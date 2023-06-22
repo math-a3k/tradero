@@ -1,0 +1,19 @@
+<p class="mb-1">
+	<strong>STP({{symbol.others.stp.params}})</strong>:<br>
+
+    {% for n in symbol.others.stp.next_n %}
+    <span class="{% if n > 0 %}text-success{% else %}text-danger{% endif %}">
+        {{ n|floatformat:2 }}%
+    </span>
+    {% endfor %}
+
+    <strong>AC:</strong>
+    <span class="{% if symbol.others.stp.next_n_sum > 0 %}text-success{% else %}text-danger{% endif %} ac-value">{{ symbol.others.stp.next_n_sum|floatformat:2 }}%</span>
+    <span class="text-muted">
+        {% if symbol.others.next_n_value < 1 %}
+        [{{ symbol.others.stp.next_n_value|floatformat:4 }}]
+        {% else %}
+        [{{ symbol.others.stp.next_n_value|floatformat:3 }}]
+        {% endif %}
+    </span>
+</p>

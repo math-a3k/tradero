@@ -1,0 +1,48 @@
+FROM archlinux:base-devel
+
+RUN pacman -Syu python python-setuptools python-pipenv supervisor git nginx postgresql redis --noconfirm && yes | pacman -Scc
+
+RUN useradd -mU tradero && \
+    mkdir -p /vol/tradero/{media,static,db,log} && \
+    chown -R tradero:tradero /vol/tradero && \
+    chmod -R 755 /vol
+
+RUN mkdir /run/postgresql && chown -R postgres:postgres /vol/tradero/db /run/postgresql
+
+USER postgres
+RUN initdb --locale=C.UTF-8 --encoding=UTF8 -D /vol/tradero/db --data-checksums
+COPY dockerfiles/postgres.conf /vol/tradero/db/postgres.conf
+COPY dockerfiles/pg_hba.conf /vol/tradero/db/pg_hba.conf
+RUN pg_ctl start -D /vol/tradero/db -s -w -t 270 && \
+    createuser --createdb tradero && \
+    createdb tradero --owner tradero && \
+    pg_ctl stop -D /vol/tradero/db
+
+USER root
+
+COPY dockerfiles/nginx.conf.arch /etc/nginx/nginx.conf
+RUN touch /run/nginx.pid && chown -R http:http /var/lib/nginx /var/log/nginx /run/nginx.pid
+
+WORKDIR /home/tradero
+COPY dockerfiles/tradero_uwsgi.ini .
+COPY ./tradero tradero
+COPY dockerfiles/.env_file.arch tradero/.env
+COPY dockerfiles/django_tasks.sh .
+COPY ./base base
+COPY Pipfile Pipfile.lock pytest.ini pyproject.toml .coveragerc manage.py .
+# For development
+# COPY ./django-ai django-ai
+RUN chown -R tradero:tradero /home/tradero
+RUN mkdir /run/daphne && chown -R tradero:tradero /run/daphne
+
+ENV PYTHONUNBUFFERED=1
+ENV PIPENV_VENV_IN_PROJECT=1
+ENV PATH="/home/tradero:/home/tradero/.venv/bin:${PATH}"
+
+USER tradero
+RUN pipenv install
+
+USER root
+COPY dockerfiles/supervisor.conf.arch /etc/supervisor.d/tradero.ini
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf", "--nodaemon"]

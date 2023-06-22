@@ -1,0 +1,56 @@
+{% load mathfilters symbols %}
+
+<a id="{{ symbol.symbol }}" href="https://www.binance.com/en/trade/{{ symbol.base_asset}}_{{ symbol.quote_asset }}?_from=markets&theme=dark&type=spot" target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action">
+    <div class="d-flex w-100 justify-content-between">
+      	<h5 class="mb-1">
+      		<mark>{{ symbol.base_asset }}</mark>/{{ symbol.quote_asset }}
+      	</h5>
+      	<small class="text-muted">
+      		{% if settings.OUTLIERS_ENABLED %}
+	      		{% if symbol.others.outliers.o1 %}
+	      		<span class="badge bg-primary rounded-pill">O1</span>
+	      		{% endif %}
+	      		{% if symbol.others.outliers.o2 %}
+	      		<span class="badge bg-primary rounded-pill">O2</span>
+	      		{% endif %}
+	      		{% if symbol.others.outliers.o3 %}
+	      		<span class="badge bg-primary rounded-pill">O3</span>
+	      		{% endif %}
+      		{% endif %}
+      		MS: <span class="ms-value">{{ symbol.model_score|floatformat:2 }}</span> |
+      		VOL24h: <span class="vol24h-value">{{ symbol.volume_quote_asset|floatformat:"0g" }}</span> |
+      		VAR24h: <span class="var24h-value {% if symbol.last_variation_24h > 0 %}text-success{% else %}text-danger{% endif %}">{{ symbol.last_variation_24h|floatformat:2 }}%</span>
+      	</small>
+    </div>
+    <p class="mb-1">
+    	{% for past in symbol.others.last_3 %}
+    		<span class="{% if past > 0 %}text-success{% else %}text-danger{% endif %}">
+    			{{ past|floatformat:2 }}%
+    		</span>
+    	{% endfor %}
+    	<strong class="{% if symbol.last_variation > 0 %}text-success{% else %}text-danger{% endif %}">| <span class="text-primary">{{ symbol.last_value_time|date:"H:i" }}:</span>
+    		<span class="text-muted">
+    		{% if symbol.last_value < 1 %}
+    			[{{ symbol.last_value|floatformat:4 }}]
+    		{% else %}
+    			[{{ symbol.last_value|floatformat:3 }}]
+    		{% endif %}</span>
+    		{{ symbol.last_variation|floatformat:2 }}%
+    	</strong>
+    	{% if settings.PREDICTION_ENABLED %}
+	    	<strong>&rarr;</strong>
+	    	<strong class="{% if symbol.prediction_variation > 0 %}text-success{% else %}text-danger{% endif %}">
+	    		<span class="text-primary">{{ symbol.prediction_time|date:"H:i" }}:</span>
+	    		<span class="text-muted">
+	    			{% if symbol.prediction_value < 1 %}
+	    			[{{ symbol.prediction_value|floatformat:4 }}]
+	    			{% else %}
+	    			[{{ symbol.prediction_value|floatformat:3 }}]
+	    			{% endif %}
+	    		</span>
+	    		{{ symbol.prediction_variation|floatformat:2 }}% |
+	    	</strong>
+    	{% endif %}
+    </p>
+    {% symbol_indicators symbol=symbol %}
+</a>

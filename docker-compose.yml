@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:latest
+    hostname: db
+    restart: always
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  redis:
+    image: redis
+    hostname: redis
+  nginx:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/Dockerfile-nginx
+    volumes:
+      - static:/vol/tradero/static
+    ports:
+      - "80:80"
+    depends_on:
+      - instance
+  instance:
+    hostname: instance
+    build:
+      context: .
+      dockerfile: ./dockerfiles/Dockerfile-instance
+    env_file:
+      - ./dockerfiles/.env_file
+    volumes:
+      - static:/vol/tradero/static
+    depends_on:
+      - db
+      - redis
+    links:
+       - db:db
+       - redis:redis
+
+volumes:
+  static:
+  postgres_data:

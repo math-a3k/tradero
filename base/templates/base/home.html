@@ -1,0 +1,166 @@
+{% extends "base/base.html" %}
+
+{% load bootstrap5 mathfilters symbols %}
+
+{% block title %}
+	Symbols
+{% endblock title %}
+
+{% block content %}
+	<div class="container">
+		<h6 class="text-center">
+			<span id="date"></span> |
+			<strong id="clock" class="text-primary"></strong>
+			<strong>UTC</strong> - Time Interval: <span class="text-primary fw-bolder">| {{ time_interval }}m |</span>
+		</h6>
+
+		<div class="form-check form-check-inline">
+			  <label class="form-check-label">SORT BY &rarr;</label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="ms" onchange="sort_symbols()" checked="checked">
+			  <label class="form-check-label">
+			    MS
+			  </label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="vol24h" onchange="sort_symbols()">
+			  <label class="form-check-label">
+			    VOL24h
+			  </label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="var24h" onchange="sort_symbols()">
+			  <label class="form-check-label">
+			    VAR24h
+			  </label>
+		</div>
+
+		{% indicators_radio_buttons %}
+
+		<div id="symbols-list" class="list-group">
+		{% for symbol in symbols %}
+			{% symbol_render_html_snippet symbol=symbol %}
+		{% endfor %}
+		</div>
+	</div>
+{% endblock content %}
+
+{% block bootstrap5_extra_script %}
+    <script>
+    	const ms_threshold = {{ ms_threshold }};
+
+    	if (location.protocol === "http:") {
+    		ws_protocol = "ws:"
+    	} else {
+    		ws_protocol = "wss:"
+    	}
+
+        const symbolsSocket = new WebSocket(
+            ws_protocol + '//'
+            + window.location.host
+            + '/ws/symbols/html'
+        );
+
+        symbolsSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            // console.log(data)
+            if (data.type === "symbol_update") {
+            	symbol_element = document.getElementById(data.symbol)
+            	if (symbol_element) {
+            		symbol_element.outerHTML = data.text;
+            	} else {
+            		document.getElementById('symbols-list').insertAdjacentHTML("beforeend", data.text);
+            	}
+        		sort_symbols();
+            }
+        };
+
+        symbolsSocket.onclose = function(e) {
+            console.error('Symbols socket closed unexpectedly');
+        };
+
+
+		var get_value_funs = {
+			"ms": function get_ms_value(list_item) {
+					text = list_item.getElementsByClassName("ms-value")[0].textContent
+					return new Number(text)
+					},
+			"vol24h": function get_vol24h_value(list_item) {
+					text = list_item.getElementsByClassName("vol24h-value")[0].textContent
+					return new Number(text.split(",").join(""))
+					},
+			"var24h": function get_var24h_value(list_item) {
+					text = list_item.getElementsByClassName("var24h-value")[0].textContent
+					return new Number(text.substring(0, text.length - 1))
+				}
+		}
+
+		{% indicators_sorting_js %}
+
+		function get_value_function() {
+			var sort_by = document.querySelector('input[name="sort-by"]:checked').value;
+			return get_value_funs[sort_by]
+		}
+
+        function sort_symbols() {
+        	var symbols_list = document.getElementById('symbols-list');
+			var items = symbols_list.childNodes;
+			var itemsArr = [];
+			var items_to_remove = [];
+			for (var i in items) {
+			    if (items[i].nodeType == 1) { // get rid of the whitespace text nodes
+				    if (
+				    	(get_value_funs["ms"](items[i]) >= ms_threshold) &&
+				    	(!items[i].textContent.includes("S1"))
+				    ) { // get rid of symbols with lower ms score and testing symbols
+				        itemsArr.push(items[i]);
+				    } else {
+				    	items_to_remove.push(items[i]);
+				    }
+			    }
+			}
+			for (var i in items_to_remove) {
+		    	items_to_remove[i].remove();
+			}
+			sort_fun = get_value_function()
+			itemsArr.sort(function(a, b) {
+			  // Sorts in descending order
+			  return sort_fun(a) == sort_fun(b)
+			          ? 0
+			          : (sort_fun(a) < sort_fun(b) ? 1 : -1);
+			});
+
+			for (i = 0; i < itemsArr.length; ++i) {
+			  symbols_list.appendChild(itemsArr[i]);
+			}
+        }
+
+        function currentTime() {
+		  let date = new Date();
+		  let hh = date.getUTCHours();
+		  let mm = date.getUTCMinutes();
+		  let ss = date.getUTCSeconds();
+
+		   hh = (hh < 10) ? "0" + hh : hh;
+		   mm = (mm < 10) ? "0" + mm : mm;
+		   ss = (ss < 10) ? "0" + ss : ss;
+
+		   let time = hh + ":" + mm + ":" + ss;
+
+		  document.getElementById("clock").innerText = time;
+		  document.getElementById("date").innerText = date.toLocaleDateString("en-US", {year: 'numeric', month: 'long', day: 'numeric' });
+		  let t = setTimeout(function(){ currentTime() }, 1000);
+		}
+
+		currentTime();
+
+		window.addEventListener("DOMContentLoaded", (event) => {
+		  sort_symbols();
+		});
+
+    </script>
+{% endblock %}

@@ -1,0 +1,1102 @@
+[
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.27300000",
+      "price_high": "2.27300000",
+      "price_low": "2.27300000",
+      "price_open": "2.27300000",
+      "symbol": 1,
+      "time_close": "2023-05-12T09:44:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T09:40:00Z",
+      "variation": "0E-8",
+      "volume": "13.70000000",
+      "volume_quote_asset": "31.14010000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245316
+  },
+  {
+    "fields": {
+      "number_of_trades": "4.00000000",
+      "price_close": "2.28100000",
+      "price_high": "2.28100000",
+      "price_low": "2.27900000",
+      "price_open": "2.27900000",
+      "symbol": 1,
+      "time_close": "2023-05-12T09:49:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T09:45:00Z",
+      "variation": "0.08775779",
+      "volume": "63.30000000",
+      "volume_quote_asset": "144.32990000",
+      "volume_tb_base_asset": "63.30000000",
+      "volume_tb_quote_asset": "144.32990000"
+    },
+    "model": "base.kline",
+    "pk": 2245317
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.28100000",
+      "price_high": "2.28100000",
+      "price_low": "2.28100000",
+      "price_open": "2.28100000",
+      "symbol": 1,
+      "time_close": "2023-05-12T09:54:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T09:50:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245318
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.28100000",
+      "price_high": "2.28100000",
+      "price_low": "2.28100000",
+      "price_open": "2.28100000",
+      "symbol": 1,
+      "time_close": "2023-05-12T09:59:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T09:55:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245319
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.28100000",
+      "price_high": "2.28100000",
+      "price_low": "2.28100000",
+      "price_open": "2.28100000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:04:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:00:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245320
+  },
+  {
+    "fields": {
+      "number_of_trades": "28.00000000",
+      "price_close": "2.28700000",
+      "price_high": "2.30200000",
+      "price_low": "2.28300000",
+      "price_open": "2.28300000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:09:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:05:00Z",
+      "variation": "0.17520806",
+      "volume": "3507.40000000",
+      "volume_quote_asset": "8053.48120000",
+      "volume_tb_base_asset": "3497.80000000",
+      "volume_tb_quote_asset": "8031.52600000"
+    },
+    "model": "base.kline",
+    "pk": 2245321
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.28400000",
+      "price_high": "2.28400000",
+      "price_low": "2.28400000",
+      "price_open": "2.28400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:14:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:10:00Z",
+      "variation": "0E-8",
+      "volume": "18.50000000",
+      "volume_quote_asset": "42.25400000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245322
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.28400000",
+      "price_high": "2.28400000",
+      "price_low": "2.28400000",
+      "price_open": "2.28400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:19:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:15:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245323
+  },
+  {
+    "fields": {
+      "number_of_trades": "8.00000000",
+      "price_close": "2.27700000",
+      "price_high": "2.28300000",
+      "price_low": "2.27700000",
+      "price_open": "2.28300000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:24:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:20:00Z",
+      "variation": "-0.26281209",
+      "volume": "336.60000000",
+      "volume_quote_asset": "767.17060000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245324
+  },
+  {
+    "fields": {
+      "number_of_trades": "8.00000000",
+      "price_close": "2.27300000",
+      "price_high": "2.27300000",
+      "price_low": "2.27300000",
+      "price_open": "2.27300000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:29:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:25:00Z",
+      "variation": "0E-8",
+      "volume": "392.00000000",
+      "volume_quote_asset": "891.01600000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245325
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.27300000",
+      "price_high": "2.27300000",
+      "price_low": "2.27300000",
+      "price_open": "2.27300000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:34:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:30:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245326
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.26800000",
+      "price_high": "2.26800000",
+      "price_low": "2.26800000",
+      "price_open": "2.26800000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:39:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:35:00Z",
+      "variation": "0E-8",
+      "volume": "33.00000000",
+      "volume_quote_asset": "74.84400000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245327
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.26800000",
+      "price_high": "2.26800000",
+      "price_low": "2.26800000",
+      "price_open": "2.26800000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:44:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:40:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245328
+  },
+  {
+    "fields": {
+      "number_of_trades": "3.00000000",
+      "price_close": "2.27200000",
+      "price_high": "2.27200000",
+      "price_low": "2.26800000",
+      "price_open": "2.26800000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:49:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:45:00Z",
+      "variation": "0.17636684",
+      "volume": "28.00000000",
+      "volume_quote_asset": "63.56920000",
+      "volume_tb_base_asset": "16.30000000",
+      "volume_tb_quote_asset": "37.03360000"
+    },
+    "model": "base.kline",
+    "pk": 2245329
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.27300000",
+      "price_high": "2.27300000",
+      "price_low": "2.27300000",
+      "price_open": "2.27300000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:54:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:50:00Z",
+      "variation": "0E-8",
+      "volume": "17.30000000",
+      "volume_quote_asset": "39.32290000",
+      "volume_tb_base_asset": "17.30000000",
+      "volume_tb_quote_asset": "39.32290000"
+    },
+    "model": "base.kline",
+    "pk": 2245330
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.27400000",
+      "price_high": "2.27400000",
+      "price_low": "2.27400000",
+      "price_open": "2.27400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T10:59:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T10:55:00Z",
+      "variation": "0E-8",
+      "volume": "13.70000000",
+      "volume_quote_asset": "31.15380000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245331
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.27400000",
+      "price_high": "2.27400000",
+      "price_low": "2.27400000",
+      "price_open": "2.27400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:04:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:00:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245332
+  },
+  {
+    "fields": {
+      "number_of_trades": "3.00000000",
+      "price_close": "2.26900000",
+      "price_high": "2.27200000",
+      "price_low": "2.26900000",
+      "price_open": "2.27200000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:09:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:05:00Z",
+      "variation": "-0.13204225",
+      "volume": "63.90000000",
+      "volume_quote_asset": "145.10260000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245333
+  },
+  {
+    "fields": {
+      "number_of_trades": "6.00000000",
+      "price_close": "2.26800000",
+      "price_high": "2.27000000",
+      "price_low": "2.26800000",
+      "price_open": "2.27000000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:14:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:10:00Z",
+      "variation": "-0.08810573",
+      "volume": "149.30000000",
+      "volume_quote_asset": "338.84500000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245334
+  },
+  {
+    "fields": {
+      "number_of_trades": "5.00000000",
+      "price_close": "2.26700000",
+      "price_high": "2.26700000",
+      "price_low": "2.26700000",
+      "price_open": "2.26700000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:19:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:15:00Z",
+      "variation": "0E-8",
+      "volume": "427.80000000",
+      "volume_quote_asset": "969.82260000",
+      "volume_tb_base_asset": "372.50000000",
+      "volume_tb_quote_asset": "844.45750000"
+    },
+    "model": "base.kline",
+    "pk": 2245335
+  },
+  {
+    "fields": {
+      "number_of_trades": "3.00000000",
+      "price_close": "2.26300000",
+      "price_high": "2.26500000",
+      "price_low": "2.26300000",
+      "price_open": "2.26500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:24:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:20:00Z",
+      "variation": "-0.08830022",
+      "volume": "152.30000000",
+      "volume_quote_asset": "344.91970000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245336
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.26300000",
+      "price_high": "2.26300000",
+      "price_low": "2.26300000",
+      "price_open": "2.26300000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:29:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:25:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245337
+  },
+  {
+    "fields": {
+      "number_of_trades": "3.00000000",
+      "price_close": "2.25900000",
+      "price_high": "2.26000000",
+      "price_low": "2.25900000",
+      "price_open": "2.26000000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:34:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:30:00Z",
+      "variation": "-0.04424779",
+      "volume": "130.80000000",
+      "volume_quote_asset": "295.48720000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245338
+  },
+  {
+    "fields": {
+      "number_of_trades": "2.00000000",
+      "price_close": "2.25900000",
+      "price_high": "2.25900000",
+      "price_low": "2.25900000",
+      "price_open": "2.25900000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:39:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:35:00Z",
+      "variation": "0E-8",
+      "volume": "90.40000000",
+      "volume_quote_asset": "204.21360000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245339
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.25900000",
+      "price_high": "2.25900000",
+      "price_low": "2.25900000",
+      "price_open": "2.25900000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:44:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:40:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245340
+  },
+  {
+    "fields": {
+      "number_of_trades": "3.00000000",
+      "price_close": "2.26500000",
+      "price_high": "2.26500000",
+      "price_low": "2.26400000",
+      "price_open": "2.26400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:49:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:45:00Z",
+      "variation": "0.04416961",
+      "volume": "42.00000000",
+      "volume_quote_asset": "95.09790000",
+      "volume_tb_base_asset": "42.00000000",
+      "volume_tb_quote_asset": "95.09790000"
+    },
+    "model": "base.kline",
+    "pk": 2245341
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.26500000",
+      "price_high": "2.26500000",
+      "price_low": "2.26500000",
+      "price_open": "2.26500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:54:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:50:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245342
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.26500000",
+      "price_high": "2.26500000",
+      "price_low": "2.26500000",
+      "price_open": "2.26500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T11:59:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T11:55:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245343
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.26100000",
+      "price_high": "2.26100000",
+      "price_low": "2.26100000",
+      "price_open": "2.26100000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:04:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:00:00Z",
+      "variation": "0E-8",
+      "volume": "9.50000000",
+      "volume_quote_asset": "21.47950000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245344
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.26100000",
+      "price_high": "2.26100000",
+      "price_low": "2.26100000",
+      "price_open": "2.26100000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:09:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:05:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245345
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.26500000",
+      "price_high": "2.26500000",
+      "price_low": "2.26500000",
+      "price_open": "2.26500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:14:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:10:00Z",
+      "variation": "0E-8",
+      "volume": "13.70000000",
+      "volume_quote_asset": "31.03050000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245346
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.26500000",
+      "price_high": "2.26500000",
+      "price_low": "2.26500000",
+      "price_open": "2.26500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:19:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:15:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245347
+  },
+  {
+    "fields": {
+      "number_of_trades": "10.00000000",
+      "price_close": "2.26100000",
+      "price_high": "2.26800000",
+      "price_low": "2.26100000",
+      "price_open": "2.26800000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:24:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:20:00Z",
+      "variation": "-0.30864198",
+      "volume": "233.80000000",
+      "volume_quote_asset": "529.41050000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245348
+  },
+  {
+    "fields": {
+      "number_of_trades": "5.00000000",
+      "price_close": "2.26800000",
+      "price_high": "2.26800000",
+      "price_low": "2.26600000",
+      "price_open": "2.26600000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:29:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:25:00Z",
+      "variation": "0.08826125",
+      "volume": "165.20000000",
+      "volume_quote_asset": "374.60760000",
+      "volume_tb_base_asset": "165.20000000",
+      "volume_tb_quote_asset": "374.60760000"
+    },
+    "model": "base.kline",
+    "pk": 2245349
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.27500000",
+      "price_high": "2.27500000",
+      "price_low": "2.27500000",
+      "price_open": "2.27500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:34:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:30:00Z",
+      "variation": "0E-8",
+      "volume": "8.80000000",
+      "volume_quote_asset": "20.02000000",
+      "volume_tb_base_asset": "8.80000000",
+      "volume_tb_quote_asset": "20.02000000"
+    },
+    "model": "base.kline",
+    "pk": 2245350
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.27500000",
+      "price_high": "2.27500000",
+      "price_low": "2.27500000",
+      "price_open": "2.27500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:39:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:35:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245351
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.27500000",
+      "price_high": "2.27500000",
+      "price_low": "2.27500000",
+      "price_open": "2.27500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:44:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:40:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245352
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.27500000",
+      "price_high": "2.27500000",
+      "price_low": "2.27500000",
+      "price_open": "2.27500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:49:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:45:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245353
+  },
+  {
+    "fields": {
+      "number_of_trades": "5.00000000",
+      "price_close": "2.28400000",
+      "price_high": "2.28400000",
+      "price_low": "2.27800000",
+      "price_open": "2.28000000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:54:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:50:00Z",
+      "variation": "0.17543860",
+      "volume": "377.20000000",
+      "volume_quote_asset": "860.13700000",
+      "volume_tb_base_asset": "131.30000000",
+      "volume_tb_quote_asset": "299.88920000"
+    },
+    "model": "base.kline",
+    "pk": 2245354
+  },
+  {
+    "fields": {
+      "number_of_trades": "5.00000000",
+      "price_close": "2.28400000",
+      "price_high": "2.28400000",
+      "price_low": "2.28400000",
+      "price_open": "2.28400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T12:59:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T12:55:00Z",
+      "variation": "0E-8",
+      "volume": "375.80000000",
+      "volume_quote_asset": "858.32720000",
+      "volume_tb_base_asset": "218.80000000",
+      "volume_tb_quote_asset": "499.73920000"
+    },
+    "model": "base.kline",
+    "pk": 2245355
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.28400000",
+      "price_high": "2.28400000",
+      "price_low": "2.28400000",
+      "price_open": "2.28400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:04:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:00:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245356
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.28400000",
+      "price_high": "2.28400000",
+      "price_low": "2.28400000",
+      "price_open": "2.28400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:09:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:05:00Z",
+      "variation": "0E-8",
+      "volume": "21.80000000",
+      "volume_quote_asset": "49.79120000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245357
+  },
+  {
+    "fields": {
+      "number_of_trades": "1.00000000",
+      "price_close": "2.28100000",
+      "price_high": "2.28100000",
+      "price_low": "2.28100000",
+      "price_open": "2.28100000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:14:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:10:00Z",
+      "variation": "0E-8",
+      "volume": "59.60000000",
+      "volume_quote_asset": "135.94760000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245358
+  },
+  {
+    "fields": {
+      "number_of_trades": "4.00000000",
+      "price_close": "2.28500000",
+      "price_high": "2.28500000",
+      "price_low": "2.28400000",
+      "price_open": "2.28400000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:19:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:15:00Z",
+      "variation": "0.04378284",
+      "volume": "136.70000000",
+      "volume_quote_asset": "312.25560000",
+      "volume_tb_base_asset": "136.70000000",
+      "volume_tb_quote_asset": "312.25560000"
+    },
+    "model": "base.kline",
+    "pk": 2245359
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.28500000",
+      "price_high": "2.28500000",
+      "price_low": "2.28500000",
+      "price_open": "2.28500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:24:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:20:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245360
+  },
+  {
+    "fields": {
+      "number_of_trades": "8.00000000",
+      "price_close": "2.29400000",
+      "price_high": "2.29400000",
+      "price_low": "2.28300000",
+      "price_open": "2.28300000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:29:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:25:00Z",
+      "variation": "0.48182216",
+      "volume": "280.90000000",
+      "volume_quote_asset": "643.28370000",
+      "volume_tb_base_asset": "154.50000000",
+      "volume_tb_quote_asset": "353.56090000"
+    },
+    "model": "base.kline",
+    "pk": 2245361
+  },
+  {
+    "fields": {
+      "number_of_trades": "9.00000000",
+      "price_close": "2.30400000",
+      "price_high": "2.30400000",
+      "price_low": "2.29700000",
+      "price_open": "2.29700000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:34:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:30:00Z",
+      "variation": "0.30474532",
+      "volume": "563.10000000",
+      "volume_quote_asset": "1296.33720000",
+      "volume_tb_base_asset": "563.10000000",
+      "volume_tb_quote_asset": "1296.33720000"
+    },
+    "model": "base.kline",
+    "pk": 2245362
+  },
+  {
+    "fields": {
+      "number_of_trades": "5.00000000",
+      "price_close": "2.29000000",
+      "price_high": "2.29200000",
+      "price_low": "2.28900000",
+      "price_open": "2.29200000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:39:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:35:00Z",
+      "variation": "-0.08726003",
+      "volume": "163.30000000",
+      "volume_quote_asset": "374.05310000",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245363
+  },
+  {
+    "fields": {
+      "number_of_trades": "2.00000000",
+      "price_close": "2.28700000",
+      "price_high": "2.29200000",
+      "price_low": "2.28700000",
+      "price_open": "2.29200000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:44:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:40:00Z",
+      "variation": "-0.21815009",
+      "volume": "171.50000000",
+      "volume_quote_asset": "392.61500000",
+      "volume_tb_base_asset": "78.90000000",
+      "volume_tb_quote_asset": "180.83880000"
+    },
+    "model": "base.kline",
+    "pk": 2245364
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.28700000",
+      "price_high": "2.28700000",
+      "price_low": "2.28700000",
+      "price_open": "2.28700000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:49:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:45:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245365
+  },
+  {
+    "fields": {
+      "number_of_trades": "6.00000000",
+      "price_close": "2.28900000",
+      "price_high": "2.28900000",
+      "price_low": "2.28600000",
+      "price_open": "2.28900000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:54:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:50:00Z",
+      "variation": "0E-8",
+      "volume": "224.40000000",
+      "volume_quote_asset": "513.18510000",
+      "volume_tb_base_asset": "18.80000000",
+      "volume_tb_quote_asset": "43.03320000"
+    },
+    "model": "base.kline",
+    "pk": 2245366
+  },
+  {
+    "fields": {
+      "number_of_trades": "2.00000000",
+      "price_close": "2.29500000",
+      "price_high": "2.29500000",
+      "price_low": "2.29200000",
+      "price_open": "2.29200000",
+      "symbol": 1,
+      "time_close": "2023-05-12T13:59:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T13:55:00Z",
+      "variation": "0.13089005",
+      "volume": "343.50000000",
+      "volume_quote_asset": "788.18970000",
+      "volume_tb_base_asset": "343.50000000",
+      "volume_tb_quote_asset": "788.18970000"
+    },
+    "model": "base.kline",
+    "pk": 2245367
+  },
+  {
+    "fields": {
+      "number_of_trades": "0E-8",
+      "price_close": "2.29500000",
+      "price_high": "2.29500000",
+      "price_low": "2.29500000",
+      "price_open": "2.29500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T14:04:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T14:00:00Z",
+      "variation": "0E-8",
+      "volume": "0E-8",
+      "volume_quote_asset": "0E-8",
+      "volume_tb_base_asset": "0E-8",
+      "volume_tb_quote_asset": "0E-8"
+    },
+    "model": "base.kline",
+    "pk": 2245368
+  },
+  {
+    "fields": {
+      "number_of_trades": "3.00000000",
+      "price_close": "2.29600000",
+      "price_high": "2.29600000",
+      "price_low": "2.29500000",
+      "price_open": "2.29500000",
+      "symbol": 1,
+      "time_close": "2023-05-12T14:09:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T14:05:00Z",
+      "variation": "0.04357298",
+      "volume": "132.10000000",
+      "volume_quote_asset": "303.26200000",
+      "volume_tb_base_asset": "92.50000000",
+      "volume_tb_quote_asset": "212.38000000"
+    },
+    "model": "base.kline",
+    "pk": 2245369
+  },
+  {
+    "fields": {
+      "number_of_trades": "3.00000000",
+      "price_close": "2.31600000",
+      "price_high": "2.31600000",
+      "price_low": "2.31200000",
+      "price_open": "2.31200000",
+      "symbol": 1,
+      "time_close": "2023-05-12T14:14:59.999Z",
+      "time_interval": "5m",
+      "time_open": "2023-05-12T14:10:00Z",
+      "variation": "0.17301038",
+      "volume": "86.40000000",
+      "volume_quote_asset": "199.98560000",
+      "volume_tb_base_asset": "86.40000000",
+      "volume_tb_quote_asset": "199.98560000"
+    },
+    "model": "base.kline",
+    "pk": 2245370
+  }
+]

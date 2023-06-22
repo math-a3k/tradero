@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  instance:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/Dockerfile-archlinux
+    env_file:
+      - ./dockerfiles/.env_file.arch
+    volumes:
+      - static:/vol/tradero/static
+      # - db:/vol/tradero/db
+    ports:
+      - "80:80"
+
+volumes:
+  static:
+  db:

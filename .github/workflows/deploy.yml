@@ -1,0 +1,32 @@
+name: Production Deployment
+
+concurrency:
+  group: production
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout and restart the server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.HOST_USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.HOST_DIR }}
+            git reset --hard HEAD
+            git checkout main
+            git pull --rebase
+            pipenv install
+            /bin/bash ./dockerfiles/django_tasks.sh
+            supervisorctl restart all
+            supervisorctl status

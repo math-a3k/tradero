@@ -1,0 +1,25 @@
+{% extends 'base/bootstrap.html' %}
+
+{% load bootstrap5 cache %}
+
+{% block bootstrap5_content %}
+
+{% cache None navbar %}
+{% include "base/navbar.html" %}
+{% endcache %}
+
+    <div class="container">
+        <div class="text-center mt-5">
+            <h1>{% block title %}(no title){% endblock %}</h1>
+        </div>
+
+        {% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
+
+        {% block content %}(no content){% endblock %}
+    </div>
+
+{% cache None footer %}
+{% include "base/footer.html" %}
+{% endcache %}
+
+{% endblock %}

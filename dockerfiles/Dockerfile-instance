@@ -1,0 +1,37 @@
+FROM python:3.11
+
+# RUN pacman -Syu python python-setuptools python-pipenv supervisor git postgresql-libs --noconfirm && yes | pacman -Scc
+
+RUN useradd -mU tradero && \
+    mkdir -p /vol/tradero/{media,static,db,log} && \
+    chown -R tradero:tradero /vol/tradero && \
+    chmod -R 755 /vol/tradero && \
+    python -m pip install pipenv
+
+WORKDIR /home/tradero
+
+USER root
+
+COPY ./tradero tradero
+COPY ./base base
+COPY dockerfiles/tradero_uwsgi.ini .
+COPY dockerfiles/django_tasks.sh .
+COPY dockerfiles/supervisor.conf .
+COPY dockerfiles/.env_file tradero/.env
+COPY Pipfile Pipfile.lock pytest.ini pyproject.toml .coveragerc manage.py .
+# For development
+# COPY ./django-ai django-ai
+RUN chown -R tradero:tradero /home/tradero
+RUN chmod a+x /home/tradero/django_tasks.sh
+RUN mkdir /run/daphne && chown -R tradero:tradero /run/daphne
+
+ENV PYTHONUNBUFFERED=1
+ENV PIPENV_VENV_IN_PROJECT=1
+ENV PATH="/home/tradero:/home/tradero/.venv/bin:${PATH}"
+
+USER tradero
+RUN pipenv install
+
+USER root
+
+CMD ["supervisord", "-c", "./supervisor.conf", "--nodaemon"]

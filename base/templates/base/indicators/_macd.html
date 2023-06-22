@@ -1,0 +1,14 @@
+<p class="mb-1">
+	<strong>MACD({{symbol.others.macdcg.params.0}},{{symbol.others.macdcg.params.1}},{{symbol.others.macdcg.params.2}})</strong>:<br>
+	{% comment "not needed" %}
+    EMA({{symbol.others.macdcg.params.0}}): {% for m in symbol.others.macdcg.ema_a|slice:"-6:" %}
+		<span class="">{{ m|floatformat:4 }}</span>
+	{% endfor %}<br>
+    {% endcomment %}
+	Line: {% for m in symbol.others.macdcg.macd_line|slice:"-6:" %}
+		<span class="{% if m >= 0 %}text-success{% else %}text-danger{% endif %}">{{ m|floatformat:6 }}</span>
+	{% endfor %}<br>
+	Signal diff: {% for m in symbol.others.macdcg.signal_diff|slice:"-6:" %}
+		<span class="{% if m >= 0 %}text-success{% else %}text-danger{% endif %}">{{ m|floatformat:6 }}</span>
+	{% endfor %}{% if symbol.others.macdcg.current_good %} <strong>(CG)</strong> {% endif %}
+</p>

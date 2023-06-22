@@ -1,0 +1,56 @@
+name: Code Compliance
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+jobs:
+  code-compliance:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: tradero
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTRGRES_DB: test_tradero
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pipenv'
+
+      - name: Install pipenv
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+
+      - run: pipenv install --dev
+
+      - name: pre-commit
+        uses: pre-commit/action@v3.0.0
+
+      - name: Testing and Coverage
+        run: pipenv run pytest

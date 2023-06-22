@@ -1,0 +1,63 @@
+{% extends "base/base.html" %}
+
+{% load bootstrap5 static %}
+
+{% block title %}
+	Instruções
+{% endblock title %}
+
+{% block content %}
+	<div class="container p-4">
+		<p>
+			<i>tradero</i> is a tool for achieving self-funding via trading.
+		</p>
+
+		<p>
+			Self-funding means generating the means independently to cover a budget in order to opt by the value it produces rather than out of economical neccessity.
+		</p>
+
+		<p>
+			It tracks Symbols in a <a href="https://binance.com">Exchange</a> with a <a href="https://www.binance.com/en/blog/markets/new-1second-interval-feature-now-available-on-spot-and-margin-charts-9151369240338163004">time resolution</a>, calculates indicators and present them in an useful way so the user can perform trading more effectively.
+		</p>
+
+		<p>
+			 The tool was inspired by the <i>micro-gains trading strategy</i>, which refers to obtaining relative small amounts of gains in a relative short time.
+		</p>
+
+		<p>
+			The idea is to enter the Symbol market - buying - and once the order is fullfiled, create a selling order for the amount with the micro-gain, and once it is fullfiled, choose your next move.
+		</p>
+
+		<p>
+			To spot favorable situations for this, the <a href="https://tradero.readthedocs.io/indicators.html">MACD/CG indicator</a> was developed:
+		</p>
+
+		<p>
+			<img src="{% static "base/macd_cg.png" %}" class="img-fluid mx-auto d-bloock" alt="MACD/CG">
+		</p>
+
+		<p>
+			The full documentation is <a href="https://tradero.readthedocs.io/">here</a> and you are welcome to join the community on <a href="https://discord.gg/zACSJmtP">GitHub</a>, <a href="https://github.com/math-a3k/tradero">Discord</a> and / or the <a href="https://groups.google.com/g/tradero">mailing list</a>.
+		</p>
+
+		<p>
+			<b>REMEMBER:</b> Trading is a risky activity and you are solely responsible for your trading decisions. You may choose not follow a particular advice or any advice at all.
+		</p>
+
+		<p>
+			If there is no experience on trading, it is advised to start with several "dummy" funds and trade for at least one month while you harvest knowledge and resources in order to have an estimation of how much would it take to cover the budget.
+		</p>
+
+		<p>
+			The 0.3% of 5000 is 15.
+		</p>
+
+		<p>
+			15 is about the minimum hourly wage in California, United States of America.
+		</p>
+
+		<p>
+			100, traded and reinvested with a gain of 0.3% in an hour for 1350 hours (168 days / 8 hours a day), is about 5000.
+		</p>
+	</div>
+{% endblock content %}
