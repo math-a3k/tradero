@@ -20,6 +20,7 @@ class Command(BaseCommand):
                         "status": symbol["status"],
                         "base_asset": symbol["baseAsset"],
                         "quote_asset": symbol["quoteAsset"],
+                        "info": symbol,
                     },
                 )
                 symbols_processed += 1

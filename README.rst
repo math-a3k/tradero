@@ -7,9 +7,9 @@ tradero
 
 ``tradero`` is a tool for achieving self-funding via trading.
 
-Self-funding means generating the means independently to cover a budget in order to opt by the value it produces rather than out of economical neccessity.
+Self-funding means generating the means independently to cover a budget in order to opt by the value it produces rather than out of economic necessity (financial freedom).
 
-It tracks Symbols in a `Exchange`_ with a time resolution, calculates indicators and present them in an useful way so the user can perform trading more effectively.
+It tracks Symbols in an `Exchange`_ with a time resolution, calculates indicators, presents them in an useful way and provides automatization through trading bots so the user can perform trading more effectively.
 
 The application is available at https://tradero.dev
 
@@ -19,7 +19,7 @@ Community
 =========
 
 * GitHub: https://github.com/math-a3k/tradero
-* Discord: https://discord.gg/zACSJmtP
+* Discord: https://discord.gg/6CdZmpjKab
 * Mailing list: https://groups.google.com/g/tradero
 
 |

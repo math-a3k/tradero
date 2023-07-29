@@ -1,0 +1,21 @@
+{% extends "base/base.html" %}
+
+{% load bootstrap5 %}
+
+{% block title %}
+	Usuário
+{% endblock title %}
+
+{% block content %}
+	<div class="container">
+		<h3>Atualizar {{ form.instance.username }}</h3>
+		<form method="post">{% csrf_token %}
+    		{% bootstrap_form form %}
+    		{% buttons %}
+    		<button type="submit" class="btn btn-primary">Enviar</button>
+  			{% endbuttons %}
+		</form>
+
+	</div>
+
+{% endblock content %}

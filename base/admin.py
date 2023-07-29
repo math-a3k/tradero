@@ -11,6 +11,9 @@ from .models import (
     Kline,
     OutliersSVC,
     Symbol,
+    TradeHistory,
+    TraderoBot,
+    TraderoBotLog,
     TrainingData,
     User,
     WSClient,
@@ -34,6 +37,7 @@ class TraderoUserAdmin(UserAdmin):
         "trading_active",
         "date_joined",
         "is_staff",
+        "get_bots",
     )
     list_display_links = ("username",)
     list_filter = ("trading_active",) + UserAdmin.list_filter
@@ -45,10 +49,16 @@ class TraderoUserAdmin(UserAdmin):
                     "trading_active",
                     "api_key",
                     "api_secret",
+                    "checkpoint",
                 )
             },
         ),
     ) + UserAdmin.fieldsets
+
+    def get_bots(self, obj):
+        return obj.bots.count()
+
+    get_bots.short_description = "# Bots"
 
 
 @admin.register(Symbol)
@@ -194,3 +204,98 @@ class WSClientAdmin(admin.ModelAdmin):
         return obj.is_open
 
     get_is_open.short_description = "Is Open?"
+
+
+class TradeHistoryInline(admin.StackedInline):
+    model = TradeHistory
+    min_num = 3
+    max_num = 20
+    extra = 0
+    ordering = ["-timestamp_start"]
+    readonly_fields = [
+        "receipt_buying",
+        "receipt_selling",
+        "user",
+        "symbol",
+        "timestamp_start",
+        "timestamp_buying",
+        "timestamp_selling",
+    ]
+
+
+@admin.register(TraderoBot)
+class TraderoBotAdmin(admin.ModelAdmin):
+    """
+    Admin View for TraderoBot
+    """
+
+    list_display = (
+        "id",
+        "user",
+        "status",
+        "symbol",
+        "should_reinvest",
+        "should_stop",
+        "is_dummy",
+        "strategy",
+        "strategy_params",
+        "fund_base_asset",
+        "fund_quote_asset",
+        "fund_quote_asset_initial",
+        "get_last_log_message",
+    )
+    list_filter = ("status",)
+    inlines = [TradeHistoryInline]
+    readonly_fields = [
+        "receipt_buying",
+        "receipt_selling",
+        "others",
+    ]
+
+    def get_last_log_message(self, obj):
+        return obj.get_last_log_message()
+
+    get_last_log_message.short_description = "Last Log Message"
+
+
+@admin.register(TraderoBotLog)
+class TraderoBotLogAdmin(admin.ModelAdmin):
+    """
+    Admin View for TraderoBot
+    """
+
+    list_display = (
+        "id",
+        "bot",
+        "is_dummy",
+        "get_action_display",
+        "message",
+    )
+    list_filter = ("action",)
+
+    def get_action_display(self, obj):
+        return obj.get_action_display()
+
+    get_action_display.short_description = "Action"
+
+
+@admin.register(TradeHistory)
+class TradeHistoryAdmin(admin.ModelAdmin):
+    """
+    Admin View for TraderoBot
+    """
+
+    list_display = (
+        "id",
+        "user",
+        "bot",
+        "is_dummy",
+        "is_complete",
+        "variation",
+        "variation_quote_asset",
+        "duration_total",
+    )
+    list_filter = (
+        "user",
+        "bot",
+    )

@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "~=4.2"
+django = "*"
 django-environ = "*"
 pytest-django = "*"
 pytest = "*"
@@ -15,29 +15,32 @@ defusedxml = "*"
 requests-mock = "*"
 djangorestframework = {git = "https://github.com/encode/django-rest-framework"}
 binance-connector = "*"
-django-ai = {editable = true, ref = "tradero", git = "https://github.com/math-a3k/django-ai"}
 django-nested-admin = "*"
 pandas = "*"
 psycopg2 = "*"
-django-rq = "~=2.6"
 django-redis = "*"
 django-mathfilters = "*"
-rq-scheduler = "*"
 daphne = "*"
 channels = "*"
 channels-redis = "*"
 django-websocketclient = "*"
 psycopg = {extras = ["binary", "pool"], version = "*"}
 statsmodels = "*"
-rq = "==1.13"
 supervisor = "*"
 uwsgi = "*"
-time-machine = "*"
 encore = "*"
 pytest-asyncio = "*"
 pytest-xdist = "*"
 twisted = {extras = ["http2", "tls"], version = "*"}
 drf-spectacular = "*"
+asgiref = "*"
+asyncio = "*"
+django-ai = {editable = true, ref = "tradero", git = "https://github.com/math-a3k/django-ai"}
+celery = {extras = ["redis"], version = "*"}
+django-celery-results = "*"
+django-celery-beat = {file = "https://github.com/celery/django-celery-beat/zipball/master"}
+python-crontab = "*"
+pytest-celery = "*"
 
 [dev-packages]
 pre-commit = "*"

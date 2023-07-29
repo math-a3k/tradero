@@ -15,6 +15,12 @@ The easiest way of running an instance is by using `Docker`_:
 
 The instance should be available at http://localhost in your machine.
 
+You may create a superuser with:
+
+.. code-block:: shell
+
+    > docker exec -it tradero-instance-1 python manage.py createsuperuser
+
 Please refer to its documentation for information on installing it on your system.
 
 Regular
@@ -46,7 +52,7 @@ After all the previous are set, review ``tradero/settings.py`` and the instance 
 
 .. code-block:: shell
 
-    > python manage.py runserver && python manage.py scheduler && python manage.py rqworker
+    > python manage.py runserver && celery -A tradero beat && celery -A tradero worker -l INFO
 
 
 .. _Docker: https://www.docker.com/

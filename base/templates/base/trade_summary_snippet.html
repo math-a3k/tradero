@@ -1,0 +1,27 @@
+{% load mathfilters symbols %}
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+    	<th scope="col" class="table-info">{{ table_name }}</th>
+    	{% for col_name, desc in s.meta.descriptions.cols.items %}
+		<th scope="col">{{ desc }}</th>
+    	{% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+  	{% for row_name, row_vals in s.rows.items %}
+  	<tr>
+  		<th scope="row">{{ s.meta.descriptions.rows|get:row_name }}</th>
+  		{% for d, row_val in row_vals.items %}
+  		<td>
+  			{% with s.meta.descriptions.formats|get:d as f %}
+  			<span class="{% if row_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ row_val|stringformat:f|default:"-" }}</span>
+  			{% endwith %}
+  		</td>
+  		{% endfor %}
+  	</tr>
+  	{% endfor %}
+    <tr>
+  </tbody>
+</table>

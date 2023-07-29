@@ -1,88 +1,218 @@
-from binance.lib.utils import check_required_parameters
+import logging
+from decimal import Decimal
+
+import requests
 from binance.spot import Spot
-from django.utils import timezone
+from django.conf import settings
+
+from .utils import get_commission
+
+logger = logging.getLogger(__name__)
 
 
 class TraderoClient(Spot):  # pragma: no cover
     """
     Tradero's Client - a Spot overhauling...
 
-    "t_" methods are Tradero's specific
+    "tradero_" methods are Tradero's specific
     """
 
     def __init__(self, user, *args, **kwargs):
         super().__init__(
             *args,
+            base_url=settings.EXCHANGE_API_URL,
             api_key=user.api_key,
             api_secret=user.api_secret,
             **kwargs,
         )
-
-    def get_quote(
-        self,
-        from_asset,
-        to_asset,
-        from_amount,
-        to_amount=None,
-        wallet_type="SPOT",
-        valid_time=None,
-        recv_window=None,
-        timestamp=None,
-        **kwargs,
-    ):
-        check_required_parameters(
-            [
-                [from_asset, "fromAsset"],
-                [to_asset, "toAsset"],
-                [from_amount, "fromAmount"],  # TODO: see how to check EITHER
-                # [timestamp, "timestamp"],
-            ]
+        self.session.mount(
+            "https://", requests.adapters.HTTPAdapter(pool_maxsize=36)
         )
 
-        url_path = "/sapi/v1/convert/getQuote"
-        # TODO: See if nothing happens if keys have null values and complete
-        # the parameters in the payload
-        payload = {
-            "fromAsset": from_asset,
-            "toAsset": to_asset,
-            "fromAmount": from_amount,
-            "timestamp": timestamp or timezone.now().timestamp() * 1000,
-            **kwargs,
-        }
-        return self.sign_request("POST", url_path, payload)
-
-    def accept_quote(
+    def tradero_market_order(
         self,
-        quote_id,
-        recv_window=None,
-        timestamp=None,
-        **kwargs,
+        side,
+        symbol,
+        amount,
+        dummy=False,
     ):
-        check_required_parameters(
+        """
+        SELL Response:
+        {
+            "symbol": "BETABUSD",
+            "orderId": 204665291,
+            "orderListId": -1,
+            "clientOrderId": "cOcAYDp7dTEu9zd4sPoUs4",
+            "transactTime": 1688436028709,
+            "price": "0.00000000",
+            "origQty": "120.00000000",
+            "executedQty": "120.00000000",
+            "cummulativeQuoteQty": "10.02360000",
+            "status": "FILLED",
+            "timeInForce": "GTC",
+            "type": "MARKET",
+            "side": "SELL",
+            "workingTime": 1688436028709,
+            "fills":
             [
-                [quote_id, "quoteId"],
-                # [timestamp, "timestamp"],
-            ]
-        )
-
-        url_path = "/sapi/v1/convert/acceptQuote"
-        # TODO: See if nothing happens if keys have null values and complete
-        # the parameters in the payload
-        payload = {
-            "quoteId": quote_id,
-            "timestamp": timestamp or timezone.now().timestamp() * 1000,
-            **kwargs,
+                {
+                    "price": "0.08353000",
+                    "qty": "120.00000000",
+                    "commission": "0.01002360",
+                    "commissionAsset": "BUSD",
+                    "tradeId": 10478698
+                }
+            ],
+            "selfTradePreventionMode": "NONE"
         }
-        return self.sign_request("POST", url_path, payload)
+        BUY response:
+        {
+            "symbol": "ONTBUSD",
+            "orderId": 227918297,
+            "orderListId": -1,
+            "clientOrderId": "LUniYVTucWMYAeKc9QpSRt",
+            "transactTime": 1689381359633,
+            "price": "0.00000000",
+            "origQty": "72.00000000",
+            "executedQty": "72.00000000",
+            "cummulativeQuoteQty": "14.91840000",
+            "status": "FILLED",
+            "timeInForce": "GTC",
+            "type": "MARKET",
+            "side": "BUY",
+            "workingTime": 1689381359633,
+            "fills":
+            [
+                {
+                    "price": "0.20720000",
+                    "qty": "72.00000000",
+                    "commission": "0.07200000",
+                    "commissionAsset": "ONT",
+                    "tradeId": 6242788
+                }
+            ],
+            "selfTradePreventionMode": "NONE"
+        }
+        """
+        try:
+            market_price = None
+            #
+            if side == "BUY":
+                # Binance's Client Market's orders are expressed in BASE asset
+                market_price = Decimal(
+                    self.ticker_price(symbol.symbol)["price"]
+                )
+                amount = Decimal(amount) / market_price
+            #
+            step = Decimal(symbol.info["filters"][1]["stepSize"])
+            qty = (Decimal(amount) // step) * step
+            #
+            if dummy:
+                # In dummy mode, price is the regular market price
+                market_price = market_price or Decimal(
+                    self.ticker_price(symbol.symbol)["price"]
+                )
+                exc_qty = qty
+                cum_exc_qty = qty * market_price
+                if side == "BUY":
+                    commission = exc_qty * settings.EXCHANGE_FEE
+                    quantity = exc_qty - commission
+                    price = cum_exc_qty / quantity  # Net price
+                else:
+                    commission = cum_exc_qty * settings.EXCHANGE_FEE
+                    quantity = cum_exc_qty - commission
+                    price = quantity / exc_qty  # Net price
+                #
+                quantity = quantity.quantize(Decimal("." + "0" * 8))
+                price = price.quantize(Decimal("." + "0" * 8))
+                #
+                return (
+                    True,  # success
+                    price,
+                    quantity,
+                    {  # receipt
+                        "orderId": "DUMMY",
+                        "side": side,
+                        "executedQty": str(exc_qty),
+                        "cummulativeQuoteQty": str(cum_exc_qty),
+                        "fills": [
+                            {
+                                "commission": str(commission),
+                                "commsssionAsset": (
+                                    symbol.base_asset
+                                    if side == "BUY"
+                                    else symbol.quote_asset
+                                ),
+                            },
+                        ],
+                    },
+                    None,  # message
+                )
+            else:
+                order_params = {
+                    "symbol": symbol.symbol,
+                    "side": side,
+                    "type": "MARKET",
+                    "quantity": qty,
+                }
+                if settings.TRADERO_DEBUG:
+                    logger.debug(f"Symbol Info: {symbol.info}")
+                    logger.debug(f"Order params: {order_params}")
+                    asset = (
+                        symbol.quote_asset
+                        if side == "BUY"
+                        else symbol.base_asset
+                    )
+                    logger.debug(f"User asset: {self.user_asset(asset=asset)}")
+                exc = None
+                for i in range(3):
+                    try:
+                        receipt = self.new_order(**order_params)
+                        if settings.TRADERO_DEBUG:
+                            logger.debug(f"Binance client result: f{receipt}")
+                        commission = get_commission(receipt)
+                        cum_exc_qty = Decimal(receipt["cummulativeQuoteQty"])
+                        exc_qty = Decimal(receipt["executedQty"])
+                        if side == "BUY":
+                            quantity = exc_qty - commission
+                            price = cum_exc_qty / quantity  # Net price
+                        else:
+                            quantity = cum_exc_qty - commission
+                            price = quantity / exc_qty  # Net price
+                        #
+                        quantity = quantity.quantize(Decimal("." + "0" * 8))
+                        price = price.quantize(Decimal("." + "0" * 8))
+                        #
+                        return (
+                            True,  # success
+                            price,
+                            quantity,
+                            receipt,
+                            None,  # message
+                        )
+                    except Exception as e:
+                        if settings.TRADERO_DEBUG:
+                            logger.debug(f"Attempt #{i}: {str(e)}")
+                        exc = e
+                raise exc
+        except Exception as e:
+            e_str = str(e)
+            if "nginx" in e_str:
+                e_str = e_str[1 : e_str.find("{")]
+            return (False, None, None, None, e_str)
 
-    def t_convert_assets(
+    def tradero_sell(
         self,
-        from_asset,
-        to_asset,
-        from_amount,
+        symbol,
+        amount,
+        dummy=False,
     ):
-        """
-        TODO: Add error handling
-        """
-        quote_id = self.get_quote(from_asset, to_asset, from_amount)["quoteId"]
-        return self.accept_quote(quote_id)
+        return self.tradero_market_order("SELL", symbol, amount, dummy=dummy)
+
+    def tradero_buy(
+        self,
+        symbol,
+        amount,
+        dummy=False,
+    ):
+        return self.tradero_market_order("BUY", symbol, amount, dummy=dummy)

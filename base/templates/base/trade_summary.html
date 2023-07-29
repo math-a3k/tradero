@@ -1,0 +1,7 @@
+{% load mathfilters symbols %}
+
+<p><strong>Checkpoint</strong>: {{ summary.checkpoint|date|default:"-" }}</p>
+
+{% include "base/trade_summary_snippet.html" with s=summary.real table_name="REAL" %}
+
+{% include "base/trade_summary_snippet.html" with s=summary.dummy table_name="DUMMY" %}

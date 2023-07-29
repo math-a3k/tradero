@@ -1,0 +1,32 @@
+{% extends "base/base.html" %}
+
+{% load bootstrap5 mathfilters symbols %}
+
+{% block title %}
+	Usuário
+{% endblock title %}
+
+{% block content %}
+	<div class="container">
+		<p></p>
+		<h3><strong>{{ user.username }}</strong></h3>
+		<p><strong>Correio Electrónico</strong>: {{ user.email }}</p>
+		<p><strong>Nome</strong>: {{ user.first_name }}</p>
+		<p><strong>Sobrenome</strong>: {{ user.last_name }}</p>
+		<p><strong>Chave do API</strong>: {{ user.api_key }}</p>
+		<p><strong>Segredo do Chave do API</strong>: {{ user.api_secret }}</p>
+
+		<h4>Actions</h4>
+		<ul>
+			<li>
+				<a class="btn btn-warning" href="{% url "base:users-update" %}">Update</a>
+			</li>
+			<li>
+				<a class="btn btn-danger" href="{% url "base:logout" %}">Sair</a>
+			</li>
+		</ul>
+	</div>
+
+	{% include "base/trades_section.html" with summary=summary trades=trades page_obj=page_obj %}
+
+{% endblock content %}

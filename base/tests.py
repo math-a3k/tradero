@@ -1,8 +1,9 @@
 import signal
 from contextlib import contextmanager
+from decimal import Decimal
 from io import StringIO
+from unittest import mock
 
-import django_rq
 import pytest
 import requests_mock
 from asgiref.sync import sync_to_async
@@ -13,14 +14,19 @@ from django.core.management import call_command
 from django.test import Client, TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
+from django.utils import timezone
 
-from .consumers import SymbolHTMLConsumer, SymbolJSONConsumer
+from base import tasks
+
+from .consumers import BotHTMLConsumer, SymbolHTMLConsumer, SymbolJSONConsumer
 from .handlers import message_handler
-from .models import Kline, Symbol, TrainingData, User, WSClient
+from .models import Kline, Symbol, TraderoBot, TrainingData, User, WSClient
 
 BINANCE_API_URL = "https://api.binance.com"
 TEST_SETTINGS = {
     "SYNC_EXECUTION": True,
+    "EXCHANGE_API_URL": BINANCE_API_URL,
+    # "INDICATORS": "",
 }
 
 
@@ -57,8 +63,8 @@ class TestTrainingData(TestCase):
         super().setUpClass()
 
     def test_creation(self):
-        self.assertEqual(TrainingData.from_klines(self.s1), 35)
-        self.assertEqual(TrainingData.from_klines(self.s1), 0)
+        self.assertEqual(len(TrainingData.from_klines(self.s1)), 35)
+        self.assertEqual(len(TrainingData.from_klines(self.s1)), 0)
 
 
 class TestKlines(TestCase):
@@ -112,9 +118,44 @@ class TestViews(TestCase):
             quote_asset="BUSD",
             defaults={
                 "model_score": 0.99,
-                "volume_quote_asset": 1000000,
+                "volume_quote_asset": Decimal(1000000),
+                "info": {
+                    "filters": [
+                        {},
+                        {"stepSize": "0.10000000", "filterType": "LOT_SIZE"},
+                    ]
+                },
             },
         )
+        with requests_mock.Mocker() as m:
+            with open("base/fixtures/klines_response_mock.json") as f:
+                content = f.read()
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/klines?symbol=S1BUSD"
+                    f"&interval={settings.TIME_INTERVAL}m",
+                    text=content,
+                )
+                cls.s1.retrieve_and_update()
+        cls.user1, _ = User.objects.get_or_create(
+            username="user1", password="secret", email="admin@example.com"
+        )
+        cls.user2, _ = User.objects.get_or_create(
+            username="user2", password="secret", email="admin@example.com"
+        )
+        cls.bot1 = TraderoBot(
+            symbol=cls.s1,
+            user=cls.user1,
+            fund_quote_asset_initial=Decimal("10"),
+        )
+        cls.bot1.save()
+        cls.bot1.on()
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            cls.bot1.buy()
+            cls.bot1.sell()
         super().setUpClass()
 
     def test_home(self):
@@ -127,6 +168,88 @@ class TestViews(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
+    def test_user_detail(self):
+        self.client.force_login(self.user1)
+        url = reverse("base:users-detail")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_update(self):
+        self.client.force_login(self.user1)
+        url = reverse("base:users-update")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(url, {"first_name": "Test"}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.user1.refresh_from_db()
+        self.assertEqual(self.user1.first_name, "Test")
+
+    def test_botzinhos_list(self):
+        self.client.force_login(self.user1)
+        url = reverse("base:botzinhos-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_botzinhos_detail(self):
+        self.client.force_login(self.user2)
+        url = reverse("base:botzinhos-detail", args=[self.bot1.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_botzinhos_create(self):
+        self.client.force_login(self.user1)
+        url = reverse("base:botzinhos-create")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinho",
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "strategy_params": "microgain=0.3",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBot.objects.filter(name="testing botzinho").count(),
+            1,
+        )
+
+    def test_botzinhos_actions(self):
+        self.client.force_login(self.user1)
+        url = reverse(
+            "base:botzinhos-actions",
+            kwargs={
+                "pk": self.bot1.pk,
+                "action": "start",
+            },
+        )
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 404)
+        url = reverse(
+            "base:botzinhos-actions",
+            kwargs={
+                "pk": self.bot1.pk,
+                "action": "on",
+            },
+        )
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        with mock.patch("base.models.TraderoBot.on") as bot_on_mock:
+            bot_on_mock.side_effect = Exception("New Exception")
+            url = reverse(
+                "base:botzinhos-actions",
+                kwargs={
+                    "pk": self.bot1.pk,
+                    "action": "on",
+                },
+            )
+            response = self.client.get(url, follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b"ERROR at", response.content)
+
 
 class TestAdmin(TestCase):
     @classmethod
@@ -138,6 +261,24 @@ class TestAdmin(TestCase):
         cls.ws_client, _ = WSClient.objects.get_or_create(
             channel_name="a_test_channel"
         )
+        cls.s1, _ = Symbol.objects.get_or_create(
+            symbol="S1BUSD",
+            status="TRADING",
+            base_asset="S1",
+            quote_asset="BUSD",
+        )
+        # Review why get_or_create does not work (probably because of save)
+        cls.bot1 = TraderoBot(
+            symbol=cls.s1,
+            user=cls.superuser,
+        )
+        cls.bot1.save()
+        cls.bot1.on()
+        cls.bot2 = TraderoBot(
+            symbol=cls.s1,
+            user=cls.superuser,
+        )
+        cls.bot2.save()
         super().setUpClass()
 
     def test_ws_client_admin(self):
@@ -151,6 +292,24 @@ class TestAdmin(TestCase):
         response = self.client.get(url + "?is_open=false", follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertNotIn(b"a_test_channel", response.content)
+
+    def test_other_admin(self):
+        self.client.force_login(self.superuser)
+        # Test UserAdmmin
+        url = reverse("admin:base_user_changelist")
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        url = reverse("admin:base_user_change", args=[self.superuser.pk])
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # Test TraderoBotAdmmin
+        url = reverse("admin:base_traderobot_changelist")
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        # Test TraderoBotLogAdmmin
+        url = reverse("admin:base_traderobotlog_changelist")
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 200)
 
 
 class TestCommands(TestCase):
@@ -260,16 +419,6 @@ class TestCommands(TestCase):
             self.assertIn("Successfully", out.getvalue())
 
     @pytest.mark.xdist_group("commands")
-    def test_scheduler(self):
-        scheduler = django_rq.get_scheduler()
-        out = StringIO()
-        with self.assertRaises(TimeoutError):
-            with timeout(2):
-                call_command("scheduler", stdout=out)
-        jobs = [str(j) for j in scheduler.get_jobs()]
-        self.assertIn("update_all_indicators_job", jobs[0])
-
-    @pytest.mark.xdist_group("commands")
     def test_ws_klines(self):
         out = StringIO()
         with self.assertRaises(TimeoutError):
@@ -344,6 +493,9 @@ class TestSymbols(TestCase):
 
 class TestTraderoMixin(TestCase):
     @classmethod
+    @override_settings(
+        INDICATORS=["__all__"],
+    )
     def setUpClass(cls):
         cls.s1, _ = Symbol.objects.get_or_create(
             symbol="S1BUSD",
@@ -359,7 +511,8 @@ class TestTraderoMixin(TestCase):
                     f"&interval={settings.TIME_INTERVAL}m",
                     text=content,
                 )
-                cls.s1.retrieve_and_update()
+                cls.s1.load_data()
+                cls.s1.update_indicators(push=False)
         super().setUpClass()
 
     def test_h_predict(self):
@@ -378,7 +531,13 @@ class TestConsumers(TestCase):
             base_asset="S1",
             quote_asset="BUSD",
         )
+        cls.user, _ = User.objects.get_or_create(
+            username="user", password="secret", email="admin@example.com"
+        )
+        cls.bot = TraderoBot(user=cls.user, symbol=cls.s1, name="BTZN")
+        cls.bot.save()
         cls.channel_layer = get_channel_layer()
+
         super().setUpClass()
 
     async def test_symbol_consumer(self):
@@ -408,6 +567,23 @@ class TestConsumers(TestCase):
         await self.s1.push_to_ws()
         response = await communicator.receive_from(timeout=15)
         self.assertTrue("S1BUSD" in response)
+        # Close
+        await communicator.disconnect()
+
+    async def test_bot_consumer(self):
+        await sync_to_async(self.client.force_login)(self.user)
+        communicator = WebsocketCommunicator(
+            BotHTMLConsumer.as_asgi(), "/ws/bots/html"
+        )
+        communicator.scope["user"] = self.user
+        connected, subprotocol = await communicator.connect()
+        self.assertTrue(connected)
+        await communicator.send_to(text_data='{"message": "hello"}')
+        response = await communicator.receive_from()
+        self.assertEqual(response, '{"message": "hello"}')
+        await self.bot.push_to_ws()
+        response = await communicator.receive_from(timeout=15)
+        self.assertTrue("BTZN" in response)
         # Close
         await communicator.disconnect()
 
@@ -491,3 +667,298 @@ class TestHandlers(TestCase):
         await message_handler(message_2, None)
         symbol = await sync_to_async(Symbol.objects.last)()
         self.assertEqual(symbol.last_variation, 100)
+
+
+class BotTestCase(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s1, _ = Symbol.objects.update_or_create(
+            symbol="S1BUSD",
+            status="TRADING",
+            base_asset="S1",
+            quote_asset="BUSD",
+            defaults={
+                "model_score": 0.99,
+                "volume_quote_asset": Decimal(1000000),
+                "info": {
+                    "filters": [
+                        {},
+                        {"stepSize": "0.10000000", "filterType": "LOT_SIZE"},
+                    ]
+                },
+            },
+        )
+        cls.s2, _ = Symbol.objects.update_or_create(
+            symbol="S2BUSD",
+            status="TRADING",
+            base_asset="S2",
+            quote_asset="BUSD",
+            defaults={
+                "model_score": 0.99,
+                "volume_quote_asset": Decimal(1000000),
+                "info": {
+                    "filters": [
+                        {},
+                        {"stepSize": "0.10000000", "filterType": "LOT_SIZE"},
+                    ]
+                },
+            },
+        )
+        cls.user1, _ = User.objects.get_or_create(
+            username="user1", password="secret", email="admin@example.com"
+        )
+        cls.bot1 = TraderoBot(
+            symbol=cls.s1,
+            user=cls.user1,
+            strategy="acmadness",
+            strategy_params="microgain=0.3",
+            fund_quote_asset_initial=10,
+            is_dummy=True,
+            is_jumpy=True,
+        )
+        cls.bot1.save()
+        cls.bot1.on()
+        cls.bot2 = TraderoBot(
+            symbol=cls.s2,
+            user=cls.user1,
+            strategy="acmadness",
+            strategy_params="microgain=0.3",
+            fund_quote_asset_initial=10,
+            is_dummy=True,
+            is_jumpy=True,
+        )
+        cls.bot2.save()
+        cls.bot2.on()
+        with requests_mock.Mocker() as m:
+            with open("base/fixtures/klines_response_mock.json") as f:
+                content = f.read()
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/klines?symbol=S1BUSD"
+                    f"&interval={settings.TIME_INTERVAL}m",
+                    text=content,
+                )
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/klines?symbol=S2BUSD"
+                    f"&interval={settings.TIME_INTERVAL}m",
+                    text=content,
+                )
+            Symbol.update_all_indicators()
+        cls.s1.refresh_from_db()
+        cls.s2.refresh_from_db()
+        cls.s1.volume_quote_asset = 1000000
+        cls.s2.volume_quote_asset = 1000000
+        cls.s1.save()
+        cls.s2.save()
+        super().setUpClass()
+
+
+class TestTraderoBots(BotTestCase):
+    def test_update_all_bots(self):
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json=[
+                    {"symbol": "S1BUSD", "price": "1.0"},
+                    {"symbol": "S2BUSD", "price": "1.0"},
+                ],
+            )
+            TraderoBot.update_all_bots()
+            self.bot2.refresh_from_db()
+            self.assertEqual(self.bot2.price_current, 1)
+
+    def test_botzinhos_actions(self):
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            self.bot1.off()
+            self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+            self.bot1.on()
+            self.assertEqual(self.bot1.status, TraderoBot.Status.BUYING)
+            self.bot1.buy()
+            self.assertEqual(self.bot1.receipt_buying is not None, True)
+            self.assertEqual(self.bot1.price_buying is not None, True)
+            self.assertEqual(self.bot1.status, TraderoBot.Status.SELLING)
+            # Test restore of state
+            self.bot1.off()
+            self.bot1.on()
+            self.assertEqual(self.bot1.status, TraderoBot.Status.SELLING)
+            self.bot1.sell()
+            self.assertEqual(self.bot1.trades.count(), 1)
+            self.assertEqual(self.bot1.status, TraderoBot.Status.BUYING)
+            # Test conserving the state
+            self.bot1.off()
+            self.bot1.buy()
+            self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+            # Test exception while buying
+            with mock.patch(
+                "base.client.TraderoClient.ticker_price"
+            ) as client_tp_mock:
+                client_tp_mock.side_effect = Exception("New Exception")
+                self.bot1.buy()
+                self.assertIn(
+                    "New Exception", self.bot1.others["last_logs"][-1]
+                )
+            self.bot1.should_stop = True
+            self.bot1.should_reinvest = False
+            self.bot1.buy()
+            self.bot1.sell()
+            self.assertEqual(
+                self.bot1.fund_quote_asset, self.bot1.fund_quote_asset_initial
+            )
+            self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+            self.bot1.fund_base_asset = 5
+            # Test exception while selling
+            with mock.patch(
+                "base.client.TraderoClient.ticker_price"
+            ) as client_tp_mock:
+                client_tp_mock.side_effect = Exception("New Exception")
+                self.bot1.sell()
+                self.assertIn(
+                    "New Exception", self.bot1.others["last_logs"][-1]
+                )
+            # Test jump
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S2BUSD", "price": "2.0"},
+            )
+            self.bot1.jump(self.s2)
+            self.assertEqual(self.bot1.symbol, self.s2)
+            self.assertEqual(self.bot1.price_current, 2)
+            # Test decide
+            self.bot1.on()
+            self.bot1.buy()
+            self.bot1.decide()
+            self.assertIn("below threshold", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 2.5
+            self.bot1.decide()
+            self.assertIn("BOOM!", self.bot1.others["last_logs"][-1])
+            self.bot1.on()
+            self.s2.others["stp"]["next_n_sum"] = 4
+            self.bot1.symbol = self.s2
+            self.bot1.decide()
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.bot1.sell()
+            self.bot1.on()
+            self.s2.others["stp"]["next_n_sum"] = 0
+            self.s1.others["stp"]["next_n_sum"] = 4
+            self.s1.save()
+            self.bot1.symbol = self.s2
+            self.bot1.decide()
+            self.assertIn("Jump", self.bot1.others["last_logs"][-2])
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.assertIn("S1BUSD", self.bot1.others["last_logs"][-1])
+            self.bot1.sell()
+            self.bot1.on()
+            self.s1.others["stp"]["next_n_sum"] = 0
+            self.s1.save()
+            self.bot1.symbol = self.s1
+            self.bot1.is_jumpy = False
+            self.bot1.decide()
+            self.assertIn("below threshold", self.bot1.others["last_logs"][-1])
+
+
+class TestStrategies(BotTestCase):
+    def test_acmadness(self):
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            self.bot1.strategy = "acmadness"
+            #
+            self.s1.others["stp"]["next_n_sum"] = 4
+            self.s1.last_updated = timezone.now() - timezone.timedelta(
+                minutes=2
+            )
+            self.bot1.on()
+            self.bot1.decide()
+            self.assertIn("Time Safeguard", self.bot1.others["last_logs"][-1])
+            self.s1.last_updated = timezone.now()
+            self.s1.others["outliers"]["o1"] = True
+            self.bot1.decide()
+            self.assertIn(
+                "Outlier Protection", self.bot1.others["last_logs"][-1]
+            )
+            self.s1.others["outliers"]["o1"] = False
+            self.s1.last_variation = Decimal("12")
+            self.bot1.strategy_params = "microgain=0.3,max_var_prot=10"
+            self.bot1.decide()
+            self.assertIn(
+                "Max Var Protection", self.bot1.others["last_logs"][-1]
+            )
+            self.s1.others["stp"]["next_n_sum"] = 0
+            self.s2.others["stp"]["next_n_sum"] = 10
+            self.s2.others["outliers"]["o1"] = True
+            self.s2.save()
+            self.bot1.decide()
+            self.assertIn(
+                "no other symbol to go", self.bot1.others["last_logs"][-1]
+            )
+            self.bot1.strategy_params = "microgain=0.3,ol_prot=0"
+            self.bot1.decide()
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.bot1.strategy_params = (
+                "microgain=0.3,ac_adjusted=0,keep_going=1"
+            )
+            self.s1.others["stp"]["next_n_sum"] = 10
+            self.s1.last_updated = timezone.now()
+            self.s1.save()
+            self.bot1.symbol = self.s1
+            self.bot1.status = self.bot1.Status.SELLING
+            self.bot1.price_buying = Decimal("0.5")
+            self.bot1.price_current = Decimal("1")
+            self.bot1.fund_base_asset = Decimal("10")
+            self.bot1.decide()
+            self.assertIn("Kept goin'", self.bot1.others["last_logs"][-1])
+            self.s1.others["stp"]["next_n_sum"] = 0
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+
+
+@pytest.mark.usefixtures("celery_session_app")
+@pytest.mark.usefixtures("celery_session_worker")
+class TestTasks(BotTestCase):
+    def test_update_all_bots(self):
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json=[
+                    {"symbol": "S1BUSD", "price": "1.0"},
+                    {"symbol": "S2BUSD", "price": "1.0"},
+                ],
+            )
+            task = tasks.update_all_bots_job.delay()
+            result = task.get()
+            active_bots = TraderoBot.objects.filter(
+                status__gt=TraderoBot.Status.INACTIVE
+            ).count()
+            self.assertIn(str(active_bots), result)
+
+    def test_update_all_symbols(self):
+        with requests_mock.Mocker() as m:
+            with open("base/fixtures/klines_response_mock.json") as f:
+                content = f.read()
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/klines?symbol=S1BUSD"
+                    f"&interval={settings.TIME_INTERVAL}m",
+                    text=content,
+                )
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/klines?symbol=S2BUSD"
+                    f"&interval={settings.TIME_INTERVAL}m",
+                    text=content,
+                )
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/ticker/price",
+                    json=[
+                        {"symbol": "S1BUSD", "price": "1.0"},
+                        {"symbol": "S2BUSD", "price": "1.0"},
+                    ],
+                )
+            # Symbol.update_all_indicators()
+            task = tasks.update_all_indicators_job.delay()
+            result = task.get()
+            self.assertIn("2", result)

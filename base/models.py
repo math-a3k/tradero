@@ -13,15 +13,18 @@ from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
 from django.db import models
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.module_loading import import_string
 from django_ai.supervised_learning.models import HGBTreeRegressor, OneClassSVC
 from encore.concurrent.futures.synchronous import SynchronousExecutor
+from requests.adapters import HTTPAdapter
 from sklearn.model_selection import GridSearchCV
 
 from .client import TraderoClient
 from .indicators import get_indicators
-from .utils import datetime_minutes_rounder
+from .strategies import get_strategies
+from .utils import datetime_minutes_rounder, get_commission
 
 channel_layer = get_channel_layer()
 logger = logging.getLogger(__name__)
@@ -48,9 +51,14 @@ class User(AbstractUser):
         "Binance's API key", max_length=255, blank=True, null=True
     )
     api_secret = models.CharField(
-        "Binance's API key", max_length=255, blank=True, null=True
+        "Binance's API key secret", max_length=255, blank=True, null=True
     )
     trading_active = models.BooleanField("Is Trading Active?", default=True)
+    checkpoint = models.DateTimeField(
+        "Checkpoint",
+        blank=True,
+        null=True,
+    )
     others = models.JSONField("Others", default=dict)
 
     class Meta:
@@ -61,6 +69,10 @@ class User(AbstractUser):
         if not self._client or reinit:
             self._client = TraderoClient(self)
         return self._client
+
+    @property
+    def trade_summary(self):
+        return TradeHistory.summary_for_bot_or_user(user=self)
 
 
 class WSClient(models.Model):
@@ -86,26 +98,60 @@ class WSClient(models.Model):
 
 
 class SymbolManager(models.Manager):
-    def top_symbols(self, n=settings.SYMBOLS_QUANTITY):
-        return self.filter(
-            status="TRADING",
-            is_enabled=True,
-            model_score__gte=settings.MODEL_SCORE_THRESHOLD,
-            volume_quote_asset__gte=settings.MARKET_SIZE_THRESHOLD,
-        ).order_by("-model_score")[:n]
-
     def available(self):
         return self.filter(
             status="TRADING",
             is_enabled=True,
         )
 
+    def top_symbols(self, n=settings.SYMBOLS_QUANTITY):
+        qs1 = self.filter(
+            status="TRADING",
+            is_enabled=True,
+            model_score__gte=settings.MODEL_SCORE_THRESHOLD,
+            volume_quote_asset__gte=settings.MARKET_SIZE_THRESHOLD,
+        ).prefetch_related(
+            models.Prefetch(
+                "bots",
+                queryset=TraderoBot.objects.enabled(),
+                to_attr="bots_prefetched",
+            ),
+        )
+        qs2 = self.filter(
+            bots__status__gt=TraderoBot.Status.INACTIVE,
+            bots__user__trading_active=True,
+        ).prefetch_related(
+            models.Prefetch(
+                "bots",
+                queryset=TraderoBot.objects.enabled(),
+                to_attr="bots_prefetched",
+            ),
+        )
+        return qs1.order_by("-model_score")[:n].union(qs2)
+
     def all_top_symbols(self, n=settings.SYMBOLS_QUANTITY):
-        return self.filter(
+        qs1 = self.filter(
             status="TRADING",
             is_enabled=True,
             volume_quote_asset__gte=settings.MARKET_SIZE_THRESHOLD,
-        ).order_by("-model_score")[:n]
+        ).prefetch_related(
+            models.Prefetch(
+                "bots",
+                queryset=TraderoBot.objects.enabled(),
+                to_attr="bots_prefetched",
+            ),
+        )
+        qs2 = self.filter(
+            bots__status__gt=TraderoBot.Status.INACTIVE,
+            bots__user__trading_active=True,
+        ).prefetch_related(
+            models.Prefetch(
+                "bots",
+                queryset=TraderoBot.objects.enabled(),
+                to_attr="bots_prefetched",
+            ),
+        )
+        return qs1.order_by("-model_score")[:n].union(qs2)
 
 
 class Symbol(models.Model):
@@ -114,6 +160,8 @@ class Symbol(models.Model):
     _outliers_model_class = None
     _last_td = None
     _serializer_class = None
+
+    client = Spot()
 
     symbol = models.CharField("Symbol", max_length=20)
     status = models.CharField("Status", max_length=20)
@@ -186,6 +234,13 @@ class Symbol(models.Model):
         null=True,
     )
     others = models.JSONField("Others", default=dict)
+    info = models.JSONField("Symmbol's Binance's Info", default=dict)
+    last_updated = models.DateTimeField(
+        "Last Updated (timestamp)",
+        blank=True,
+        null=True,
+        auto_now=True,
+    )
 
     objects = SymbolManager()
 
@@ -219,12 +274,10 @@ class Symbol(models.Model):
             s.load_data()
 
     def load_data(self, start_time=None, end_time=None):
-        n_klines = Kline.load_klines(
-            self, start_time=start_time, end_time=end_time
-        )
-        n_td = TrainingData.from_klines(self)
+        Kline.load_klines(self, start_time=start_time, end_time=end_time)
+        td = TrainingData.from_klines(self)
         logger.warning(f"{self}: Data loaded")
-        return (n_klines, n_td)
+        return td
 
     def get_prediction_model(self):
         if not self._prediction_model_class:
@@ -299,8 +352,12 @@ class Symbol(models.Model):
         ]["r2"]
         return predictor
 
-    def update_indicators(self, push=True):
-        self._last_td = self.training_data.last()
+    def update_indicators(
+        self, push=True, last_td=None, bot_early_notification=False
+    ):
+        self._last_td = (
+            last_td or self.training_data.first()  # negative ordering)
+        )
         klines_24h = self.klines.filter(
             time_close__gte=timezone.now() - timezone.timedelta(days=1)
         )
@@ -349,6 +406,17 @@ class Symbol(models.Model):
         self.render_json_snippet(set_cache=True)
 
         self.save()
+
+        # Early bot notification if available
+        if bot_early_notification:  # pragma: no cover
+            if getattr(self, "bots_prefetched", []):
+                price = self.client.ticker_price(symbol=self.symbol)["price"]
+                # Re-fetch to avoid errors
+                for bot in self.bots.enabled():
+                    bot.price_current = Decimal(price)
+                    bot.symbol = self
+                    bot.decide()
+
         if push:
             async_to_sync(self.push_to_ws)()
         # Use warning to make sure it goes
@@ -402,9 +470,20 @@ class Symbol(models.Model):
             cache.set(cache_key, j, settings.TIME_INTERVAL * 60 + 9)
         return j
 
-    def retrieve_and_update(self):
-        self.load_data()
-        self.update_indicators()
+    def retrieve_and_update(self, push=False):
+        tds = self.load_data()
+        last_td = tds[0] if tds else None
+        self.update_indicators(push=push, last_td=last_td)
+
+    @classmethod
+    def clean_data(cls):
+        # TODO: return n records
+        date_threshold = timezone.now() - timezone.timedelta(
+            minutes=settings.TIME_INTERVAL * 1000
+        )
+        Kline.objects.filter(time_close__lt=date_threshold).delete()
+        TrainingData.objects.filter(time__lt=date_threshold).delete()
+        logger.warning("-->: Data cleaned for all Symbols")
 
     @classmethod
     def update_all_indicators(
@@ -414,20 +493,26 @@ class Symbol(models.Model):
         model_score_threshold=settings.MODEL_SCORE_THRESHOLD,
         threads=settings.EXECUTOR_THREADS,
     ):
-        Kline.load_all_klines(model_score=model_score_threshold)
+        timestamp = timezone.now()
         if only_top:
             symbols = cls.objects.all_top_symbols()
         else:
             symbols = cls.objects.available()
+
         with thread_pool_executor(threads) as executor:
             for symbol in symbols:
-                executor.submit(TrainingData.from_klines, symbol)
-        with thread_pool_executor(threads) as executor:
-            for symbol in symbols:
-                executor.submit(symbol.update_indicators, push=push)
+                executor.submit(symbol.retrieve_and_update, push=push)
         logger.warning(
             f"-> UPDATE ALL PREDICTIONS DONE (MST: {model_score_threshold}) <-"
         )
+        cls.clean_data()
+        message = (
+            f"---> Elapsed Time: "
+            f"{ (timezone.now() - timestamp).total_seconds() } "
+            f"({len(symbols)} Symbols) <----"
+        )
+        logger.warning(message)
+        return message
 
     @classmethod
     def general_warm_up(
@@ -502,7 +587,7 @@ class Symbol(models.Model):
 
 
 class Kline(models.Model):
-    client = Spot()
+    _client = None
 
     symbol = models.ForeignKey(
         Symbol,
@@ -554,6 +639,13 @@ class Kline(models.Model):
             f"{self.price_close} | {self.variation}%"
         )
         return f_str
+
+    @classmethod
+    def get_client(cls):
+        if not cls._client:
+            cls._client = Spot()
+            cls._client.session.mount("https://", HTTPAdapter(pool_maxsize=36))
+        return cls._client
 
     @classmethod
     def from_binance_kline(cls, symbol, time_interval, b_kline):
@@ -666,7 +758,7 @@ class Kline(models.Model):
         end_time=None,
         limit=1000,
     ):
-        last_kline = symbol.klines.order_by("time_open").last()
+        last_kline = symbol.klines.order_by("time_open").last()  # Check
         if last_kline and not start_time:
             logger.warning(f"{symbol}: Last kline is {last_kline}")
             start_time = datetime_minutes_rounder(last_kline.time_close)
@@ -695,7 +787,8 @@ class Kline(models.Model):
         logger.warning(
             f"{symbol}: Requesting klines from {start_time} to {end_time}."
         )
-        klines_binance = cls.client.klines(
+        client = cls.get_client()
+        klines_binance = client.klines(
             symbol.symbol,
             interval=f"{interval}m",
             startTime=int(start_time.timestamp() * 1000),
@@ -721,7 +814,7 @@ class Kline(models.Model):
             f"{symbol}: Received {len(klines_binance)} klines, "
             f"created {len(created)}."
         )
-        return created
+        return sorted(created, key=lambda x: x.time_close, reverse=True)
 
     @classmethod
     def load_all_klines(
@@ -932,9 +1025,7 @@ class TrainingData(models.Model):
     class Meta:
         verbose_name = "Training Data"
         verbose_name_plural = "Training Data"
-        ordering = [
-            "time",
-        ]
+        ordering = ["-time"]  # Descending ordering
         constraints = [
             models.UniqueConstraint(
                 fields=["symbol", "time", "time_interval"],
@@ -1039,14 +1130,14 @@ class TrainingData(models.Model):
             symbol=symbol, time__in=times, time_interval__in=time_intervals
         ).values_list("time", flat=True)
         tds_to_create = [td for td in tds if td.time not in existing_data]
-        created = len(cls.objects.bulk_create(tds_to_create))
-        if created > 0:
-            logger.warning(f"{symbol}: Created {created} Training Data.")
+        created = cls.objects.bulk_create(tds_to_create)
+        if len(created) > 0:
+            logger.warning(f"{symbol}: Created {len(created)} Training Data.")
         else:
             logger.warning(
                 f"{symbol}: TD already exist: {tds} {tds_to_create}"
             )
-        return created
+        return sorted(created, key=lambda x: x.time, reverse=True)
 
 
 class TraderoMixin:
@@ -1087,7 +1178,7 @@ class PredictionModel(TraderoMixin, models.Model):
         return [float(t) for t in targets]
 
     def predict_next(self):
-        last_td = self.symbol.training_data.last()
+        last_td = self.symbol.training_data.first()
         obs = {"variation_01": last_td.variation}
         for i in range(2, self.get_window_size() + 1):
             obs[f"variation_{i:02d}"] = getattr(
@@ -1101,7 +1192,7 @@ class PredictionModel(TraderoMixin, models.Model):
         """
         Assumption: n < self.WINDOW
         """
-        last_td = self.symbol.training_data.order_by("time").last()
+        last_td = self.symbol.training_data.first()
         preds = []
         obss = []
         preds.append(self.predict_next())
@@ -1139,12 +1230,18 @@ class PredictionModel(TraderoMixin, models.Model):
             self.save()
 
     def calibrate_model(self, save=True):
+        """
+        TOOD: Review this
+        """
+        print("Before:", self.symbol.model_score)
         gs_eo = GridSearchCV(self.get_engine_object(), self.CALIBRATION_PARAMS)
         data, targets = self.get_data(), self.get_targets()
         gs_eo.fit(data, targets)
         for param, value in gs_eo.best_params_.items():
             setattr(self, param, value)
         logger.warning(f"{self.symbol}: Best params: {gs_eo.best_params_}")
+        self.perform_inference(save=False)
+        print("After:", self.metadata["inference"]["current"]["scores"]["r2"])
         if save:  # pragma: no cover
             self.save()
         return gs_eo.best_params_
@@ -1221,3 +1318,736 @@ class OutliersSVC(OutlierDetectionModel, OneClassSVC):
     class Meta:
         verbose_name = "Outliers SVC"
         verbose_name_plural = "Outliers SVCs"
+
+
+class TraderoBotManager(models.Manager):
+    def enabled(self):
+        return self.get_queryset().exclude(
+            models.Q(status=TraderoBot.Status.INACTIVE)
+            | models.Q(user__trading_active=False)
+        )
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("symbol", "user")
+
+
+class TraderoBot(models.Model):
+    _client = None
+    _strategies = get_strategies()
+    _last_klines = None
+
+    class Status(models.IntegerChoices):
+        INACTIVE = 0, "Inactive"
+        BUYING = 1, "Buying"
+        SELLING = 2, "Selling"
+
+    class Action(models.IntegerChoices):
+        ERROR = -1, "Error"
+        HOLD = 0, "Hold"
+        BUY = 1, "Buy"
+        SELL = 2, "Sell"
+        JUMP = 3, "Jump"
+        TURN_ON = 4, "Turn ON"
+        TURN_OFF = 5, "Turn OFF"
+
+    user = models.ForeignKey(
+        User,
+        verbose_name="User",
+        related_name="bots",
+        on_delete=models.PROTECT,
+    )
+    symbol = models.ForeignKey(
+        Symbol,
+        verbose_name="Symbol",
+        related_name="bots",
+        on_delete=models.PROTECT,
+    )
+    name = models.CharField(
+        "Name",
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    strategy = models.CharField("Strategy", max_length=50, default="acmadness")
+    strategy_params = models.CharField(
+        "Strategy parameters",
+        max_length=510,
+        default="microgain=0.3,ac_factor=6",
+    )
+    is_jumpy = models.BooleanField("Jumpy?", default=False)
+    jumpy_blacklist = models.CharField(
+        "Jumpy Symbols' Blacklist", max_length=510, default=""
+    )
+    should_reinvest = models.BooleanField("Should Reinvest?", default=True)
+    should_stop = models.BooleanField(
+        "Should Stop After Selling?", default=False
+    )
+    is_dummy = models.BooleanField("Dummy?", default=True)
+    status = models.SmallIntegerField(
+        "Bot Status", choices=Status.choices, default=Status.INACTIVE
+    )
+    fund_base_asset = models.DecimalField(
+        "Fund (Base Asset)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    fund_quote_asset = models.DecimalField(
+        "Fund (Quote Asset)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    fund_quote_asset_initial = models.DecimalField(
+        "Initial Fund (Quote Asset)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    price_buying = models.DecimalField(
+        "Buying Price the Base Asset",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    price_current = models.DecimalField(
+        "Current Price of the Base Asset",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    price_selling = models.DecimalField(
+        "Selling Price of the Base Asset",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    timestamp_start = models.DateTimeField(
+        "Timestamp of Start Buying",
+        blank=True,
+        null=True,
+    )
+    timestamp_buying = models.DateTimeField(
+        "Timestamp of Buying",
+        blank=True,
+        null=True,
+    )
+    timestamp_selling = models.DateTimeField(
+        "Timestamp of Selling",
+        blank=True,
+        null=True,
+    )
+    receipt_buying = models.JSONField(
+        "Receipt - Buying", default=dict, blank=True, null=True
+    )
+    receipt_selling = models.JSONField(
+        "Receipt - Selling", default=dict, blank=True, null=True
+    )
+    others = models.JSONField("Others", default=dict)
+
+    class Meta:
+        verbose_name = "Tradero Bot"
+        verbose_name_plural = "Tradero Bots"
+
+    objects = TraderoBotManager()
+
+    def __str__(self):
+        return f"BOT #{self.id}: {self.symbol.symbol} | {self.get_status_display()}"
+
+    def get_absolute_url(self):
+        return reverse("base:botzinhos-detail", kwargs={"pk": self.pk})
+
+    def save(self, *args, **kwargs):
+        self.others["ws_group_name"] = f"bots_html_{self.user.username}"
+        super().save(*args, **kwargs)
+        if not self.name:
+            self.name = f"{settings.BOT_DEFAULT_NAME}-{self.pk:03d}"
+            super().save(*args, **kwargs)
+        self.render_html_snippet(set_cache=True)
+        async_to_sync(self.push_to_ws)()
+
+    def get_client(self, reinit=False):  # pragma: no cover
+        if not self._client or reinit:
+            self._client = self.user.get_client()
+        return self._client
+
+    def get_strategy(self):
+        params = {}
+        for pv in self.strategy_params.split(","):
+            pv = pv.split("=")
+            params[pv[0]] = pv[1]
+        return self._strategies[self.strategy](self, **params)
+
+    def on(self):
+        if self.price_buying:
+            self.status = self.Status.SELLING
+        else:
+            self.timestamp_start = self.timestamp_start or timezone.now()
+            self.status = self.Status.BUYING
+        self.log_trade()
+        self.log(self.Action.TURN_ON, "Turned ON")
+        self.save()
+        return True
+
+    def off(self):
+        self.status = self.Status.INACTIVE
+        self.log(self.Action.TURN_OFF, "Turned OFF")
+        self.save()
+        return True
+
+    def buy(self):
+        client = self.get_client()
+        amount = self.fund_quote_asset or self.fund_quote_asset_initial
+        success, price, quantity, receipt, message = client.tradero_buy(
+            self.symbol,
+            amount,
+            dummy=self.is_dummy,
+        )
+        if success:
+            self.receipt_buying = receipt
+            self.timestamp_buying = timezone.now()
+            if not self.timestamp_start:  # pragma: no cover
+                self.timestamp_start = self.timestamp_buying
+            self.price_buying = price
+            self.fund_base_asset = quantity
+            self.log(self.Action.BUY)
+            self.log_trade()
+            self.fund_quote_asset = (
+                None  # Unexecuted FQA is not logged when Buying
+            )
+            if self.status != self.Status.INACTIVE:
+                self.status = self.Status.SELLING
+            self.save()
+            return True
+        self.log(self.Action.ERROR, message=message)
+        self.save()
+        return False
+
+    def sell(self):
+        client = self.get_client()
+        success, price, quantity, receipt, message = client.tradero_sell(
+            self.symbol,
+            self.fund_base_asset,
+            dummy=self.is_dummy,
+        )
+        if success:
+            self.receipt_selling = receipt
+            self.price_selling = price
+            self.fund_quote_asset = quantity
+            self.timestamp_selling = timezone.now()
+            self.log(self.Action.SELL)
+            self.log_trade()
+            # Reset state
+            self.fund_base_asset = self.fund_base_asset - Decimal(
+                self.receipt_selling["executedQty"]
+            )
+            if not self.should_reinvest:
+                self.fund_quote_asset = self.fund_quote_asset_initial
+            self.timestamp_selling, self.timestamp_buying = None, None
+            self.receipt_selling, self.receipt_buying = None, None
+            self.price_selling, self.price_buying = None, None
+            if self.status != self.Status.INACTIVE:
+                self.status = self.Status.BUYING
+            if self.should_stop:
+                self.status = self.Status.INACTIVE
+                self.timestamp_start = None
+            else:
+                self.timestamp_start = timezone.now()
+            self.save()
+            return True
+        self.log(self.Action.ERROR, message=message)
+        self.save()
+        return False
+
+    def jump(self, to_symbol):
+        current_symbol = self.symbol
+        fba = self.fund_quote_asset
+        fba_msg = (
+            f" (leaving {fba:.6f} {current_symbol.symbol} behind)"
+            if fba
+            else ""
+        )
+        self.symbol = to_symbol
+        self.fund_base_asset = None
+        self.price_current = self.get_current_price()
+        self.log(
+            self.Action.JUMP,
+            f"Jumped from {current_symbol} to {to_symbol}{fba_msg}",
+        )
+        self.save()
+
+    def decide(self):
+        strategy = self.get_strategy()
+        if self.status == self.Status.BUYING:
+            should_buy, message = strategy.evaluate_buy()
+            if should_buy:
+                self.buy()
+                return
+            if self.is_jumpy:
+                should_jump, symbol = strategy.evaluate_jump()
+                if should_jump:
+                    self.jump(symbol)
+                    self.get_strategy()  # Update values
+                    self.decide()
+                    return
+                message += " and no other symbol to go was found."
+        if self.status == self.Status.SELLING:
+            should_sell, message = strategy.evaluate_sell()
+            if should_sell:
+                self.sell()
+                return
+        self.log(self.Action.HOLD, message)
+        self.save()
+
+    def get_current_price(self):
+        client = self.get_client()
+        price = client.ticker_price(symbol=self.symbol.symbol)["price"]
+        return Decimal(price)
+
+    def log(self, action, message=None):
+        log = TraderoBotLog(
+            bot=self,
+            is_dummy=self.is_dummy,
+            status=self.status,
+            action=action,
+            fund_base_asset=self.fund_base_asset,
+            fund_quote_asset=self.fund_quote_asset,
+            price_buying=self.price_buying,
+            price_current=self.price_current,
+            message=message,
+        )
+        if action == self.Action.BUY:
+            log.message = (
+                f"Bought {self.fund_base_asset:.3f} of {self.symbol} at "
+                f"{self.price_buying:.6f} ("
+                f"{self.fund_base_asset * self.price_buying:.6f} "
+                f"{self.symbol.quote_asset})"
+            )
+        if action == self.Action.SELL:
+            log.price_selling = self.price_selling
+            log.variation = (self.price_selling / self.price_buying - 1) * 100
+            log.message = (
+                f"BOOM! Sold {self.fund_base_asset:.3f} of {self.symbol} at "
+                f"{self.price_selling:.6f} - VAR: {log.variation:.3f}%"
+            )
+        log.save()
+        last_logs = self.others.get("last_logs", [])
+        last_logs.append(f"{log.timestamp:%Y-%m-%d %H:%M:%S}| {log.message}")
+        self.others["last_logs"] = last_logs[-4:]
+
+    def log_trade(self):
+        trade_history, _ = self.trades.update_or_create(
+            bot=self,
+            user=self.user,
+            timestamp_start=self.timestamp_start,
+            defaults={
+                "is_dummy": self.is_dummy,
+                "symbol": self.symbol,
+                "strategy": self.strategy,
+                "strategy_params": self.strategy_params,
+                "timestamp_start": self.timestamp_start,
+                "timestamp_buying": self.timestamp_buying,
+                "timestamp_selling": self.timestamp_selling,
+                "fund_base_asset": self.fund_base_asset,
+                "price_buying": self.price_buying,
+                "price_selling": self.price_selling,
+                "receipt_buying": self.receipt_buying,
+                "receipt_selling": self.receipt_selling,
+            },
+        )
+        trade_history.save()
+        return trade_history
+
+    def get_last_log_message(self):
+        last_log = self.logs.last()
+        if last_log:
+            return last_log.message
+        return None
+
+    def render_html_snippet(self, set_cache=False):
+        cache_key = f"bot_{self.pk}_html"
+        html = cache.get(cache_key)
+        if not html or set_cache:
+            html = render_to_string(
+                "base/bot_snippet.html",
+                {
+                    "bot": self,
+                },
+            )
+            cache.set(cache_key, html, settings.TIME_INTERVAL_BOTS * 60 + 9)
+        return html
+
+    async def push_to_ws(self):
+        bot = f"botzinho-{self.pk}"
+        text = self.render_html_snippet()
+        await channel_layer.group_send(
+            self.others["ws_group_name"],
+            {
+                "type": "bot.html.message",
+                "message": {
+                    "type": "bot_update",
+                    "bot": bot,
+                    "text": text,
+                },
+            },
+        )
+
+    @classmethod
+    def update_all_bots(cls):
+        client = Spot()
+        bots = cls.objects.enabled()
+        if bots:
+            symbols = list(
+                Symbol.objects.filter(bots__in=bots)
+                .distinct()
+                .values_list("symbol", flat=True)
+            )
+            prices = {
+                t["symbol"]: t["price"]
+                for t in client.ticker_price(symbols=symbols)
+            }
+            for bot in bots:
+                bot.price_current = Decimal(prices[bot.symbol.symbol])
+                bot.decide()
+            message = f"{len(bots)} bots updated."
+        else:  # pragma: no cover
+            message = "No bots were found."
+        logger.warning(message)
+        return message
+
+
+class TraderoBotLog(models.Model):
+    bot = models.ForeignKey(
+        TraderoBot,
+        verbose_name="User",
+        related_name="logs",
+        on_delete=models.PROTECT,
+    )
+    is_dummy = models.BooleanField("Dummy?")
+    timestamp = models.DateTimeField("Timestamp", auto_now_add=True)
+    status = models.SmallIntegerField(
+        "Bot Status",
+        choices=TraderoBot.Status.choices,
+    )
+    action = models.SmallIntegerField(
+        "Bot Action",
+        choices=TraderoBot.Action.choices,
+    )
+    fund_base_asset = models.DecimalField(
+        "Fund (Base Asset)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    fund_quote_asset = models.DecimalField(
+        "Fund (Quote Asset)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    price_buying = models.DecimalField(
+        "Buying Price the Base Asset (Net)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    price_current = models.DecimalField(
+        "Current Market Price of the Base Asset",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    price_selling = models.DecimalField(
+        "Selling Price of the Base Asset (Net)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    variation = models.DecimalField(
+        "Porcentual Variation between Buying and Selling Price",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    message = models.CharField(
+        "Extra message (others)",
+        max_length=2048,
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = "Tradero Bot Log"
+        verbose_name_plural = "Tradero Bots Logs"
+
+    def __str__(self):
+        return (
+            f"{self.bot} {'[[DUMMY]]' if self.is_dummy else ''}| "
+            f"{self.timestamp} | [{self.get_action_display()}] "
+            f"FBA: {self.fund_base_asset}, "
+            f"FQA: {self.fund_quote_asset}, PB(N): {self.price_buying}, "
+            f"PC(M): {self.price_current}, PS(N): {self.price_selling}, "
+            f"VAR: {self.variation} || {self.message}"
+        )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        logger.warning(str(self))
+
+
+class TradeHistoryManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related("symbol", "user", "bot")
+
+
+class TradeHistory(models.Model):
+    """
+    Highly denormalized on purpose
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name="User",
+        related_name="trades",
+        on_delete=models.PROTECT,
+    )
+    bot = models.ForeignKey(
+        TraderoBot,
+        verbose_name="Bot",
+        related_name="trades",
+        on_delete=models.PROTECT,
+    )
+    is_dummy = models.BooleanField("Dummy?")
+    symbol = models.ForeignKey(
+        Symbol,
+        verbose_name="Symbol",
+        related_name="trades_history",
+        on_delete=models.PROTECT,
+    )
+    strategy = models.CharField(
+        "Strategy",
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+    strategy_params = models.CharField(
+        "Strategy parameters",
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    timestamp_start = models.DateTimeField(
+        "Timestamp - Start",
+        blank=True,
+        null=True,
+    )
+    timestamp_buying = models.DateTimeField(
+        "Timestamp - Buying",
+        blank=True,
+        null=True,
+    )
+    timestamp_selling = models.DateTimeField(
+        "Timestamp - Selling",
+        blank=True,
+        null=True,
+    )
+    fund_base_asset = models.DecimalField(
+        "Fund (Base Asset)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    fund_base_asset_exec = models.DecimalField(
+        "Fund (Base Asset) Executed",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    fund_base_asset_unexec = models.DecimalField(
+        "Fund (Base Asset) Unexecuted",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    fund_quote_asset = models.DecimalField(
+        "Fund (Quote Asset)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    price_buying = models.DecimalField(
+        "Net Buying Price the Base Asset",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    price_selling = models.DecimalField(
+        "Net Selling Price of the Base Asset",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    receipt_buying = models.JSONField(
+        "Receipt - Buying", default=dict, blank=True, null=True
+    )
+    receipt_selling = models.JSONField(
+        "Receipt - Selling", default=dict, blank=True, null=True
+    )
+    is_complete = models.BooleanField("Is Trade Complete?", default=False)
+    variation = models.DecimalField(
+        "Porcentual Variation between Buying and Selling Price",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    variation_quote_asset = models.DecimalField(
+        "Variation of the Quote Asset",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    duration_seeking = models.DurationField(
+        "Elapsed time looking for buy",
+        blank=True,
+        null=True,
+    )
+    duration_trade = models.DurationField(
+        "Elapsed time between Buying and Selling",
+        blank=True,
+        null=True,
+    )
+    duration_total = models.DurationField(
+        "Total Elapsed time since start",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = "Trade History"
+        verbose_name_plural = "Trades History"
+
+    objects = TradeHistoryManager()
+
+    def __str__(self):
+        return (
+            f"{self.user}: #{self.bot.id} {'[[DUMMY]]' if self.is_dummy else ''} |"
+            f" {self.symbol.symbol} | {self.timestamp_start} - "
+            f"{self.timestamp_selling or '...'}:: Var: {self.variation}% "
+            f"Var FQA: {self.variation_quote_asset}"
+        )
+
+    def save(self, *args, **kwargs):
+        if self.timestamp_buying and self.timestamp_start:
+            self.duration_seeking = (
+                self.timestamp_buying - self.timestamp_start
+            )
+        if (
+            self.timestamp_selling
+            and self.timestamp_buying
+            and self.timestamp_start
+        ):
+            self.duration_trade = (
+                self.timestamp_selling - self.timestamp_buying
+            )
+            self.duration_total = self.timestamp_selling - self.timestamp_start
+        if self.price_buying and self.price_selling:
+            self.variation = (self.price_selling / self.price_buying - 1) * 100
+        if self.receipt_buying:
+            self.fund_quote_asset = Decimal(
+                self.receipt_buying["cummulativeQuoteQty"]
+            )
+        if self.receipt_buying and self.receipt_selling:
+            self.is_complete = True
+            self.fund_base_asset = Decimal(
+                self.receipt_buying["executedQty"]
+            ) - get_commission(self.receipt_buying)
+            self.fund_base_asset_exec = Decimal(
+                self.receipt_selling["executedQty"]
+            )
+            self.fund_base_asset_unexec = self.fund_base_asset - Decimal(
+                self.fund_base_asset_exec
+            )
+            self.variation_quote_asset = (
+                Decimal(self.receipt_selling["cummulativeQuoteQty"])
+                - get_commission(self.receipt_selling)
+                - self.fund_quote_asset
+            )
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def summary(cls, trades_qs, checkpoint=None):
+        result = {"rows": {}}
+        dates = {
+            "24h": timezone.now() - timezone.timedelta(days=1),
+            "1w": timezone.now() - timezone.timedelta(days=7),
+            "checkpoint": checkpoint,
+            "alltime": None,
+        }
+        for label, t in dates.items():
+            t_qs = trades_qs.filter(is_complete=True)
+            if t:
+                t_qs = t_qs.filter(timestamp_selling__gte=t)
+            result["rows"][label] = t_qs.aggregate(
+                variation_quote_asset_total=models.Sum(
+                    "variation_quote_asset"
+                ),
+                variation_average=models.Avg("variation"),
+                trades_quantity=models.Count("pk"),
+            )
+        result["meta"] = {
+            "descriptions": {
+                "rows": {
+                    "24h": "Last 24 Hours",
+                    "1w": "Last Week",
+                    "checkpoint": "Checkpoint",
+                    "alltime": "All-Time",
+                },
+                "cols": {
+                    "variation_quote_asset_total": "Total Gains (QA)",
+                    "variation_average": "Avg. % Var",
+                    "trades_quantity": "#Trades",
+                },
+                "formats": {
+                    "variation_quote_asset_total": ".4f",
+                    "variation_average": ".3f",
+                    "trades_quantity": "i",
+                },
+            }
+        }
+        return result
+
+    @classmethod
+    def summary_for_bot_or_user(cls, bot=None, user=None):
+        if bot:
+            qs = cls.objects.filter(bot=bot)
+            checkpoint = bot.user.checkpoint
+        else:
+            qs = cls.objects.filter(user=user)
+            checkpoint = user.checkpoint
+        result = {
+            "object": bot or user,
+            "cp": checkpoint,
+            "dummy": cls.summary(qs.filter(is_dummy=True), checkpoint),
+            "real": cls.summary(qs.filter(is_dummy=False), checkpoint),
+        }
+        return result
