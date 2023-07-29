@@ -21,7 +21,6 @@ from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("django-rq/", include("django_rq.urls")),
     path("nested_admin/", include("nested_admin.urls")),
     path("django-ai/", include("django_ai.ai_base.urls")),
     path(

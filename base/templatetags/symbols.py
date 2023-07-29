@@ -43,3 +43,26 @@ def indicators_sorting_js(context):
             {},
         )
     return mark_safe(rendered)
+
+
+@register.simple_tag(takes_context=True)
+def bot_render_html_snippet(context, bot):
+    return mark_safe(bot.render_html_snippet())
+
+
+@register.filter("timedelta", is_safe=True)
+def timedelta(value):
+    if not value:  # pragma: no cover
+        return ""
+    secs = value.total_seconds()
+    hours, rem = int(secs // 3600), int(secs % 3600)
+    mins, rem = int(rem // 60), int(rem % 60)
+    secs = rem
+    return f"{hours:02d}:{mins:02d}:{secs:02d}"
+
+
+@register.filter("get", is_safe=True)
+def get(value, key):
+    if not value:  # pragma: no cover
+        return ""
+    return value.get(key, "")

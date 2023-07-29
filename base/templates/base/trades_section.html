@@ -1,0 +1,17 @@
+<div class="container">
+
+    <h4>Trades</h4>
+
+    {% include "base/trade_summary.html" with summary=summary %}
+
+	<div id="trades-list" class="list-group">
+	{% for trade in page_obj %}
+		{% include "base/trade_snippet.html" with trade=trade %}
+	{% endfor %}
+	</div>
+
+    <div class="container">
+        {% include "base/_paginator.html" with page_obj=page_obj %}
+    </div>
+
+</div>

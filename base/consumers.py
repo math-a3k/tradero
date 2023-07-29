@@ -18,15 +18,16 @@ class TraderoConsumer(WebsocketConsumer):
         self.accept()
         if "pytest" not in sys.modules:  # pragma: no cover
             WSClient.objects.create(
-                channel_group=self.group_name, channel_name=self.channel_name
+                channel_group=self.get_group_name(),
+                channel_name=self.channel_name,
             )
         # join the group
         async_to_sync(self.channel_layer.group_add)(
-            self.group_name,
+            self.get_group_name(),
             self.channel_name,
         )
-        logger.info(
-            f"Should be connected [{self.group_name}] {self.channel_name}"
+        logger.warning(
+            f"Should be connected [{self.get_group_name()}] {self.channel_name}"
         )
 
     def disconnect(self, close_code):
@@ -35,17 +36,20 @@ class TraderoConsumer(WebsocketConsumer):
                 time_disconnect=timezone.now()
             )
         async_to_sync(self.channel_layer.group_discard)(
-            self.group_name,
+            self.get_group_name(),
             self.channel_name,
         )
-        logger.info(
-            f"Should be DISconnected [{self.group_name}] {self.channel_name}"
+        logger.warning(
+            f"Should be DISconnected [{self.get_group_name()}] {self.channel_name}"
         )
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
         self.send(text_data=json.dumps({"message": message}))
+
+    def get_group_name(self):
+        return self.group_name
 
 
 class SymbolHTMLConsumer(TraderoConsumer):
@@ -62,3 +66,14 @@ class SymbolJSONConsumer(TraderoConsumer):
     def symbol_json_message(self, event):
         # Handles the "symbol.json.message" event when it's sent to the consumer.
         self.send(text_data=event["message"])
+
+
+class BotHTMLConsumer(TraderoConsumer):
+    group_name = "bots_html"
+
+    def bot_html_message(self, event):
+        # Handles the "symbol.html.message" event when it's sent to the consumer.
+        self.send(text_data=json.dumps(event["message"]))
+
+    def get_group_name(self):
+        return f"bots_html_{self.scope['user'].username}"

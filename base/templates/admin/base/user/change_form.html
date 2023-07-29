@@ -1,0 +1,7 @@
+{% extends "admin/ai_base/change_form.html" %}
+{% load django_ai_tags static i18n %}
+
+{% block after_related_objects %}
+  <h2>{% trans "Trades Summary" %}</h2>
+  {% include "base/trade_summary.html" with summary=original.trade_summary %}
+{% endblock %}

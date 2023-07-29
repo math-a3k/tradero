@@ -16,15 +16,6 @@ Loads symbols from Binance.
 
 .. autoclass:: base.management.commands.load_symbols.Command
 
-.. _scheduuler:
-
-``scheduler``
-=============
-
-Starts the task scheduler for the workers (http polling).
-
-.. autoclass:: base.management.commands.scheduler.Command
-
 .. _warm_and_ready:
 
 ``warm_and_ready``
