@@ -56,7 +56,16 @@ Parameters
   Do not sell if the price has reached the threshold if the ``AC`` is still at a buying point (``1`` | ``0``).
 
 
+CatchTheWave
+-------------
+
+Also known as *dolphin bots*, this strategy [4]_ relies on the :ref:`macd_cg` indicator (``Current Good``) for buying.
+
+Given a Symbol, the bot will buy when it is in "Current Good" and sell when the short-term tendency crosses the middle-term one ("end of the wave").
+
+
 .. rubric:: References
 .. [1] .. autoclass:: base.models.TraderoBot
 .. [2] .. autoclass:: base.strategies.TradingStrategy
 .. [3] .. autoclass:: base.strategies.ACMadness
+.. [4] .. autoclass:: base.strategies.CatchTheWave

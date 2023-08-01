@@ -671,6 +671,9 @@ class TestHandlers(TestCase):
 
 class BotTestCase(TestCase):
     @classmethod
+    @override_settings(
+        INDICATORS=["__all__"],
+    )
     def setUpClass(cls):
         cls.s1, _ = Symbol.objects.update_or_create(
             symbol="S1BUSD",
@@ -952,6 +955,46 @@ class TestStrategies(BotTestCase):
             self.s1.others["stp"]["next_n_sum"] = 0
             self.bot1.decide()
             self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+
+    def test_catchthewave(self):
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            self.bot1.strategy = "catchthewave"
+            self.bot1.strategy_params = ""
+            #
+            self.s1.others["macdcg"]["current_good"] = True
+            self.s1.others["macdcg"]["macd_line_last"] = 1
+            self.bot1.on()
+            self.bot1.decide()
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 0.9
+            self.bot1.decide()
+            self.assertIn(
+                "below price of buying", self.bot1.others["last_logs"][-1]
+            )
+            self.bot1.price_current = 1.1
+            self.bot1.decide()
+            self.assertIn("Kept goin'", self.bot1.others["last_logs"][-1])
+            self.s1.others["macdcg"]["macd_line_last"] = 0
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            self.s1.others["macdcg"]["current_good"] = False
+            self.s2.others["macdcg"]["current_good"] = True
+            self.s2.save()
+            self.bot1.decide()
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.bot1.sell()
+            self.s2.others["macdcg"]["current_good"] = False
+            self.s2.save()
+            self.bot1.refresh_from_db()
+            self.bot1.decide()
+            self.assertIn(
+                "no other symbol to go", self.bot1.others["last_logs"][-1]
+            )
 
 
 @pytest.mark.usefixtures("celery_session_app")

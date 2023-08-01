@@ -1480,9 +1480,10 @@ class TraderoBot(models.Model):
 
     def get_strategy(self):
         params = {}
-        for pv in self.strategy_params.split(","):
-            pv = pv.split("=")
-            params[pv[0]] = pv[1]
+        if self.strategy_params:
+            for pv in self.strategy_params.split(","):
+                pv = pv.split("=")
+                params[pv[0]] = pv[1]
         return self._strategies[self.strategy](self, **params)
 
     def on(self):
