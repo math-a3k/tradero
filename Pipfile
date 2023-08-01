@@ -41,6 +41,7 @@ django-celery-results = "*"
 django-celery-beat = {file = "https://github.com/celery/django-celery-beat/zipball/master"}
 python-crontab = "*"
 pytest-celery = "*"
+django-axes = {version = "*", extras = ["ipware"]}
 
 [dev-packages]
 pre-commit = "*"
