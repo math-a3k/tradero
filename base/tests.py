@@ -791,6 +791,7 @@ class TestTraderoBots(BotTestCase):
             self.bot1.off()
             self.bot1.buy()
             self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+            self.bot1.sell()
             # Test exception while buying
             with mock.patch(
                 "base.client.TraderoClient.ticker_price"
@@ -818,6 +819,34 @@ class TestTraderoBots(BotTestCase):
                 self.assertIn(
                     "New Exception", self.bot1.others["last_logs"][-1]
                 )
+            # Test already bought
+            self.bot1.on()
+            with mock.patch(
+                "base.models.TraderoBot.log_trade"
+            ) as bot_log_trade_mock:
+                bot_log_trade_mock.side_effect = Exception("New Exception")
+                self.bot1.buy()
+                self.assertIn(
+                    "New Exception", self.bot1.others["last_logs"][-1]
+                )
+                self.bot1.buy()
+                self.assertIn(
+                    "Already bought", self.bot1.others["last_logs"][-1]
+                )
+            # Test already sold
+            with mock.patch(
+                "base.models.TraderoBot.log_trade"
+            ) as bot_log_trade_mock:
+                bot_log_trade_mock.side_effect = Exception("New Exception")
+                self.bot1.sell()
+                self.assertIn(
+                    "New Exception", self.bot1.others["last_logs"][-1]
+                )
+                self.bot1.sell()
+                self.assertIn(
+                    "Already sold", self.bot1.others["last_logs"][-1]
+                )
+
             # Test reset
             self.bot1.reset()
             self.assertIn("RESET", self.bot1.others["last_logs"][-1])

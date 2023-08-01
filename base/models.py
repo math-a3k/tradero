@@ -1522,65 +1522,91 @@ class TraderoBot(models.Model):
         return True
 
     def buy(self):
-        client = self.get_client()
-        amount = self.fund_quote_asset or self.fund_quote_asset_initial
-        success, price, quantity, receipt, message = client.tradero_buy(
-            self.symbol,
-            amount,
-            dummy=self.is_dummy,
-        )
-        if success:
-            self.receipt_buying = receipt
-            self.timestamp_buying = timezone.now()
-            if not self.timestamp_start:  # pragma: no cover
-                self.timestamp_start = self.timestamp_buying
-            self.price_buying = price
-            self.fund_base_asset = quantity
-            self.log(self.Action.BUY)
-            self.log_trade()
-            self.fund_quote_asset = (
-                None  # Unexecuted FQA is not logged when Buying
-            )
-            if self.status != self.Status.INACTIVE:
-                self.status = self.Status.SELLING
-            self.save()
-            return True
+        if not self.receipt_buying:
+            try:
+                client = self.get_client()
+                amount = self.fund_quote_asset or self.fund_quote_asset_initial
+                (
+                    success,
+                    price,
+                    quantity,
+                    receipt,
+                    message,
+                ) = client.tradero_buy(
+                    self.symbol,
+                    amount,
+                    dummy=self.is_dummy,
+                )
+                if success:
+                    self.receipt_buying = receipt
+                    self.save()
+                    self.timestamp_buying = timezone.now()
+                    if not self.timestamp_start:  # pragma: no cover
+                        self.timestamp_start = self.timestamp_buying
+                    self.price_buying = price
+                    self.fund_base_asset = quantity
+                    self.log(self.Action.BUY)
+                    self.log_trade()
+                    self.fund_quote_asset = (
+                        None  # Unexecuted FQA is not logged when Buying
+                    )
+                    if self.status != self.Status.INACTIVE:
+                        self.status = self.Status.SELLING
+                    self.save()
+                    return True
+            except Exception as e:
+                message = str(e)
+        else:
+            message = "Already bought, reset the bot if the problem persists"
         self.log(self.Action.ERROR, message=message)
         self.save()
         return False
 
     def sell(self):
-        client = self.get_client()
-        success, price, quantity, receipt, message = client.tradero_sell(
-            self.symbol,
-            self.fund_base_asset,
-            dummy=self.is_dummy,
-        )
-        if success:
-            self.receipt_selling = receipt
-            self.price_selling = price
-            self.fund_quote_asset = quantity
-            self.timestamp_selling = timezone.now()
-            self.log(self.Action.SELL)
-            self.log_trade()
-            # Reset state
-            self.fund_base_asset = self.fund_base_asset - Decimal(
-                self.receipt_selling["executedQty"]
-            )
-            if not self.should_reinvest:
-                self.fund_quote_asset = self.fund_quote_asset_initial
-            self.timestamp_selling, self.timestamp_buying = None, None
-            self.receipt_selling, self.receipt_buying = None, None
-            self.price_selling, self.price_buying = None, None
-            if self.status != self.Status.INACTIVE:
-                self.status = self.Status.BUYING
-            if self.should_stop:
-                self.status = self.Status.INACTIVE
-                self.timestamp_start = None
-            else:
-                self.timestamp_start = timezone.now()
-            self.save()
-            return True
+        if not self.receipt_selling:
+            try:
+                client = self.get_client()
+                (
+                    success,
+                    price,
+                    quantity,
+                    receipt,
+                    message,
+                ) = client.tradero_sell(
+                    self.symbol,
+                    self.fund_base_asset,
+                    dummy=self.is_dummy,
+                )
+                if success:
+                    self.receipt_selling = receipt
+                    self.save()
+                    self.price_selling = price
+                    self.fund_quote_asset = quantity
+                    self.timestamp_selling = timezone.now()
+                    self.log(self.Action.SELL)
+                    self.log_trade()
+                    # Reset state
+                    self.fund_base_asset = self.fund_base_asset - Decimal(
+                        self.receipt_selling["executedQty"]
+                    )
+                    if not self.should_reinvest:
+                        self.fund_quote_asset = self.fund_quote_asset_initial
+                    self.timestamp_selling, self.timestamp_buying = None, None
+                    self.receipt_selling, self.receipt_buying = None, None
+                    self.price_selling, self.price_buying = None, None
+                    if self.status != self.Status.INACTIVE:
+                        self.status = self.Status.BUYING
+                    if self.should_stop:
+                        self.status = self.Status.INACTIVE
+                        self.timestamp_start = None
+                    else:
+                        self.timestamp_start = timezone.now()
+                    self.save()
+                    return True
+            except Exception as e:
+                message = str(e)
+        else:
+            message = "Already sold, reset the bot if the problem persists"
         self.log(self.Action.ERROR, message=message)
         self.save()
         return False
