@@ -170,7 +170,7 @@ class BotzinhosActionsView(OwnerMixin, LoginRequiredMixin, RedirectView):
     permanent = False
     http_method_names = ["post"]
     #: Available Actions
-    ACTIONS = ["buy", "sell", "on", "off"]
+    ACTIONS = ["buy", "sell", "on", "off", "reset"]
 
     # def test_func(self):
     #     return self.request.user.is_superuser or self.request.user.is_staff

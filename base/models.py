@@ -1349,6 +1349,7 @@ class TraderoBot(models.Model):
         JUMP = 3, "Jump"
         TURN_ON = 4, "Turn ON"
         TURN_OFF = 5, "Turn OFF"
+        RESET = 6, "Reset"
 
     user = models.ForeignKey(
         User,
@@ -1501,6 +1502,25 @@ class TraderoBot(models.Model):
         self.save()
         return True
 
+    def reset(self):
+        self.log_trade(cancelled=True)
+        self.status = self.Status.INACTIVE
+        self.receipt_buying, self.receipt_selling = None, None
+        self.fund_base_asset, self.fund_quote_asset = None, None
+        self.price_buying, self.price_selling, self.price_current = (
+            None,
+            None,
+            None,
+        )
+        self.timestamp_start, self.timestamp_buying, self.timestamp_selling = (
+            None,
+            None,
+            None,
+        )
+        self.log(self.Action.RESET, "RESET")
+        self.save()
+        return True
+
     def buy(self):
         client = self.get_client()
         amount = self.fund_quote_asset or self.fund_quote_asset_initial
@@ -1641,7 +1661,7 @@ class TraderoBot(models.Model):
         last_logs.append(f"{log.timestamp:%Y-%m-%d %H:%M:%S}| {log.message}")
         self.others["last_logs"] = last_logs[-4:]
 
-    def log_trade(self):
+    def log_trade(self, cancelled=False):
         trade_history, _ = self.trades.update_or_create(
             bot=self,
             user=self.user,
@@ -1654,6 +1674,7 @@ class TraderoBot(models.Model):
                 "timestamp_start": self.timestamp_start,
                 "timestamp_buying": self.timestamp_buying,
                 "timestamp_selling": self.timestamp_selling,
+                "timestamp_cancelled": (timezone.now() if cancelled else None),
                 "fund_base_asset": self.fund_base_asset,
                 "price_buying": self.price_buying,
                 "price_selling": self.price_selling,
@@ -1860,6 +1881,11 @@ class TradeHistory(models.Model):
     )
     timestamp_selling = models.DateTimeField(
         "Timestamp - Selling",
+        blank=True,
+        null=True,
+    )
+    timestamp_cancelled = models.DateTimeField(
+        "Timestamp - Cancelled",
         blank=True,
         null=True,
     )
