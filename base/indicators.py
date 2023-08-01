@@ -87,6 +87,7 @@ class MACDCG(Indicator):
             ],
             # "ema_a": ts_a_e.tolist(),   # not needed
             "macd_line": macd_line[-self.c :],
+            "macd_line_last": macd_line[-1],
             "signal_diff": signal_diff[-self.c :],
             "current_good": bool(current_good),
         }

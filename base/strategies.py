@@ -151,3 +151,66 @@ class ACMadness(TradingStrategy):
             return self.ac * self.bot.symbol.model_score
         else:
             return self.ac
+
+
+class CatchTheWave(TradingStrategy):
+    """
+    Catch The Wave Trading Strategy
+
+    (requires the MACD/CG indicator)
+    """
+
+    slug = "catchthewave"
+
+    def __init__(self, bot, **kwargs):
+        self.bot = bot
+        self.cg = self.bot.symbol.others["macdcg"]["current_good"]
+        self.macd_line_last = Decimal(
+            self.bot.symbol.others["macdcg"]["macd_line_last"]
+        )
+
+    def evaluate_buy(self):
+        if self.cg:
+            return True, None
+        return (False, "Symbol is not in Current Good")
+
+    def evaluate_sell(self):
+        if self.bot.price_current > self.bot.price_buying:
+            if self.macd_line_last > 0:
+                return (
+                    False,
+                    "Kept goin' due to still being in the wave",
+                )
+            return True, None
+        return (
+            False,
+            f"Current price ({self.bot.price_current:.8f}) is below price of buying "
+            f"({self.bot.price_buying:.8f})",
+        )
+
+    def evaluate_jump(self):
+        symbols_with_siblings = self.get_symbols_with_siblings()
+        symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
+        # import ipdb; ipdb.set_trace()
+        symbols = sorted(
+            symbols,
+            key=lambda s: s.others["macdcg"]["macd_line_last"],
+            reverse=True,
+        )
+        symbols_blacklist = self.bot.jumpy_blacklist.split(",")
+        for symbol in symbols:
+            symbol_macd_current_good = symbol.others["macdcg"]["current_good"]
+            if (
+                symbol_macd_current_good
+                and symbol.pk not in symbols_with_siblings
+                and symbol.symbol not in symbols_blacklist
+            ):
+                return True, symbol
+        return False, None
+
+    def get_symbols_with_siblings(self):
+        return self.bot.user.bots.filter(
+            status__gte=self.bot.Status.INACTIVE,
+            strategy=self.bot.strategy,
+            strategy_params=self.bot.strategy_params,
+        ).values_list("symbol", flat=True)
