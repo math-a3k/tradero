@@ -68,6 +68,9 @@
 				{% bot_action_button "on" "Turn ON" "btn-primary" %}
 				{% endif %}
 			</li>
+			<li>
+				<a class="btn btn-danger" href="{% url "base:botzinhos-actions" bot.pk "reset" %}">RESET</a>
+			</li>
 		</ul>
 
 	</div>

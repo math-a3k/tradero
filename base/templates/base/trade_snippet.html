@@ -6,6 +6,8 @@
       		#{{ trade.id|stringformat:"05d" }}: {{ trade.symbol.base_asset }}/{{ trade.symbol.quote_asset }} |
       		{% if trade.is_complete %}
       			<span class="{% if trade.variation_quote_asset > 0 %}text-success{% else %}text-danger{% endif %}">{{ trade.variation_quote_asset|floatformat:4 }} {{ trade.symbol.quote_asset }} ({{trade.variation|floatformat:3 }}%)</span>
+      		{% elif trade.timestamp_cancelled %}
+      		Cancelled
       		{% else %}
       		Ongoing / Not Finished
       		{% endif %}
@@ -19,7 +21,7 @@
     <p>
     	<strong>Quote Asset Fund executed</strong>: {{ trade.fund_quote_asset|floatformat:4|default:"-"}} {{trade.symbol.quote_asset }}<br>
     	<strong>Base Asset Fund</strong>: {{ trade.fund_base_asset|floatformat:4|default:"-"}} {{trade.symbol.base_asset }} ({{ trade.fund_base_asset_exec|floatformat:4|default:"-"}} exec | {{ trade.fund_base_asset_unexec|floatformat:4|default:"-" }} unexec) <br>
-    	<strong>Timestamps</strong>: {{ trade.timestamp_start }} (Start) | {{ trade.timestamp_buying|default:"-" }} (Buying) | {{ trade.timestamp_selling|default:"-" }} (Selling) <br>
+    	<strong>Timestamps</strong>: {{ trade.timestamp_start }} (Start) | {{ trade.timestamp_buying|default:"-" }} (Buying) | {{ trade.timestamp_selling|default:"-" }} (Selling) {% if trade.timestamp_cancelled %} | {{ trade.timestamp_cancelled }} (Cancelled) {% endif %}<br>
     	<strong>Durations</strong>: {{ trade.duration_seeking|timedelta|default:"-" }} (Seeking) | {{ trade.duration_trade|timedelta|default:"-" }} (Trade) | {{ trade.duration_total|timedelta|default:"-" }} (Total)
    		<p><strong>Receipt - Buying</strong>: <pre>{{ trade.receipt_buying|default:"-" }}</pre></p>
    		<p><strong>Receipt - Selling</strong>: <pre>{{ trade.receipt_selling|default:"-" }}</pre></p>

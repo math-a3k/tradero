@@ -818,6 +818,13 @@ class TestTraderoBots(BotTestCase):
                 self.assertIn(
                     "New Exception", self.bot1.others["last_logs"][-1]
                 )
+            # Test reset
+            self.bot1.reset()
+            self.assertIn("RESET", self.bot1.others["last_logs"][-1])
+            self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+            self.assertEqual(
+                self.bot1.trades.last().timestamp_cancelled is not None, True
+            )
             # Test jump
             m.get(
                 f"{BINANCE_API_URL}/api/v3/ticker/price",
