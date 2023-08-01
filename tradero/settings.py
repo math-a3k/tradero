@@ -134,6 +134,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": env.str("REDIS_URL", "redis://127.0.0.1:6379/5"),
+        "TIMEOUT": 600,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PICKLE_VERSION": -1,
@@ -289,6 +290,9 @@ EXECUTOR_THREADS = env.str("TRADERO_EXECUTOR_THREADS", None)
 
 # Symbols quantity to track
 SYMBOLS_QUANTITY = env.int("TRADERO_SYMBOLS_QUANTITY", cpu_count() * 4)
+
+# Cache key used for lock concurrent updates and/or queue overlapping
+SYMBOLS_UPDATE_ALL_INDICATORS_KEY = "symbols_update_all_indicators"
 
 # Periods for the warm_and_ready command
 WARM_UP_PERIODS = env.int("TRADERO_WARM_UP_PERIODS", 0)

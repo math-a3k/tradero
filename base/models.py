@@ -493,24 +493,33 @@ class Symbol(models.Model):
         model_score_threshold=settings.MODEL_SCORE_THRESHOLD,
         threads=settings.EXECUTOR_THREADS,
     ):
-        timestamp = timezone.now()
-        if only_top:
-            symbols = cls.objects.all_top_symbols()
-        else:
-            symbols = cls.objects.available()
+        cache_key = settings.SYMBOLS_UPDATE_ALL_INDICATORS_KEY
+        if not cache.get(cache_key, False):
+            cache.set(cache_key, True)
+            timestamp = timezone.now()
+            if only_top:
+                symbols = cls.objects.all_top_symbols()
+            else:
+                symbols = cls.objects.available()
 
-        with thread_pool_executor(threads) as executor:
-            for symbol in symbols:
-                executor.submit(symbol.retrieve_and_update, push=push)
-        logger.warning(
-            f"-> UPDATE ALL PREDICTIONS DONE (MST: {model_score_threshold}) <-"
-        )
-        cls.clean_data()
-        message = (
-            f"---> Elapsed Time: "
-            f"{ (timezone.now() - timestamp).total_seconds() } "
-            f"({len(symbols)} Symbols) <----"
-        )
+            with thread_pool_executor(threads) as executor:
+                for symbol in symbols:
+                    executor.submit(symbol.retrieve_and_update, push=push)
+            logger.warning(
+                f"-> UPDATE ALL PREDICTIONS DONE (MST: {model_score_threshold}) <-"
+            )
+            cls.clean_data()
+            message = (
+                f"---> Elapsed Time: "
+                f"{ (timezone.now() - timestamp).total_seconds() } "
+                f"({len(symbols)} Symbols) <----"
+            )
+            cache.set(cache_key, False)
+        else:  # pragma: no cover
+            message = (
+                "Other process updating all indicators is running, please "
+                "wait."
+            )
         logger.warning(message)
         return message
 
