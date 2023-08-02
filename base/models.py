@@ -358,7 +358,7 @@ class Symbol(models.Model):
         self._last_td = (
             last_td or self.training_data.first()  # negative ordering)
         )
-        klines_24h = self.klines.filter(
+        klines_24h = self.klines.order_by("time_close").filter(
             time_close__gte=timezone.now() - timezone.timedelta(days=1)
         )
         self.volume_quote_asset = klines_24h.aggregate(
@@ -639,6 +639,17 @@ class Kline(models.Model):
     class Meta:
         verbose_name = "Kline"
         verbose_name_plural = "Klines"
+        ordering = ["-time_close"]  # Descending ordering
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "symbol",
+                    "time_close",
+                    "time_interval",
+                ],  # leverage index on time_close
+                name="klines_unique_symbol_time",
+            )
+        ]
 
     def __str__(self):
         f_str = (
@@ -767,7 +778,7 @@ class Kline(models.Model):
         end_time=None,
         limit=1000,
     ):
-        last_kline = symbol.klines.order_by("time_open").last()  # Check
+        last_kline = symbol.klines.first()
         if last_kline and not start_time:
             logger.warning(f"{symbol}: Last kline is {last_kline}")
             start_time = datetime_minutes_rounder(last_kline.time_close)
