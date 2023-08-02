@@ -42,8 +42,9 @@ class ACMadness(TradingStrategy):
 
     slug = "acmadness"
 
-    def __init__(self, bot, **kwargs):
+    def __init__(self, bot, symbol=None, **kwargs):
         self.bot = bot
+        self.symbol = symbol or self.bot.symbol
         self.ac = Decimal(self.bot.symbol.others["stp"]["next_n_sum"])
         self.microgain = Decimal(kwargs.get("microgain", "0.3"))
         self.ac_threshold = self.microgain * Decimal(
@@ -162,8 +163,9 @@ class CatchTheWave(TradingStrategy):
 
     slug = "catchthewave"
 
-    def __init__(self, bot, **kwargs):
+    def __init__(self, bot, symbol=None, **kwargs):
         self.bot = bot
+        self.symbol = symbol or self.bot.symbol
         self.cg = self.bot.symbol.others["macdcg"]["current_good"]
         self.macd_line_last = Decimal(
             self.bot.symbol.others["macdcg"]["macd_line_last"]

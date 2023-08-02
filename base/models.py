@@ -1499,13 +1499,18 @@ class TraderoBot(models.Model):
             self._client = self.user.get_client()
         return self._client
 
-    def get_strategy(self):
+    def get_strategy(self, symbol=None):
+        return self._strategies[self.strategy](
+            self, symbol, **self.get_strategy_params()
+        )
+
+    def get_strategy_params(self):
         params = {}
         if self.strategy_params:
             for pv in self.strategy_params.split(","):
                 pv = pv.split("=")
                 params[pv[0]] = pv[1]
-        return self._strategies[self.strategy](self, **params)
+        return params
 
     def on(self):
         if self.price_buying:
