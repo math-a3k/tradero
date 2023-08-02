@@ -67,15 +67,29 @@ class MACDCG(Indicator):
         )
         tds = pd.Series(tds)
 
-        ts_a = tds.rolling(self.a).mean().dropna().to_list()
-        ts_b = tds.rolling(self.b).mean().dropna().to_list()
-        ts_a_e = Holt(ts_a).fit().fittedvalues
-        ts_b_e = Holt(ts_b).fit().fittedvalues
+        ts_a = tds.rolling(self.a).mean().dropna()
+        ts_b = tds.rolling(self.b).mean().dropna()
+        ts_c = tds.rolling(self.c).mean().dropna()
+        min_len = min(len(ts_a), len(ts_b), len(ts_c))
+        ts_a = ts_a[-min_len:].reset_index(drop=True)
+        ts_b = ts_b[-min_len:].reset_index(drop=True)
+        ts_c = ts_c[-min_len:].reset_index(drop=True)
+        ts_c_var = ts_c.diff().dropna()
+        ts_diff_ab = ts_a - ts_b
+        ts_diff_ca = ts_c - ts_a
 
-        av_len = min(len(ts_a_e), len(ts_b_e))
-        macd_line = pd.Series(ts_a_e[-av_len:] - ts_b_e[-av_len:])
-        macd_signal = macd_line.rolling(self.c).mean().dropna()
-        macd_line = macd_line[(self.c - 1) :].to_list()
+        ts_a_e = pd.Series(Holt(ts_a.tolist()).fit().fittedvalues)
+        ts_b_e = pd.Series(Holt(ts_b.tolist()).fit().fittedvalues)
+        ts_c_e = pd.Series(Holt(ts_c.tolist()).fit().fittedvalues)
+        ts_c_e_var = ts_c_e.diff().dropna()
+        ts_diff_e_ab = ts_a_e - ts_b_e
+        ts_diff_e_ca = ts_c_e - ts_a_e
+
+        macd_line = ts_a_e - ts_b_e
+        macd_signal = (
+            macd_line.rolling(self.c).mean().dropna().reset_index(drop=True)
+        )
+        macd_line = macd_line[(self.c - 1) :].reset_index(drop=True).to_list()
         signal_diff = (macd_line - macd_signal).to_list()
         current_good = (macd_line[-1] > 0) and (signal_diff[-1] > 0)
 
@@ -85,9 +99,25 @@ class MACDCG(Indicator):
                 self.b,
                 self.c,
             ],
-            # "ema_a": ts_a_e.tolist(),   # not needed
+            "smas": {
+                "a": ts_a[-min_len:].tolist(),
+                "b": ts_b[-min_len:].tolist(),
+                "c": ts_c[-min_len:].tolist(),
+                "c_var": ts_c_var.tolist(),
+                "diff_ab": ts_diff_ab.tolist(),
+                "diff_ca": ts_diff_ca.tolist(),
+            },
+            "emas": {
+                "a": ts_a_e[-min_len:].tolist(),
+                "b": ts_b_e[-min_len:].tolist(),
+                "c": ts_c_e[-min_len:].tolist(),
+                "c_var": ts_c_e_var.tolist(),
+                "diff_ab": ts_diff_e_ab.tolist(),
+                "diff_ca": ts_diff_e_ca.tolist(),
+            },
             "macd_line": macd_line[-self.c :],
             "macd_line_last": macd_line[-1],
+            "signal": macd_signal[-self.c :].to_list(),
             "signal_diff": signal_diff[-self.c :],
             "current_good": bool(current_good),
         }
