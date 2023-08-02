@@ -26,7 +26,6 @@ BINANCE_API_URL = "https://api.binance.com"
 TEST_SETTINGS = {
     "SYNC_EXECUTION": True,
     "EXCHANGE_API_URL": BINANCE_API_URL,
-    # "INDICATORS": "",
 }
 
 
@@ -966,7 +965,7 @@ class TestStrategies(BotTestCase):
             self.bot1.strategy_params = ""
             #
             self.s1.others["macdcg"]["current_good"] = True
-            self.s1.others["macdcg"]["macd_line_last"] = 1
+            self.s1.others["macdcg"]["smas"]["c_var"] = [1, 1, 1]
             self.bot1.on()
             self.bot1.decide()
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
@@ -978,11 +977,20 @@ class TestStrategies(BotTestCase):
             self.bot1.price_current = 1.1
             self.bot1.decide()
             self.assertIn("Kept goin'", self.bot1.others["last_logs"][-1])
-            self.s1.others["macdcg"]["macd_line_last"] = 0
+            self.s1.others["macdcg"]["smas"]["diff_ca"] = [
+                0,
+            ]
+            self.bot1.strategy_params = "sell_on_maxima=0"
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            self.bot1.buy()
+            self.bot1.strategy_params = "sell_on_maxima=1"
+            self.s1.others["macdcg"]["smas"]["c_var"] = [1, 1, -0.1]
             self.bot1.decide()
             self.assertIn("Sold", self.bot1.others["last_logs"][-1])
             self.s1.others["macdcg"]["current_good"] = False
             self.s2.others["macdcg"]["current_good"] = True
+            self.s2.others["macdcg"]["smas"]["c_var"] = [1, 1, 2]
             self.s2.save()
             self.bot1.decide()
             self.assertIn("Jumped", self.bot1.others["last_logs"][-2])

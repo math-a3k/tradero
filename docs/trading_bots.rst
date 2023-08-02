@@ -61,7 +61,13 @@ CatchTheWave
 
 Also known as *dolphin bots*, this strategy [4]_ relies on the :ref:`macd_cg` indicator (``Current Good``) for buying.
 
-Given a Symbol, the bot will buy when it is in "Current Good" and sell when the short-term tendency crosses the middle-term one ("end of the wave").
+Given a Symbol, the bot will buy when it is in "Current Good" and the short-term tendency is increasing, while selling when the short-term tendency crosses the middle-term one ("end of the wave").
+
+Parameters
+^^^^^^^^^^
+
+``sell_on_maxima``
+  Sell after the short-term tendency has a local maxima (``1`` | ``0``).
 
 
 .. rubric:: References

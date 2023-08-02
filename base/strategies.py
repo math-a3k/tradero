@@ -166,19 +166,27 @@ class CatchTheWave(TradingStrategy):
     def __init__(self, bot, symbol=None, **kwargs):
         self.bot = bot
         self.symbol = symbol or self.bot.symbol
-        self.cg = self.bot.symbol.others["macdcg"]["current_good"]
-        self.macd_line_last = Decimal(
-            self.bot.symbol.others["macdcg"]["macd_line_last"]
-        )
+        self.macdcg = self.symbol.others["macdcg"]
+        self.cg = self.macdcg["current_good"]
+        self.diff_ca = self.macdcg["smas"][
+            "diff_ca"
+        ]  # Short - Middle tendency
+        self.c_var = self.macdcg["smas"][
+            "c_var"
+        ]  # Variation of the Short tendency
+        self.sell_on_maxima = bool(int(kwargs.get("sell_on_maxima", "1")))
 
     def evaluate_buy(self):
-        if self.cg:
+        if self.cg and self.all_positive(self.c_var[-2:]):
             return True, None
-        return (False, "Symbol is not in Current Good")
+        return (False, "Symbol is not in CG and ascending...")
 
     def evaluate_sell(self):
         if self.bot.price_current > self.bot.price_buying:
-            if self.macd_line_last > 0:
+            if self.sell_on_maxima:
+                if self.c_var[-1] < 0:
+                    return True, None
+            if self.diff_ca[-1] > 0:
                 return (
                     False,
                     "Kept goin' due to still being in the wave",
@@ -193,7 +201,6 @@ class CatchTheWave(TradingStrategy):
     def evaluate_jump(self):
         symbols_with_siblings = self.get_symbols_with_siblings()
         symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
-        # import ipdb; ipdb.set_trace()
         symbols = sorted(
             symbols,
             key=lambda s: s.others["macdcg"]["macd_line_last"],
@@ -201,9 +208,10 @@ class CatchTheWave(TradingStrategy):
         )
         symbols_blacklist = self.bot.jumpy_blacklist.split(",")
         for symbol in symbols:
-            symbol_macd_current_good = symbol.others["macdcg"]["current_good"]
+            strat_in_symbol = self.bot.get_strategy(symbol)
+            should_buy, _ = strat_in_symbol.evaluate_buy()
             if (
-                symbol_macd_current_good
+                should_buy
                 and symbol.pk not in symbols_with_siblings
                 and symbol.symbol not in symbols_blacklist
             ):
@@ -216,3 +224,6 @@ class CatchTheWave(TradingStrategy):
             strategy=self.bot.strategy,
             strategy_params=self.bot.strategy_params,
         ).values_list("symbol", flat=True)
+
+    def all_positive(self, ts):
+        return all([t > 0 for t in ts])
