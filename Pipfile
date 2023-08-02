@@ -42,6 +42,7 @@ django-celery-beat = {file = "https://github.com/celery/django-celery-beat/zipba
 python-crontab = "*"
 pytest-celery = "*"
 django-axes = {version = "*", extras = ["ipware"]}
+django-clearcache = "*"
 
 [dev-packages]
 pre-commit = "*"

@@ -495,7 +495,7 @@ class Symbol(models.Model):
     ):
         cache_key = settings.SYMBOLS_UPDATE_ALL_INDICATORS_KEY
         if not cache.get(cache_key, False):
-            cache.set(cache_key, True)
+            cache.set(cache_key, True, 2400)
             timestamp = timezone.now()
             if only_top:
                 symbols = cls.objects.all_top_symbols()
