@@ -20,6 +20,7 @@ from django.urls import include, path
 from django.views.generic.base import RedirectView
 
 urlpatterns = [
+    path("admin/clearcache/", include("clearcache.urls")),
     path("admin/", admin.site.urls),
     path("nested_admin/", include("nested_admin.urls")),
     path("django-ai/", include("django_ai.ai_base.urls")),

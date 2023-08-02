@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     #
     "axes",
+    "clearcache",
     "django_celery_beat",
     "django_celery_results",
     "websocketclient",
