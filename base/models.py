@@ -1,5 +1,6 @@
 import json
 import logging
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timezone as tz
 from decimal import Decimal
@@ -494,7 +495,7 @@ class Symbol(models.Model):
         threads=settings.EXECUTOR_THREADS,
     ):
         cache_key = settings.SYMBOLS_UPDATE_ALL_INDICATORS_KEY
-        if not cache.get(cache_key, False):
+        if not cache.get(cache_key, False) or "pytest" in sys.modules:
             cache.set(cache_key, True, 2400)
             timestamp = timezone.now()
             if only_top:
