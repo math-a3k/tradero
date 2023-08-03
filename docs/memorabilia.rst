@@ -10,3 +10,8 @@ Memorabilia
   "When I have no more soldiers, I will fight with cimarrón dogs" Joseph Artigas, *The Betrayed General*, circa 1800.
 
   "If I am to be left alone, I shall face the hedge funds with chickens" Rodrigo, 2023.
+
+  "Doomsday is coming, and while SkyNet is being built by Generative AI, *tradero* - the little man's tool for achieving financial self-sufficiency - couldn't be less and introduces... *trading bots*!!!"
+  https://www.reddit.com/r/django/comments/15d14qc/trading_bots_in_django/
+
+  "If I am to be left alone, I shall face the hedge funds with *MY* chickens and *MY* dolphins" Rodrigo, 2023.
