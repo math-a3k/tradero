@@ -158,7 +158,7 @@ class CatchTheWave(TradingStrategy):
     """
     Catch The Wave Trading Strategy
 
-    (requires the MACD/CG indicator)
+    (requires the SCG indicator)
     """
 
     slug = "catchthewave"
@@ -166,36 +166,32 @@ class CatchTheWave(TradingStrategy):
     def __init__(self, bot, symbol=None, **kwargs):
         self.bot = bot
         self.symbol = symbol or self.bot.symbol
-        self.macdcg = self.symbol.others["macdcg"]
-        self.cg = self.macdcg["current_good"]
-        self.diff_ca = self.macdcg["smas"][
-            "diff_ca"
-        ]  # Short - Middle tendency
-        self.c_var = self.macdcg["smas"][
-            "c_var"
-        ]  # Variation of the Short tendency
+        self.scg = self.symbol.others["scg"]
+        self.cg = self.scg["current_good"]
+        self.diff_sm = self.scg["line_diff_sm"]  # Short - Middle tendency
+        self.s_var = self.scg["line_s_var"]  # Var of the Short tendency
+        #
         self.sell_on_maxima = bool(int(kwargs.get("sell_on_maxima", "1")))
+        self.onset_periods = int(kwargs.get("onset_periods", "2"))
+        self.maxima_tol = Decimal(kwargs.get("maxima_tol", "0.1"))
+        self.sell_safeguard = Decimal(kwargs.get("sell_safeguard", "0.3"))
 
     def evaluate_buy(self):
-        if self.cg and self.all_positive(self.c_var[-2:]):
+        if self.cg and self.is_on_wave_onset():
             return True, None
         return (False, "Symbol is not in CG and ascending...")
 
     def evaluate_sell(self):
-        if self.bot.price_current > self.bot.price_buying:
-            if self.sell_on_maxima:
-                if self.c_var[-1] < 0:
-                    return True, None
-            if self.diff_ca[-1] > 0:
-                return (
-                    False,
-                    "Kept goin' due to still being in the wave",
-                )
+        if self.bot.price_current > self.get_min_selling_threshold():
+            if self.sell_on_maxima and self.is_local_maxima():
+                return True, None
+            if self.is_on_wave():
+                return (False, "Kept goin' due to still being in the wave")
             return True, None
         return (
             False,
-            f"Current price ({self.bot.price_current:.8f}) is below price of buying "
-            f"({self.bot.price_buying:.8f})",
+            f"Current price ({self.bot.price_current:.8f}) is below min. "
+            f"selling threshold ({self.get_min_selling_threshold():.8f})",
         )
 
     def evaluate_jump(self):
@@ -203,7 +199,7 @@ class CatchTheWave(TradingStrategy):
         symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
         symbols = sorted(
             symbols,
-            key=lambda s: s.others["macdcg"]["macd_line_last"],
+            key=lambda s: s.others["scg"]["scg_index"],
             reverse=True,
         )
         symbols_blacklist = self.bot.jumpy_blacklist.split(",")
@@ -227,3 +223,15 @@ class CatchTheWave(TradingStrategy):
 
     def all_positive(self, ts):
         return all([t > 0 for t in ts])
+
+    def is_local_maxima(self):
+        return self.s_var[-1] * 100 < -self.maxima_tol
+
+    def is_on_wave(self):
+        return self.diff_sm[-1] > 0
+
+    def is_on_wave_onset(self):
+        return self.all_positive(self.s_var[-self.onset_periods :])
+
+    def get_min_selling_threshold(self):
+        return self.bot.price_buying * (1 + self.sell_safeguard / 100)

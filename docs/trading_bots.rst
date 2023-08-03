@@ -59,15 +59,24 @@ Parameters
 CatchTheWave
 -------------
 
-Also known as *dolphin bots*, this strategy [4]_ relies on the :ref:`macd_cg` indicator (``Current Good``) for buying.
+Also known as *dolphin bots*, this strategy [4]_ relies on the :ref:`scg` indicator for buying.
 
-Given a Symbol, the bot will buy when it is in "Current Good" and the short-term tendency is increasing, while selling when the short-term tendency crosses the middle-term one ("end of the wave").
+Given a Symbol, the bot will buy when it is in "Current Good" and the short-term tendency is increasing ("wave onset"), while selling when the short-term line crosses the middle-term one ("end of the wave").
 
 Parameters
 ^^^^^^^^^^
 
 ``sell_on_maxima``
-  Sell after the short-term tendency has a local maxima (``1`` | ``0``).
+  Sell after the short-term tendency has a local maxima (``1`` | ``0``, defaults to ``1``).
+
+``onset_periods``
+  Periods to consider the wave is on onset (short-term increasing) (``int``, defaults to ``2``).
+
+``maxima_tol``
+  Tolerance (in percentage) for the short-term line variation to consider it as a local maxima (``Decimal``, defaults to ``0.1``).
+
+``sell_safeguard``
+  Extra percentage of the buying price to set the min. selling threshold for automatic selling in the worst case scenario (``Decimal``, defaults to ``0.3``).
 
 
 .. rubric:: References
