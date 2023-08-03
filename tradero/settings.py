@@ -343,3 +343,6 @@ MACD_CG = (25, 99, 7)
 
 # STP Parameters
 STP = 3
+
+# SCG Parameters
+SCG = (7, 25, 99)

@@ -73,6 +73,31 @@ Default: ``4``
 
 The amount of time intervals to be predicted.
 
+.. _scg:
+
+SCG Indicator
+-------------
+
+The SCG (*Simple Current Good*) is tradero-developed indicator aimed to detect "positive waves" of Symbols which aims to be the successor of MACD/CG.
+
+It uses simple Moving Averages (MAs) with Binance's short, middle and long term tendencies defaults (lines) to spot trading opportunities.
+
+While tracking this tendencies, it calculates its differences, variations and *Current Good* status (short one is above middle which is above long one) and calculates an index for providing an ordering of the Symbols where the top one would be the earliest onset of a "postive wave" with the highest slope under the *CG* status.
+
+The index (*SCG*) takes into acount the amount of periods the Symbol has been in *CG* and the distance of the middle line from the long one. The less periods and higher distance, the higher the value. The index is zero when there is no *CG* status.
+
+.. image:: macd_cg.png
+
+The parameters used for the SCG indicator can be set via the :setting:`SCG` setting.
+
+.. setting:: SCG
+
+``SCG``
+^^^^^^^
+
+Default: ``(7, 25, 99)``
+
+The *s*, *m*, *l* parameters for the SCG indicator (middle, long, short) tendencies.
 
 Internal Implementation
 =======================
