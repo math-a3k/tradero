@@ -1,0 +1,15 @@
+{% load mathfilters %}
+
+<p class="mb-1">
+	<strong>SCG({{symbol.others.scg.params.0}},{{symbol.others.scg.params.1}},{{symbol.others.scg.params.2}})</strong>:<br>
+	Lines:
+		<span class="fw-bold" style="color: #99672d;">{{ symbol.others.scg.line_s|last|floatformat:4 }}</span> (Short) |
+		<span class="fw-bold" style="color: #9e30a9;">{{ symbol.others.scg.line_m|last|floatformat:4 }}</span> (Middle) |
+		<span class="fw-bold" style="color: #3d777a;">{{ symbol.others.scg.line_l|last|floatformat:4 }}</span> (Long) <br>
+		Short Line Var: {% for v in symbol.others.scg.line_s_var|slice:"-4:" %}
+			<span class="{% if v >= 0 %}text-success{% else %}text-danger{% endif %}">{{ v|mul:100|floatformat:2 }}%</span>
+		{% endfor %}<br>
+		CG: <strong>{{ symbol.others.scg.current_good|yesno|upper }}</strong> |
+		CG Periods: <strong>{{ symbol.others.scg.current_good_periods }}</strong> |
+		SCG Index: <strong><span class="scg-value">{{ symbol.others.scg.scg_index|floatformat:2 }}</span></strong>
+</p>

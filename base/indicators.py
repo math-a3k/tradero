@@ -124,6 +124,86 @@ class MACDCG(Indicator):
         return self.value
 
 
+class SCG(Indicator):
+    """
+    Simple Current Good Indicator
+    """
+
+    slug = "scg"
+    template = "base/indicators/_scg.html"
+    js_slug = "scg"
+    js_sorting = "base/indicators/_scg.js"
+    #
+    (
+        s,
+        m,
+        l,
+    ) = (None, None, None)
+
+    def __init__(
+        self,
+        symbol,
+        s=settings.SCG[0],  # Short-term tendency
+        m=settings.SCG[1],  # Middle-term tendency
+        l=settings.SCG[2],  # Long-term tendency
+    ):
+        self.symbol = symbol
+        self.s, self.m, self.l = s, m, l
+
+    def calculate(self):
+        tds = reversed(
+            self.symbol.training_data.all()
+            .order_by("-time")[: self.l * 2]
+            .values_list("price_close", flat=True)
+        )
+        tds = pd.Series(tds)
+
+        ts_s = tds.rolling(self.s).mean().dropna()
+        ts_m = tds.rolling(self.m).mean().dropna()
+        ts_l = tds.rolling(self.l).mean().dropna()
+        min_len = min(len(ts_s), len(ts_m), len(ts_l))
+        ts_m = ts_m[-min_len:].reset_index(drop=True)
+        ts_l = ts_l[-min_len:].reset_index(drop=True)
+        ts_s = ts_s[-min_len:].reset_index(drop=True)
+        ts_s_var = ts_s.pct_change().dropna()
+        ts_diff_ml = ts_m - ts_l
+        ts_diff_sm = ts_s - ts_m
+        ts_diff_ml_var = ts_diff_ml.pct_change().dropna()
+
+        cg = (ts_diff_ml > 0) & (ts_diff_sm > 0)
+        cg_periods = 0
+        i = len(cg) - 1
+        flag = False
+        while i >= 0 and not flag:
+            if cg[i]:
+                cg_periods += 1
+                i -= 1
+            else:
+                flag = True
+        if cg_periods == 0:
+            scg_index = 0
+        else:
+            scg_index = 100 - cg_periods + ts_diff_ml_var[i]
+
+        self.value = {
+            "params": [
+                self.s,
+                self.m,
+                self.l,
+            ],
+            "line_m": ts_m.to_list(),
+            "line_l": ts_l.to_list(),
+            "line_s": ts_s.to_list(),
+            "line_s_var": ts_s_var.to_list(),
+            "line_diff_ml": ts_diff_ml.to_list(),
+            "line_diff_sm": ts_diff_sm.to_list(),
+            "current_good": bool(cg[len(cg) - 1]),
+            "current_good_periods": cg_periods,
+            "scg_index": scg_index,
+        }
+        return self.value
+
+
 class STP(Indicator):
     """
     Short Term Prediction
