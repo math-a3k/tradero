@@ -56,16 +56,16 @@
 			</li>
 			<li>
 				{% if not bot.price_buying %}
-				<a class="btn btn-success" href="{% url "base:botzinhos-actions" bot.pk "buy" %}">Force BUY</a>
+				{% bot_action_button "buy" "Force BUY" "btn-success" %}
 				{% else %}
-				<a class="btn btn-danger" href="{% url "base:botzinhos-actions" bot.pk "sell" %}">Force SELL</a>
+				{% bot_action_button "sell" "Force SELL" "btn-danger" %}
 				{% endif %}
 			</li>
 			<li>
 				{% if bot.status > bot.Status.INACTIVE %}
-				<a class="btn btn-dark" href="{% url "base:botzinhos-actions" bot.pk "off" %}">Turn OFF</a>
+				{% bot_action_button "off" "Turn OFF" "btn-dark" %}
 				{% else %}
-				<a class="btn btn-primary" href="{% url "base:botzinhos-actions" bot.pk "on" %}">Turn ON</a>
+				{% bot_action_button "on" "Turn ON" "btn-primary" %}
 				{% endif %}
 			</li>
 		</ul>
