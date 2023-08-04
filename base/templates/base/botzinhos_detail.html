@@ -69,7 +69,7 @@
 				{% endif %}
 			</li>
 			<li>
-				<a class="btn btn-danger" href="{% url "base:botzinhos-actions" bot.pk "reset" %}">RESET</a>
+				{% bot_action_button "reset" "RESET" "btn-dangerr" %}
 			</li>
 		</ul>
 
