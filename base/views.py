@@ -168,6 +168,7 @@ class BotzinhosActionsView(OwnerMixin, LoginRequiredMixin, RedirectView):
     """
 
     permanent = False
+    http_method_names = ["post"]
     #: Available Actions
     ACTIONS = ["buy", "sell", "on", "off"]
 
@@ -177,9 +178,6 @@ class BotzinhosActionsView(OwnerMixin, LoginRequiredMixin, RedirectView):
     def get_object(self):
         self.object = get_object_or_404(TraderoBot, pk=self.pk)
         return self.object
-
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
 
     def run_action(self, action):
         try:

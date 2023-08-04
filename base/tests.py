@@ -226,7 +226,7 @@ class TestViews(TestCase):
                 "action": "start",
             },
         )
-        response = self.client.get(url, follow=True)
+        response = self.client.post(url, follow=True)
         self.assertEqual(response.status_code, 404)
         url = reverse(
             "base:botzinhos-actions",
@@ -235,7 +235,7 @@ class TestViews(TestCase):
                 "action": "on",
             },
         )
-        response = self.client.get(url, follow=True)
+        response = self.client.post(url, follow=True)
         self.assertEqual(response.status_code, 200)
         with mock.patch("base.models.TraderoBot.on") as bot_on_mock:
             bot_on_mock.side_effect = Exception("New Exception")
@@ -246,7 +246,7 @@ class TestViews(TestCase):
                     "action": "on",
                 },
             )
-            response = self.client.get(url, follow=True)
+            response = self.client.post(url, follow=True)
             self.assertEqual(response.status_code, 200)
             self.assertIn(b"ERROR at", response.content)
 

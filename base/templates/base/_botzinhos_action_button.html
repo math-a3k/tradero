@@ -1,0 +1,1 @@
+<form method="post" action="{% url "base:botzinhos-actions" bot.pk action %}">{% csrf_token %}<input class="btn {{ css_classes }}" type="submit" value="{{ text }}"></form>
