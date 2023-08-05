@@ -15,4 +15,4 @@ def get_commission(receipt):
     commission = sum(
         [Decimal(fill["commission"]) for fill in receipt["fills"]]
     )
-    return commission
+    return commission, receipt["fills"][0]["commissionAsset"]

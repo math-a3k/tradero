@@ -1984,6 +1984,32 @@ class TradeHistory(models.Model):
         blank=True,
         null=True,
     )
+    commission_buying = models.DecimalField(
+        "Comission (Buying)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    commission_buying_asset = models.CharField(
+        "Comission Asset (Buying)",
+        max_length=10,
+        blank=True,
+        null=True,
+    )
+    commission_selling = models.DecimalField(
+        "Comission (Selling)",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    commission_selling_asset = models.CharField(
+        "Comission Asset (Selling)",
+        max_length=10,
+        blank=True,
+        null=True,
+    )
     receipt_buying = models.JSONField(
         "Receipt - Buying", default=dict, blank=True, null=True
     )
@@ -2055,20 +2081,36 @@ class TradeHistory(models.Model):
             self.fund_quote_asset = Decimal(
                 self.receipt_buying["cummulativeQuoteQty"]
             )
+            (
+                self.commission_buying,
+                self.commission_buying_asset,
+            ) = get_commission(self.receipt_buying)
         if self.receipt_buying and self.receipt_selling:
             self.is_complete = True
             self.fund_base_asset = Decimal(
                 self.receipt_buying["executedQty"]
-            ) - get_commission(self.receipt_buying)
+            ) - (
+                self.commission_buying
+                if self.commission_buying_asset != "BNB"
+                else 0
+            )
             self.fund_base_asset_exec = Decimal(
                 self.receipt_selling["executedQty"]
             )
             self.fund_base_asset_unexec = self.fund_base_asset - Decimal(
                 self.fund_base_asset_exec
             )
+            (
+                self.commission_selling,
+                self.commission_selling_asset,
+            ) = get_commission(self.receipt_selling)
             self.variation_quote_asset = (
                 Decimal(self.receipt_selling["cummulativeQuoteQty"])
-                - get_commission(self.receipt_selling)
+                - (
+                    self.commission_selling
+                    if self.commission_selling_asset != "BNB"
+                    else 0
+                )
                 - self.fund_quote_asset
             )
         super().save(*args, **kwargs)

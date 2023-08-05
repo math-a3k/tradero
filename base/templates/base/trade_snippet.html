@@ -21,6 +21,7 @@
     <p>
     	<strong>Quote Asset Fund executed</strong>: {{ trade.fund_quote_asset|floatformat:4|default:"-"}} {{trade.symbol.quote_asset }}<br>
     	<strong>Base Asset Fund</strong>: {{ trade.fund_base_asset|floatformat:4|default:"-"}} {{trade.symbol.base_asset }} ({{ trade.fund_base_asset_exec|floatformat:4|default:"-"}} exec | {{ trade.fund_base_asset_unexec|floatformat:4|default:"-" }} unexec) <br>
+		<strong>Commissions</strong>: {{ trade.commission_buying|floatformat:8|default:"-"}} {{trade.commission_buying_asset|default:"" }} | {{ trade.commission_selling|floatformat:8|default:"-"}} {{trade.commission_selling_asset|default:"" }} <br>
     	<strong>Timestamps</strong>: {{ trade.timestamp_start }} (Start) | {{ trade.timestamp_buying|default:"-" }} (Buying) | {{ trade.timestamp_selling|default:"-" }} (Selling) {% if trade.timestamp_cancelled %} | {{ trade.timestamp_cancelled }} (Cancelled) {% endif %}<br>
     	<strong>Durations</strong>: {{ trade.duration_seeking|timedelta|default:"-" }} (Seeking) | {{ trade.duration_trade|timedelta|default:"-" }} (Trade) | {{ trade.duration_total|timedelta|default:"-" }} (Total)
    		<p><strong>Receipt - Buying</strong>: <pre>{{ trade.receipt_buying|default:"-" }}</pre></p>

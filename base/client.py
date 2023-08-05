@@ -138,7 +138,7 @@ class TraderoClient(Spot):  # pragma: no cover
                         "fills": [
                             {
                                 "commission": str(commission),
-                                "commsssionAsset": (
+                                "commissionAsset": (
                                     symbol.base_asset
                                     if side == "BUY"
                                     else symbol.quote_asset
@@ -170,15 +170,21 @@ class TraderoClient(Spot):  # pragma: no cover
                         receipt = self.new_order(**order_params)
                         if settings.TRADERO_DEBUG:
                             logger.debug(f"Binance client result: f{receipt}")
-                        commission = get_commission(receipt)
+                        commission, commission_asset = get_commission(receipt)
+                        if commission_asset == "BNB":
+                            commission = 0
                         cum_exc_qty = Decimal(receipt["cummulativeQuoteQty"])
                         exc_qty = Decimal(receipt["executedQty"])
                         if side == "BUY":
                             quantity = exc_qty - commission
-                            price = cum_exc_qty / quantity  # Net price
+                            price = (
+                                cum_exc_qty / quantity
+                            )  # Net price (except when comm in BNB)
                         else:
                             quantity = cum_exc_qty - commission
-                            price = quantity / exc_qty  # Net price
+                            price = (
+                                quantity / exc_qty
+                            )  # Net price (except when comm in BNB)
                         #
                         quantity = quantity.quantize(Decimal("." + "0" * 8))
                         price = price.quantize(Decimal("." + "0" * 8))
