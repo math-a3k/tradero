@@ -1001,6 +1001,16 @@ class TestStrategies(BotTestCase):
             self.assertIn(
                 "no other symbol to go", self.bot1.others["last_logs"][-1]
             )
+            self.bot1.strategy_params = "early_onset=1"
+            self.bot1.symbol.others["scg"]["early_onset"] = True
+            self.bot1.symbol.others["scg"]["line_l_var"] = [0.1, 0, -0.11]
+            self.s1.others["scg"]["current_good"] = False
+            self.s1.others["scg"]["early_onset"] = True
+            self.s1.others["scg"]["line_l_var"] = [1, 1, 2]
+            self.s1.save()
+            self.bot1.decide()
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
 
 
 @pytest.mark.usefixtures("celery_session_app")

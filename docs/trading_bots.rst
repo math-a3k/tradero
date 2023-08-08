@@ -61,10 +61,15 @@ CatchTheWave
 
 Also known as *dolphin bots*, this strategy [4]_ relies on the :ref:`scg` indicator for buying.
 
-Given a Symbol, the bot will buy when it is in "Current Good" and the short-term tendency is increasing ("wave onset"), while selling when the short-term line crosses the middle-term one ("end of the wave").
+Given a Symbol, the bot will buy when it is on "good status" while selling when the short-term line crosses the middle-term one ("end of the wave").
+
+*Good Status* is either when Symbol is at "Current Good" and the short-term tendency is increasing ("wave onset") or at "Early Onset" and the long-term line is not decreasing.
 
 Parameters
 ^^^^^^^^^^
+
+``early_onset``
+  Use the *Early Onset* status (``1`` | ``0``, defaults to ``0``).
 
 ``sell_on_maxima``
   Sell after the short-term tendency has a local maxima (``1`` | ``0``, defaults to ``1``).
