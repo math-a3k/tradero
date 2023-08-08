@@ -167,19 +167,20 @@ class CatchTheWave(TradingStrategy):
         self.bot = bot
         self.symbol = symbol or self.bot.symbol
         self.scg = self.symbol.others["scg"]
-        self.cg = self.scg["current_good"]
         self.diff_sm = self.scg["line_diff_sm"]  # Short - Middle tendency
         self.s_var = self.scg["line_s_var"]  # Var of the Short tendency
+        self.l_var = self.scg["line_l_var"]  # Var of the Long tendency
         #
+        self.early_onset = bool(int(kwargs.get("early_onset", "0")))
         self.sell_on_maxima = bool(int(kwargs.get("sell_on_maxima", "1")))
         self.onset_periods = int(kwargs.get("onset_periods", "2"))
         self.maxima_tol = Decimal(kwargs.get("maxima_tol", "0.1"))
         self.sell_safeguard = Decimal(kwargs.get("sell_safeguard", "0.3"))
 
     def evaluate_buy(self):
-        if self.cg and self.is_on_wave_onset():
+        if self.is_on_good_status() and self.is_on_wave_onset():
             return True, None
-        return (False, "Symbol is not in CG and ascending...")
+        return (False, "Symbol is not in good status and ascending...")
 
     def evaluate_sell(self):
         if self.bot.price_current > self.get_min_selling_threshold():
@@ -197,9 +198,13 @@ class CatchTheWave(TradingStrategy):
     def evaluate_jump(self):
         symbols_with_siblings = self.get_symbols_with_siblings()
         symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
+        if self.early_onset:
+            key = lambda s: s.others["scg"]["seo_index"]
+        else:
+            key = lambda s: s.others["scg"]["scg_index"]
         symbols = sorted(
             symbols,
-            key=lambda s: s.others["scg"]["scg_index"],
+            key=key,
             reverse=True,
         )
         symbols_blacklist = self.bot.jumpy_blacklist.split(",")
@@ -224,6 +229,13 @@ class CatchTheWave(TradingStrategy):
     def all_positive(self, ts):
         return all([t > 0 for t in ts])
 
+    def is_on_good_status(self):
+        if self.early_onset:
+            return self.scg["early_onset"] and self.not_decreasing(
+                self.l_var[-self.onset_periods :]  # long-term line
+            )
+        return self.scg["current_good"]
+
     def is_local_maxima(self):
         return self.s_var[-1] * 100 < -self.maxima_tol
 
@@ -232,6 +244,9 @@ class CatchTheWave(TradingStrategy):
 
     def is_on_wave_onset(self):
         return self.all_positive(self.s_var[-self.onset_periods :])
+
+    def not_decreasing(self, line):
+        return all([l * 100 > -self.maxima_tol for l in line])
 
     def get_min_selling_threshold(self):
         return self.bot.price_buying * (1 + self.sell_safeguard / 100)
