@@ -5,6 +5,8 @@ import pandas as pd
 from django.conf import settings
 from statsmodels.tsa.api import Holt
 
+from .utils import count_periods_from_now
+
 
 def get_indicators():
     available_inds = {
@@ -166,24 +168,31 @@ class SCG(Indicator):
         ts_l = ts_l[-min_len:].reset_index(drop=True)
         ts_s = ts_s[-min_len:].reset_index(drop=True)
         ts_s_var = ts_s.pct_change().dropna()
+        ts_l_var = ts_l.pct_change().dropna()
         ts_diff_ml = ts_m - ts_l
         ts_diff_sm = ts_s - ts_m
+        ts_diff_sm_var = ts_diff_ml.pct_change().dropna()
         ts_diff_ml_var = ts_diff_ml.pct_change().dropna()
 
         cg = (ts_diff_ml > 0) & (ts_diff_sm > 0)
-        cg_periods = 0
-        i = len(cg) - 1
-        flag = False
-        while i >= 0 and not flag:
-            if cg[i]:
-                cg_periods += 1
-                i -= 1
-            else:
-                flag = True
+        cg_periods = count_periods_from_now(cg)
         if cg_periods == 0:
             scg_index = 0
         else:
-            scg_index = 100 - cg_periods + ts_diff_ml_var[i]
+            scg_index = (
+                100 - cg_periods + ts_diff_ml_var[len(cg) - 1 - cg_periods]
+            )
+
+        eo = ts_diff_sm > 0
+        early_onset_periods = count_periods_from_now(eo)
+        early_onset = early_onset_periods > 0
+        seo_index = (
+            100
+            - early_onset_periods
+            + ts_diff_sm_var[len(eo) - 1 - early_onset_periods]
+            if early_onset
+            else 0
+        )
 
         self.value = {
             "params": [
@@ -195,11 +204,15 @@ class SCG(Indicator):
             "line_l": ts_l.to_list(),
             "line_s": ts_s.to_list(),
             "line_s_var": ts_s_var.to_list(),
+            "line_l_var": ts_l_var.to_list(),
             "line_diff_ml": ts_diff_ml.to_list(),
             "line_diff_sm": ts_diff_sm.to_list(),
             "current_good": bool(cg[len(cg) - 1]),
             "current_good_periods": cg_periods,
             "scg_index": scg_index,
+            "early_onset": early_onset,
+            "early_onset_periods": early_onset_periods,
+            "seo_index": seo_index,
         }
         return self.value
 

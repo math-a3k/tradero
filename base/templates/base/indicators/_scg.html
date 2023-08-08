@@ -11,5 +11,8 @@
 		{% endfor %}<br>
 		CG: <strong>{{ symbol.others.scg.current_good|yesno|upper }}</strong> |
 		CG Periods: <strong>{{ symbol.others.scg.current_good_periods }}</strong> |
-		SCG Index: <strong><span class="scg-value">{{ symbol.others.scg.scg_index|floatformat:2 }}</span></strong>
+		SCG Index: <strong><span class="scg-value">{{ symbol.others.scg.scg_index|floatformat:2 }}</span></strong> <br>
+		EO: <strong>{{ symbol.others.scg.early_onset|yesno|upper }}</strong> |
+		EO Periods: <strong>{{ symbol.others.scg.early_onset_periods }}</strong> |
+		SEO Index: <strong><span class="seo-value">{{ symbol.others.scg.seo_index|floatformat:2 }}</span></strong>
 </p>
