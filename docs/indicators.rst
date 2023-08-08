@@ -80,11 +80,17 @@ SCG Indicator
 
 The SCG (*Simple Current Good*) is tradero-developed indicator aimed to detect "positive waves" of Symbols which aims to be the successor of MACD/CG.
 
-It uses simple Moving Averages (MAs) with Binance's short, middle and long term tendencies defaults (lines) to spot trading opportunities.
+It uses simple Moving Averages (MAs) with Binance's short, middle and long term tendencies defaults (lines) to spot trading opportunities ("postive waves").
 
-While tracking this tendencies, it calculates its differences, variations and *Current Good* status (short one is above middle which is above long one) and calculates an index for providing an ordering of the Symbols where the top one would be the earliest onset of a "postive wave" with the highest slope under the *CG* status.
+While tracking this tendencies, it calculates its differences, variations and status: *Current Good* (*CG*) and *Early Onset* (*EO*).
 
-The index (*SCG*) takes into acount the amount of periods the Symbol has been in *CG* and the distance of the middle line from the long one. The less periods and higher distance, the higher the value. The index is zero when there is no *CG* status.
+*Current Good* status is when short-term line one is above middle which is above long one.
+
+The *SCG index* takes into acount the amount of periods the Symbol has been in *CG* and the distance of the middle line from the long one. The less periods and higher distance, the higher the value. The index is zero when there is no *CG* status and provides an ordering of preference at the "earliest onset of the positive wave" under the status.
+
+*Early Onset* status is when the short-term line one is only above middle one (independently of the long-term line).
+
+The *SEO index* (Simple Early Onset) is analogous to the *SCG* but only considers the short and middle term relation.
 
 .. image:: macd_cg.png
 
