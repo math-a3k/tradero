@@ -73,7 +73,13 @@ class User(AbstractUser):
 
     @property
     def trade_summary(self):
-        return TradeHistory.summary_for_bot_or_user(user=self)
+        return TradeHistory.summary_for_object(self)
+
+    def save(self, *args, **kwargs):
+        created = True if not self.pk else False
+        super().save(*args, **kwargs)
+        if created:
+            TraderoBotGroup.objects.create(user=self)
 
 
 class WSClient(models.Model):
@@ -1341,6 +1347,47 @@ class OutliersSVC(OutlierDetectionModel, OneClassSVC):
         verbose_name_plural = "Outliers SVCs"
 
 
+class TraderoBotGroupManager(models.Manager):
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                models.Prefetch(
+                    "bots", queryset=TraderoBot.objects.order_by("name")
+                )
+            )
+        )
+
+
+class TraderoBotGroup(models.Model):
+    user = models.ForeignKey(
+        User,
+        verbose_name="User",
+        related_name="botgroups",
+        on_delete=models.PROTECT,
+    )
+    name = models.CharField(
+        "Name",
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    others = models.JSONField("Others", default=dict, blank=True)
+
+    objects = TraderoBotGroupManager()
+
+    class Meta:
+        verbose_name = "Tradero Bots Group"
+        verbose_name_plural = "Tradero Bots Groups"
+
+    def __str__(self):
+        return f"{self.name}"
+
+    def get_absolute_url(self):
+        return reverse("base:botzinhos-group-detail", kwargs={"pk": self.pk})
+
+
 class TraderoBotManager(models.Manager):
     def enabled(self):
         return self.get_queryset().exclude(
@@ -1375,6 +1422,12 @@ class TraderoBot(models.Model):
     user = models.ForeignKey(
         User,
         verbose_name="User",
+        related_name="bots",
+        on_delete=models.PROTECT,
+    )
+    group = models.ForeignKey(
+        TraderoBotGroup,
+        verbose_name="Group",
         related_name="bots",
         on_delete=models.PROTECT,
     )
@@ -2158,15 +2211,18 @@ class TradeHistory(models.Model):
         return result
 
     @classmethod
-    def summary_for_bot_or_user(cls, bot=None, user=None):
-        if bot:
-            qs = cls.objects.filter(bot=bot)
-            checkpoint = bot.user.checkpoint
-        else:
-            qs = cls.objects.filter(user=user)
-            checkpoint = user.checkpoint
+    def summary_for_object(cls, obj=None):
+        if isinstance(obj, TraderoBot):
+            qs = cls.objects.filter(bot=obj)
+            checkpoint = obj.user.checkpoint
+        elif isinstance(obj, User):
+            qs = cls.objects.filter(user=obj)
+            checkpoint = obj.checkpoint
+        else:  # TraderoBotGroup object
+            qs = cls.objects.filter(bot__group=obj)
+            checkpoint = obj.user.checkpoint
         result = {
-            "object": bot or user,
+            "object": obj,
             "cp": checkpoint,
             "dummy": cls.summary(qs.filter(is_dummy=True), checkpoint),
             "real": cls.summary(qs.filter(is_dummy=False), checkpoint),

@@ -15,8 +15,8 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import TraderoBotForm, UserForm
-from .models import Symbol, TradeHistory, TraderoBot, User
+from .forms import TraderoBotForm, TraderoBotGroupForm, UserForm
+from .models import Symbol, TradeHistory, TraderoBot, TraderoBotGroup, User
 
 
 class HomeView(TemplateView):
@@ -53,7 +53,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         trades = self.object.trades.all().order_by("-id")
-        summary = TradeHistory.summary_for_bot_or_user(user=self.object)
+        summary = TradeHistory.summary_for_object(self.object)
         #
         paginator = Paginator(trades, 5)
         page_number = self.request.GET.get("page", 1)
@@ -93,7 +93,7 @@ class BotzinhosView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["bots"] = TraderoBot.objects.filter(
+        context["groups"] = TraderoBotGroup.objects.filter(
             user=self.request.user
         ).order_by("name")
         context["time_interval"] = settings.TIME_INTERVAL_BOTS
@@ -108,7 +108,7 @@ class BotzinhosDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         trades = self.object.trades.all().order_by("-id")
-        summary = TradeHistory.summary_for_bot_or_user(bot=self.object)
+        summary = TradeHistory.summary_for_object(self.object)
         #
         paginator = Paginator(trades, 5)
         page_number = self.request.GET.get("page", 1)
@@ -122,44 +122,28 @@ class BotzinhosDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
 
 class BotzinhosCreateView(LoginRequiredMixin, CreateView):
     model = TraderoBot
-    form = TraderoBotForm
+    form_class = TraderoBotForm
     template_name = "base/botzinhos_form.html"
-    fields = [
-        "name",
-        "strategy",
-        "strategy_params",
-        "is_dummy",
-        "symbol",
-        "fund_quote_asset",
-        "fund_quote_asset_initial",
-        "fund_base_asset",
-        "is_jumpy",
-        "should_reinvest",
-        "should_stop",
-    ]
 
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update(user=self.request.user)
+        return kwargs
+
 
 class BotzinhosUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
     model = TraderoBot
-    form = TraderoBotForm
+    form_class = TraderoBotForm
     template_name = "base/botzinhos_form.html"
-    fields = [
-        "name",
-        "strategy",
-        "strategy_params",
-        "is_dummy",
-        "symbol",
-        "fund_quote_asset",
-        "fund_quote_asset_initial",
-        "fund_base_asset",
-        "is_jumpy",
-        "should_reinvest",
-        "should_stop",
-    ]
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update(user=self.request.user)
+        return kwargs
 
 
 class BotzinhosActionsView(OwnerMixin, LoginRequiredMixin, RedirectView):
@@ -207,3 +191,45 @@ class BotzinhosActionsView(OwnerMixin, LoginRequiredMixin, RedirectView):
         self.get_object()
         self.run_action(kwargs["action"])
         return self.request.META.get("HTTP_REFERER", "/")
+
+
+class BotzinhosGroupDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
+    model = TraderoBotGroup
+    template_name = "base/botzinhos_group_detail.html"
+    context_object_name = "group"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        bots = TraderoBot.objects.filter(group=self.object)
+        trades = TradeHistory.objects.filter(
+            bot__group=self.object, is_complete=True
+        ).order_by("-id")
+        summary = TradeHistory.summary_for_object(self.object)
+        #
+        paginator = Paginator(trades, 10)
+        page_number = self.request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+        #
+        context["page_obj"] = page_obj
+        context["time_interval"] = settings.TIME_INTERVAL_BOTS
+        context["bots"] = bots
+        context["summary"] = summary
+        return context
+
+
+class BotzinhosGroupCreateView(LoginRequiredMixin, CreateView):
+    model = TraderoBotGroup
+    form = TraderoBotGroupForm
+    template_name = "base/botzinhos_group_form.html"
+    fields = ["name"]
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+class BotzinhosGroupUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
+    model = TraderoBotGroup
+    form = TraderoBotGroupForm
+    template_name = "base/botzinhos_group_form.html"
+    fields = ["name"]
