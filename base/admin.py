@@ -13,6 +13,7 @@ from .models import (
     Symbol,
     TradeHistory,
     TraderoBot,
+    TraderoBotGroup,
     TraderoBotLog,
     TrainingData,
     User,
@@ -206,6 +207,33 @@ class WSClientAdmin(admin.ModelAdmin):
     get_is_open.short_description = "Is Open?"
 
 
+class TraderoBotInline(admin.StackedInline):
+    model = TraderoBot
+    min_num = 1
+    max_num = 20
+    extra = 0
+    ordering = ["-timestamp_start"]
+    readonly_fields = [
+        "receipt_buying",
+        "receipt_selling",
+    ]
+
+
+@admin.register(TraderoBotGroup)
+class TraderoBotGroupAdmin(admin.ModelAdmin):
+    """
+    Admin View for TraderoBotGroup
+    """
+
+    list_display = (
+        "id",
+        "user",
+        "name",
+    )
+    list_filter = ("user",)
+    inlines = [TraderoBotInline]
+
+
 class TradeHistoryInline(admin.StackedInline):
     model = TradeHistory
     min_num = 3
@@ -232,6 +260,7 @@ class TraderoBotAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "user",
+        "group",
         "status",
         "symbol",
         "should_reinvest",

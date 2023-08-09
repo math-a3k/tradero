@@ -20,7 +20,15 @@ from base import tasks
 
 from .consumers import BotHTMLConsumer, SymbolHTMLConsumer, SymbolJSONConsumer
 from .handlers import message_handler
-from .models import Kline, Symbol, TraderoBot, TrainingData, User, WSClient
+from .models import (
+    Kline,
+    Symbol,
+    TraderoBot,
+    TraderoBotGroup,
+    TrainingData,
+    User,
+    WSClient,
+)
 
 BINANCE_API_URL = "https://api.binance.com"
 TEST_SETTINGS = {
@@ -141,7 +149,14 @@ class TestViews(TestCase):
         cls.user2, _ = User.objects.get_or_create(
             username="user2", password="secret", email="admin@example.com"
         )
+        cls.group1, _ = TraderoBotGroup.objects.get_or_create(
+            user=cls.user1, name="Test Group 1"
+        )
+        cls.group2, _ = TraderoBotGroup.objects.get_or_create(
+            user=cls.user2, name="Test Group 2"
+        )
         cls.bot1 = TraderoBot(
+            group=cls.group1,
             symbol=cls.s1,
             user=cls.user1,
             fund_quote_asset_initial=Decimal("10"),
@@ -204,6 +219,7 @@ class TestViews(TestCase):
             url,
             {
                 "name": "testing botzinho",
+                "group": self.group1.pk,
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
@@ -213,6 +229,74 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             TraderoBot.objects.filter(name="testing botzinho").count(),
+            1,
+        )
+
+    def test_botzinhos_update(self):
+        self.client.force_login(self.user1)
+        url = reverse("base:botzinhos-update", args=[self.bot1.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinho update",
+                "group": self.group1.pk,
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "strategy_params": "microgain=0.3",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBot.objects.filter(name="testing botzinho update").count(),
+            1,
+        )
+
+    def test_botzinhos_group_detail(self):
+        self.client.force_login(self.user2)
+        url = reverse("base:botzinhos-group-detail", args=[self.group1.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_botzinhos_group_create(self):
+        self.client.force_login(self.user1)
+        url = reverse("base:botzinhos-group-create")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinhos group",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBotGroup.objects.filter(
+                name="testing botzinhos group"
+            ).count(),
+            1,
+        )
+
+    def test_botzinhos_group_update(self):
+        self.client.force_login(self.user1)
+        url = reverse("base:botzinhos-group-update", args=[self.group1.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinhos group update",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBotGroup.objects.filter(
+                name="testing botzinhos group update"
+            ).count(),
             1,
         )
 
@@ -266,16 +350,21 @@ class TestAdmin(TestCase):
             base_asset="S1",
             quote_asset="BUSD",
         )
+        cls.group1, _ = TraderoBotGroup.objects.get_or_create(
+            user=cls.superuser, name="Test Group 1"
+        )
         # Review why get_or_create does not work (probably because of save)
         cls.bot1 = TraderoBot(
             symbol=cls.s1,
             user=cls.superuser,
+            group=cls.group1,
         )
         cls.bot1.save()
         cls.bot1.on()
         cls.bot2 = TraderoBot(
             symbol=cls.s1,
             user=cls.superuser,
+            group=cls.group1,
         )
         cls.bot2.save()
         super().setUpClass()
@@ -533,7 +622,12 @@ class TestConsumers(TestCase):
         cls.user, _ = User.objects.get_or_create(
             username="user", password="secret", email="admin@example.com"
         )
-        cls.bot = TraderoBot(user=cls.user, symbol=cls.s1, name="BTZN")
+        cls.group1, _ = TraderoBotGroup.objects.get_or_create(
+            user=cls.user, name="Test Group 1"
+        )
+        cls.bot = TraderoBot(
+            user=cls.user, symbol=cls.s1, name="BTZN", group=cls.group1
+        )
         cls.bot.save()
         cls.channel_layer = get_channel_layer()
 
@@ -709,9 +803,13 @@ class BotTestCase(TestCase):
         cls.user1, _ = User.objects.get_or_create(
             username="user1", password="secret", email="admin@example.com"
         )
+        cls.group1, _ = TraderoBotGroup.objects.get_or_create(
+            user=cls.user1, name="Test Group 1"
+        )
         cls.bot1 = TraderoBot(
             symbol=cls.s1,
             user=cls.user1,
+            group=cls.group1,
             strategy="acmadness",
             strategy_params="microgain=0.3",
             fund_quote_asset_initial=10,
@@ -723,6 +821,7 @@ class BotTestCase(TestCase):
         cls.bot2 = TraderoBot(
             symbol=cls.s2,
             user=cls.user1,
+            group=cls.group1,
             strategy="acmadness",
             strategy_params="microgain=0.3",
             fund_quote_asset_initial=10,

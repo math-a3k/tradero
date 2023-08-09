@@ -14,11 +14,17 @@
 			<strong>UTC</strong> - Time Interval: <span class="text-primary fw-bolder">| {{ time_interval }}m |</span>
 		</h6>
 
+		{% for group in groups %}
+		<div class="container bg-success bg-gradient">
+			<h4 class="mt-1 mb-0 p-2 text-light">GROUP: <a class="text-warning" href="{% url "base:botzinhos-group-detail" group.pk %}">{{ group.name|default:"(Sem Nome)" }}</a></h4>
+		</div>
+
 		<div id="bots-list" class="list-group">
-		{% for bot in bots %}
+		{% for bot in group.bots.all %}
 			{% bot_render_html_snippet bot=bot %}
 		{% endfor %}
 		</div>
+		{% endfor %}
 
 		{% comment "not needed for now" %}
 		<div class="form-check form-check-inline">
@@ -43,7 +49,8 @@
 	</div>
 
 	<div class="container">
-		<a class="btn btn-primary btn-lg" href="{% url "base:botzinhos-create" %}" role="button">Novo</a>
+		<a class="btn btn-primary btn-lg" href="{% url "base:botzinhos-create" %}" role="button">Novo</a> &nbsp;
+		<a class="btn btn-primary btn-lg" href="{% url "base:botzinhos-group-create" %}" role="button">Novo Grupo</a>
 	</div>
 
 	{% if user.bots_motto %}

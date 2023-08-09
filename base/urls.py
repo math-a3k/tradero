@@ -56,6 +56,21 @@ urlpatterns = [
         base_views.BotzinhosActionsView.as_view(),
         name="botzinhos-actions",
     ),
+    path(
+        "Botzinhos/Grupo/Novo",
+        base_views.BotzinhosGroupCreateView.as_view(),
+        name="botzinhos-group-create",
+    ),
+    path(
+        "Botzinhos/Grupo/<pk>",
+        base_views.BotzinhosGroupDetailView.as_view(),
+        name="botzinhos-group-detail",
+    ),
+    path(
+        "Botzinhos/Grupo/<pk>/Atualizar",
+        base_views.BotzinhosGroupUpdateView.as_view(),
+        name="botzinhos-group-update",
+    ),
     #
     path("api/v1/", include(("base.api.v1.urls", "base"), namespace="v1")),
 ]
