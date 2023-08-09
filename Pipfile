@@ -38,7 +38,7 @@ asyncio = "*"
 django-ai = {editable = true, ref = "tradero", git = "https://github.com/math-a3k/django-ai"}
 celery = {extras = ["redis"], version = "*"}
 django-celery-results = "*"
-django-celery-beat = {file = "https://github.com/celery/django-celery-beat/zipball/master"}
+django-celery-beat = {git = "https://github.com/celery/django-celery-beat"}
 python-crontab = "*"
 pytest-celery = "*"
 django-axes = {version = "*", extras = ["ipware"]}
