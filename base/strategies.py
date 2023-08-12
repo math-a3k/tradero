@@ -32,6 +32,12 @@ class TradingStrategy:
     def time_safeguard(self):
         return (timezone.now() - self.bot.symbol.last_updated).seconds > 60
 
+    def local_memory_update(self):
+        pass
+
+    def has_local_memory(self, symbol):
+        pass
+
 
 class ACMadness(TradingStrategy):
     """
