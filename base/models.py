@@ -1571,6 +1571,7 @@ class TraderoBot(models.Model):
         else:
             self.timestamp_start = self.timestamp_start or timezone.now()
             self.status = self.Status.BUYING
+        self.local_memory_reset()
         self.log_trade()
         self.log(self.Action.TURN_ON, "Turned ON")
         self.save()
@@ -1578,6 +1579,7 @@ class TraderoBot(models.Model):
 
     def off(self):
         self.status = self.Status.INACTIVE
+        self.local_memory_reset()
         self.log(self.Action.TURN_OFF, "Turned OFF")
         self.save()
         return True
@@ -1702,6 +1704,7 @@ class TraderoBot(models.Model):
         self.symbol = to_symbol
         self.fund_base_asset = None
         self.price_current = self.get_current_price()
+        self.local_memory_reset()
         self.log(
             self.Action.JUMP,
             f"Jumped from {current_symbol} to {to_symbol}{fba_msg}",
@@ -1710,6 +1713,7 @@ class TraderoBot(models.Model):
 
     def decide(self):
         strategy = self.get_strategy()
+        self.local_memory_update(strategy)
         if self.status == self.Status.BUYING:
             should_buy, message = strategy.evaluate_buy()
             if should_buy:
@@ -1730,6 +1734,26 @@ class TraderoBot(models.Model):
                 return
         self.log(self.Action.HOLD, message)
         self.save()
+
+    def local_memory_update(self, strategy=None):
+        strategy = strategy or self.get_strategy()
+        strategy.local_memory_update()
+
+    def has_local_memory(self, symbol=None, strategy=None):
+        symbol = symbol or self.symbol
+        strategy = strategy or self.get_strategy()
+        return strategy.has_local_memory(symbol)
+
+    def local_memory_reset(self):
+        self.others["local_memory"] = {}
+
+    def get_local_memory(self, symbol=None):
+        symbol = symbol or self.symbol
+        return self.others["local_memory"].get(symbol.symbol, {})
+
+    def set_local_memory(self, symbol=None, value={}):
+        symbol = symbol or self.symbol
+        self.others["local_memory"][self.symbol.symbol] = value
 
     def get_current_price(self):
         client = self.get_client()

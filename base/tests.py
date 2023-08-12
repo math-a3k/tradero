@@ -995,6 +995,29 @@ class TestTraderoBots(BotTestCase):
             self.bot1.decide()
             self.assertIn("below threshold", self.bot1.others["last_logs"][-1])
 
+    def test_local_memory(self):
+        self.assertTrue(self.bot1.has_local_memory() is None)
+        self.bot1.set_local_memory(value={"test": [1]})
+        lm = self.bot1.get_local_memory()
+        self.assertEqual(lm, {"test": [1]})
+        self.bot1.local_memory_reset()
+        self.assertEqual(self.bot1.get_local_memory(), {})
+        with mock.patch(
+            "base.strategies.TradingStrategy.local_memory_update"
+        ) as lmu_mock:
+            lmu_mock.side_effect = self.bot1.set_local_memory(
+                self.s1, {"test": [2]}
+            )
+            self.bot1.decide()
+            self.assertEqual(self.bot1.get_local_memory(), {"test": [2]})
+        with mock.patch(
+            "base.strategies.TradingStrategy.has_local_memory"
+        ) as hlm_mock:
+            hlm_mock.return_value = {
+                "test": [2]
+            } == self.bot1.get_local_memory()
+            self.assertTrue(self.bot1.has_local_memory() is True)
+
 
 class TestStrategies(BotTestCase):
     def test_acmadness(self):
