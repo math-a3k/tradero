@@ -172,6 +172,7 @@ class CatchTheWave(TradingStrategy):
     def __init__(self, bot, symbol=None, **kwargs):
         self.bot = bot
         self.symbol = symbol or self.bot.symbol
+        self.local_memory = self.bot.get_local_memory(self.symbol)
         self.scg = self.symbol.others["scg"]
         self.diff_sm = self.scg["line_diff_sm"]  # Short - Middle tendency
         self.s_var = self.scg["line_s_var"]  # Var of the Short tendency
@@ -182,13 +183,21 @@ class CatchTheWave(TradingStrategy):
         self.onset_periods = int(kwargs.get("onset_periods", "2"))
         self.maxima_tol = Decimal(kwargs.get("maxima_tol", "0.1"))
         self.sell_safeguard = Decimal(kwargs.get("sell_safeguard", "0.3"))
+        self.use_local_memory = bool(int(kwargs.get("use_local_memory", "1")))
+        self.use_matrix_time_res = bool(
+            int(kwargs.get("use_matrix_time_res", "0"))
+        )
 
     def evaluate_buy(self):
+        if self.use_matrix_time_res and self.time_safeguard:
+            return (False, "Holding - Using matrix's time resolution...")
         if self.is_on_good_status() and self.is_on_wave_onset():
             return True, None
         return (False, "Symbol is not in good status and ascending...")
 
     def evaluate_sell(self):
+        if self.use_matrix_time_res and self.time_safeguard:
+            return (False, "Holding - Using matrix's time resolution")
         if self.bot.price_current > self.get_min_selling_threshold():
             if self.sell_on_maxima and self.is_local_maxima():
                 return True, None
@@ -202,6 +211,8 @@ class CatchTheWave(TradingStrategy):
         )
 
     def evaluate_jump(self):
+        if self.use_matrix_time_res and self.time_safeguard:
+            return False, None
         symbols_with_siblings = self.get_symbols_with_siblings()
         symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
         if self.early_onset:
@@ -243,16 +254,54 @@ class CatchTheWave(TradingStrategy):
         return self.scg["current_good"]
 
     def is_local_maxima(self):
+        if self.local_memory_available():
+            return self.local_memory["price_var"][-1] < -self.maxima_tol
         return self.s_var[-1] * 100 < -self.maxima_tol
 
     def is_on_wave(self):
         return self.diff_sm[-1] > 0
 
     def is_on_wave_onset(self):
+        if self.local_memory_available():
+            return self.all_positive(
+                self.local_memory["price_var"][-self.onset_periods :]
+            )
         return self.all_positive(self.s_var[-self.onset_periods :])
 
     def not_decreasing(self, line):
-        return all([l * 100 > -self.maxima_tol for l in line])
+        return all([p * 100 > -self.maxima_tol for p in line])
 
     def get_min_selling_threshold(self):
         return self.bot.price_buying * (1 + self.sell_safeguard / 100)
+
+    def local_memory_update(self):
+        if self.use_matrix_time_res and self.time_safeguard:
+            return
+        lm = self.bot.get_local_memory()
+        if not lm:
+            lm = {"price": [], "price_var": []}
+        price, price_var = lm["price"], lm["price_var"]
+        if self.bot.price_current:
+            price = price + [float(self.bot.price_current)]
+            if len(price) > 1:
+                last_var = (Decimal(price[-1]) / Decimal(price[-2]) - 1) * 100
+                price_var = price_var + [float(last_var)]
+        lm = {
+            "price": price[-100:],
+            "price_var": price_var[-100:],
+        }
+        self.local_memory = lm
+        self.bot.set_local_memory(self.symbol, lm)
+
+    def has_local_memory(self, symbol=None):
+        symbol = symbol or self.symbol
+        lm = self.bot.get_local_memory(symbol)
+        price = lm.get("price", [])
+        if len(price) > 1:
+            return True
+        return False
+
+    def local_memory_available(self):
+        return self.use_local_memory and self.bot.has_local_memory(
+            self.symbol, strategy=self
+        )

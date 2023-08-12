@@ -65,6 +65,8 @@ Given a Symbol, the bot will buy when it is on "good status" while selling when 
 
 *Good Status* is either when Symbol is at "Current Good" and the short-term tendency is increasing ("wave onset") or at "Early Onset" and the long-term line is not decreasing.
 
+This strategy uses the bots' local memory to track the price movement of the asset at its native time resolution (:setting:`TIME_INTERVAL_BOTS`) while using the indicators from the matrix (also known as *Rainha Botzinha*) at her time resolution (:setting:`TIME_INTERVAL`) to forsee the market situation.
+
 Parameters
 ^^^^^^^^^^
 
@@ -82,6 +84,12 @@ Parameters
 
 ``sell_safeguard``
   Extra percentage of the buying price to set the min. selling threshold for automatic selling in the worst case scenario (``Decimal``, defaults to ``0.3``).
+
+``use_local_memory``
+  Use bot's local memory (``1`` | ``0``, defaults to ``1``)
+
+``use_matrix_time_res``
+  Use matrix's time resolution (:settings:`TIME_INTERVAL`) (``1`` | ``0``, defaults to ``0``)
 
 
 .. rubric:: References

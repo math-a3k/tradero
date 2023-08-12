@@ -811,7 +811,7 @@ class BotTestCase(TestCase):
             user=cls.user1,
             group=cls.group1,
             strategy="acmadness",
-            strategy_params="microgain=0.3",
+            strategy_params="",
             fund_quote_asset_initial=10,
             is_dummy=True,
             is_jumpy=True,
@@ -1084,7 +1084,7 @@ class TestStrategies(BotTestCase):
                 json={"symbol": "S1BUSD", "price": "1.0"},
             )
             self.bot1.strategy = "catchthewave"
-            self.bot1.strategy_params = ""
+            self.bot1.strategy_params = "use_local_memory=0"
             #
             self.s1.others["scg"]["current_good"] = True
             self.s1.others["scg"]["line_s_var"] = [1, 1, 1]
@@ -1100,7 +1100,7 @@ class TestStrategies(BotTestCase):
             self.s1.others["scg"]["line_diff_sm"] = [
                 0,
             ]
-            self.bot1.strategy_params = "sell_on_maxima=0"
+            self.bot1.strategy_params = "use_local_memory=0,sell_on_maxima=0"
             self.bot1.decide()
             self.assertIn("Sold", self.bot1.others["last_logs"][-1])
             self.bot1.buy()
@@ -1123,16 +1123,89 @@ class TestStrategies(BotTestCase):
             self.assertIn(
                 "no other symbol to go", self.bot1.others["last_logs"][-1]
             )
-            self.bot1.strategy_params = "early_onset=1"
+            self.bot1.strategy_params = "use_local_memory=0,early_onset=1"
             self.bot1.symbol.others["scg"]["early_onset"] = True
             self.bot1.symbol.others["scg"]["line_l_var"] = [0.1, 0, -0.11]
             self.s1.others["scg"]["current_good"] = False
             self.s1.others["scg"]["early_onset"] = True
             self.s1.others["scg"]["line_l_var"] = [1, 1, 2]
+            self.s1.others["scg"]["line_s_var"] = [1, 1, 2]
             self.s1.save()
             self.bot1.decide()
             self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            #
+            self.bot1.strategy_params = "use_local_memory=1"
+            self.bot1.reset()
+            self.bot1.on()
+            self.bot1.symbol = self.s1
+            #
+            self.s1.others["scg"]["current_good"] = True
+            self.s1.others["scg"]["line_s_var"] = [1, 1, 1]
+            self.s1.others["scg"]["line_diff_sm"] = [1, 1, 1]
+            self.assertEqual(self.bot1.has_local_memory(), False)
+            self.bot1.decide()
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.assertEqual(self.bot1.has_local_memory(), False)
+            self.bot1.price_current = 1
+            self.bot1.decide()
+            self.assertEqual(self.bot1.has_local_memory(), False)
+            self.assertIn("below min", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 1.001
+            self.bot1.decide()
+            self.assertEqual(self.bot1.has_local_memory(), True)
+            self.assertIn("below min", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 1.3
+            self.bot1.decide()
+            self.assertIn("Kept goin", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 1.299
+            self.bot1.decide()
+            self.assertIn("Kept goin", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 1.2
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 1.5
+            self.bot1.decide()
+            self.assertIn(
+                "not in good status and ascending",
+                self.bot1.others["last_logs"][-1],
+            )
+            self.bot1.price_current = 1.51
+            self.bot1.decide()
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.s1.others["scg"]["line_diff_sm"] = [1, 1, -0.1]
+            self.bot1.price_current = 1.6
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            self.s2.others["scg"]["current_good"] = True
+            self.s2.save()
+            self.bot1.decide()
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.assertEqual(self.bot1.has_local_memory(), False)
+            #
+            self.bot1.strategy_params = (
+                "use_local_memory=1,use_matrix_time_res=1"
+            )
+            #
+            self.bot1.price_current = 1.3
+            self.bot1.decide()
+            self.assertIn("Kept goin", self.bot1.others["last_logs"][-1])
+            self.bot1.symbol.last_updated = (
+                timezone.now() - timezone.timedelta(minutes=2)
+            )
+            self.bot1.price_current = 1.1
+            self.bot1.decide()
+            self.assertIn(
+                "Using matrix's time resolution",
+                self.bot1.others["last_logs"][-1],
+            )
+            self.bot1.sell()
+            self.bot1.decide()
+            self.assertIn(
+                "Using matrix's time resolution",
+                self.bot1.others["last_logs"][-1],
+            )
 
 
 @pytest.mark.usefixtures("celery_session_app")
