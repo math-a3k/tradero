@@ -85,6 +85,15 @@ Default: ``0.3``
 
 Minimum model score of a Symbol. Symbols below this threshold will not be tracked and listed to the User.
 
+.. setting:: CLEANING_WINDOW
+
+``CLEANING_WINDOW``
+===================
+
+Default: ``1000``
+
+Amount of Klines and Training Data Time Intervals (observations) to be left for each Symbol after updating indicators. Controls how much data is fed to the Prediction Model. A value of ``1500`` will fed the Prediction Model with at most the last 1500 Training Data and "clean" the older.
+
 
 .. setting:: PREDICTION_MODEL_CLASS
 

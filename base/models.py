@@ -486,7 +486,7 @@ class Symbol(models.Model):
     def clean_data(cls):
         # TODO: return n records
         date_threshold = timezone.now() - timezone.timedelta(
-            minutes=settings.TIME_INTERVAL * 1000
+            minutes=settings.TIME_INTERVAL * settings.CLEANING_WINDOW
         )
         Kline.objects.filter(time_close__lt=date_threshold).delete()
         TrainingData.objects.filter(time__lt=date_threshold).delete()

@@ -321,6 +321,10 @@ PREDICTION_MODEL_CLASS = env.str(
     "base.models.DecisionTreeRegressor",
 )
 
+# Cleaning Window (Klines and Training Data Time Intervals to be left after
+# after updating indicators for a Symbol)
+CLEANING_WINDOW = env.int("TRADERO_CLEANING_WINDOW", 1000)
+
 # Enable Outliers detection
 OUTLIERS_ENABLED = env.bool("TRADERO_OUTIERS_ENABLED", True)
 
