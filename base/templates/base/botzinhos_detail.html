@@ -19,6 +19,9 @@
 		</div>
 
 		<p></p>
+		{% if bot.jumpy_whitelist or bot.jumpy_blacklist %}
+		<p><strong>Jumpy lists</strong>: {{ bot.jumpy_whitelist|default:"-" }} (White) | {{ bot.jumpy_blacklist|default:"-" }} (Black)</p>
+		{% endif %}
 		{% if bot.fund_quote_asset %}
 		<p><strong>Fund (Quote Assett)</strong>: {{ bot.fund_quote_asset }} {{ bot.symbol.quote_asset }}</p>
 		{% endif %}

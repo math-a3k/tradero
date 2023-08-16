@@ -19,6 +19,8 @@ class TraderoBotForm(forms.ModelForm):
             "fund_quote_asset_initial",
             "fund_base_asset",
             "is_jumpy",
+            "jumpy_whitelist",
+            "jumpy_blacklist",
             "should_reinvest",
             "should_stop",
         ]

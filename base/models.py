@@ -12,6 +12,7 @@ from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -1493,8 +1494,11 @@ class TraderoBot(models.Model):
         default="microgain=0.3,ac_factor=6",
     )
     is_jumpy = models.BooleanField("Jumpy?", default=False)
+    jumpy_whitelist = models.CharField(
+        "Jumpy Symbols' Whitelist", max_length=1024, blank=True, null=True
+    )
     jumpy_blacklist = models.CharField(
-        "Jumpy Symbols' Blacklist", max_length=510, default=""
+        "Jumpy Symbols' Blacklist", max_length=1024, blank=True, null=True
     )
     should_reinvest = models.BooleanField("Should Reinvest?", default=True)
     should_stop = models.BooleanField(
@@ -1583,6 +1587,10 @@ class TraderoBot(models.Model):
 
     def save(self, *args, **kwargs):
         self.others["ws_group_name"] = f"bots_html_{self.user.username}"
+        if self.jumpy_whitelist:
+            self.jumpy_whitelist = self.jumpy_whitelist.upper()
+        if self.jumpy_blacklist:
+            self.jumpy_blacklist = self.jumpy_blacklist.upper()
         super().save(*args, **kwargs)
         if not self.name:
             self.name = f"{settings.BOT_DEFAULT_NAME}-{self.pk:03d}"
@@ -1868,6 +1876,16 @@ class TraderoBot(models.Model):
             return last_log.message
         return None
 
+    def get_jumpy_blacklist(self):
+        if self.jumpy_blacklist:
+            return [s.strip().upper() for s in self.jumpy_blacklist.split(",")]
+        return []
+
+    def get_jumpy_whitelist(self):
+        if self.jumpy_whitelist:
+            return [s.strip().upper() for s in self.jumpy_whitelist.split(",")]
+        return []
+
     def render_html_snippet(self, set_cache=False):
         cache_key = f"bot_{self.pk}_html"
         html = cache.get(cache_key)
@@ -1895,6 +1913,27 @@ class TraderoBot(models.Model):
                 },
             },
         )
+
+    def clean(self):
+        super().clean()
+        # Check validity of jumpy_whitelist
+        jumpy_whitelist = self.get_jumpy_whitelist()
+        if jumpy_whitelist:
+            if len(Symbol.objects.filter(symbol__in=jumpy_whitelist)) < len(
+                jumpy_whitelist
+            ):
+                raise ValidationError(
+                    {"jumpy_whitelist": "Unrecognized Symbols."}
+                )
+        # Check validity of jumpy_blacklist
+        jumpy_blacklist = self.get_jumpy_blacklist()
+        if jumpy_blacklist:
+            if len(Symbol.objects.filter(symbol__in=jumpy_blacklist)) < len(
+                jumpy_blacklist
+            ):
+                raise ValidationError(
+                    {"jumpy_blacklist": "Unrecognized Symbols."}
+                )
 
     @classmethod
     def update_all_bots(cls):
