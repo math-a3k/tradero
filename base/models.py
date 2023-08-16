@@ -642,6 +642,9 @@ class Kline(models.Model):
     variation = models.DecimalField(
         "Variation", max_digits=20, decimal_places=8
     )
+    variation_range = models.DecimalField(
+        "Variation Range", max_digits=20, decimal_places=8
+    )
 
     class Meta:
         verbose_name = "Kline"
@@ -713,6 +716,8 @@ class Kline(models.Model):
             volume_tb_quote_asset=b_kline[10],
             variation=((Decimal(b_kline[4]) / Decimal(b_kline[1])) * 100)
             - 100,
+            variation_range=((Decimal(b_kline[2]) / Decimal(b_kline[3])) * 100)
+            - 100,
         )
         return kline
 
@@ -767,6 +772,11 @@ class Kline(models.Model):
             volume_tb_quote_asset=ws_kline["k"]["Q"],
             variation=(
                 (Decimal(ws_kline["k"]["c"]) / Decimal(ws_kline["k"]["o"]))
+                * 100
+            )
+            - 100,
+            variation_range=(
+                (Decimal(ws_kline["k"]["h"]) / Decimal(ws_kline["k"]["l"]))
                 * 100
             )
             - 100,
@@ -890,26 +900,26 @@ class TrainingData(models.Model):
         "variation_18",
         "variation_19",
         "variation_20",
-        # "variation_21",
-        # "variation_22",
-        # "variation_23",
-        # "variation_24",
-        # "variation_25",
-        # "variation_26",
-        # "variation_27",
-        # "variation_28",
-        # "variation_29",
-        # "variation_30",
-        # "variation_31",
-        # "variation_32",
-        # "variation_33",
-        # "variation_34",
-        # "variation_35",
-        # "variation_36",
-        # "variation_37",
-        # "variation_38",
-        # "variation_39",
-        # "variation_40",
+        "variation_range_01",
+        "variation_range_02",
+        "variation_range_03",
+        "variation_range_04",
+        "variation_range_05",
+        "variation_range_06",
+        "variation_range_07",
+        "variation_range_08",
+        "variation_range_09",
+        "variation_range_10",
+        "variation_range_11",
+        "variation_range_12",
+        "variation_range_13",
+        "variation_range_14",
+        "variation_range_15",
+        "variation_range_16",
+        "variation_range_17",
+        "variation_range_18",
+        "variation_range_19",
+        "variation_range_20",
     ]
 
     symbol = models.ForeignKey(
@@ -988,66 +998,66 @@ class TrainingData(models.Model):
     variation_20 = models.DecimalField(
         "Variation (t-20)", max_digits=20, decimal_places=8
     )
-    # variation_21 = models.DecimalField(
-    #     "Variation (t-21)", max_digits=20, decimal_places=8
-    # )
-    # variation_22 = models.DecimalField(
-    #     "Variation (t-22)", max_digits=20, decimal_places=8
-    # )
-    # variation_23 = models.DecimalField(
-    #     "Variation (t-23)", max_digits=20, decimal_places=8
-    # )
-    # variation_24 = models.DecimalField(
-    #     "Variation (t-24)", max_digits=20, decimal_places=8
-    # )
-    # variation_25 = models.DecimalField(
-    #     "Variation (t-25)", max_digits=20, decimal_places=8
-    # )
-    # variation_26 = models.DecimalField(
-    #     "Variation (t-26)", max_digits=20, decimal_places=8
-    # )
-    # variation_27 = models.DecimalField(
-    #     "Variation (t-27)", max_digits=20, decimal_places=8
-    # )
-    # variation_28 = models.DecimalField(
-    #     "Variation (t-28)", max_digits=20, decimal_places=8
-    # )
-    # variation_29 = models.DecimalField(
-    #     "Variation (t-29)", max_digits=20, decimal_places=8
-    # )
-    # variation_30 = models.DecimalField(
-    #     "Variation (t-30)", max_digits=20, decimal_places=8
-    # )
-    # variation_31 = models.DecimalField(
-    #     "Variation (t-31)", max_digits=20, decimal_places=8
-    # )
-    # variation_32 = models.DecimalField(
-    #     "Variation (t-32)", max_digits=20, decimal_places=8
-    # )
-    # variation_33 = models.DecimalField(
-    #     "Variation (t-33)", max_digits=20, decimal_places=8
-    # )
-    # variation_34 = models.DecimalField(
-    #     "Variation (t-34)", max_digits=20, decimal_places=8
-    # )
-    # variation_35 = models.DecimalField(
-    #     "Variation (t-35)", max_digits=20, decimal_places=8
-    # )
-    # variation_36 = models.DecimalField(
-    #     "Variation (t-36)", max_digits=20, decimal_places=8
-    # )
-    # variation_37 = models.DecimalField(
-    #     "Variation (t-37)", max_digits=20, decimal_places=8
-    # )
-    # variation_38 = models.DecimalField(
-    #     "Variation (t-38)", max_digits=20, decimal_places=8
-    # )
-    # variation_39 = models.DecimalField(
-    #     "Variation (t-39)", max_digits=20, decimal_places=8
-    # )
-    # variation_40 = models.DecimalField(
-    #     "Variation (t-40)", max_digits=20, decimal_places=8
-    # )
+    variation_range_01 = models.DecimalField(
+        "Variation Range (t-1)", max_digits=20, decimal_places=8
+    )
+    variation_range_02 = models.DecimalField(
+        "Variation Range (t-2)", max_digits=20, decimal_places=8
+    )
+    variation_range_03 = models.DecimalField(
+        "Variation Range (t-3)", max_digits=20, decimal_places=8
+    )
+    variation_range_04 = models.DecimalField(
+        "Variation Range (t-4)", max_digits=20, decimal_places=8
+    )
+    variation_range_05 = models.DecimalField(
+        "Variation Range (t-5)", max_digits=20, decimal_places=8
+    )
+    variation_range_06 = models.DecimalField(
+        "Variation Range (t-6)", max_digits=20, decimal_places=8
+    )
+    variation_range_07 = models.DecimalField(
+        "Variation Range (t-7)", max_digits=20, decimal_places=8
+    )
+    variation_range_08 = models.DecimalField(
+        "Variation Range (t-8)", max_digits=20, decimal_places=8
+    )
+    variation_range_09 = models.DecimalField(
+        "Variation Range (t-9)", max_digits=20, decimal_places=8
+    )
+    variation_range_10 = models.DecimalField(
+        "Variation Range (t-10)", max_digits=20, decimal_places=8
+    )
+    variation_range_11 = models.DecimalField(
+        "Variation Range (t-11)", max_digits=20, decimal_places=8
+    )
+    variation_range_12 = models.DecimalField(
+        "Variation Range (t-12)", max_digits=20, decimal_places=8
+    )
+    variation_range_13 = models.DecimalField(
+        "Variation Range (t-13)", max_digits=20, decimal_places=8
+    )
+    variation_range_14 = models.DecimalField(
+        "Variation Range (t-14)", max_digits=20, decimal_places=8
+    )
+    variation_range_15 = models.DecimalField(
+        "Variation Range (t-15)", max_digits=20, decimal_places=8
+    )
+    variation_range_16 = models.DecimalField(
+        "Variation Range (t-16)", max_digits=20, decimal_places=8
+    )
+    variation_range_17 = models.DecimalField(
+        "Variation Range (t-17)", max_digits=20, decimal_places=8
+    )
+    variation_range_18 = models.DecimalField(
+        "Variation Range (t-18)", max_digits=20, decimal_places=8
+    )
+    variation_range_19 = models.DecimalField(
+        "Variation Range (t-19)", max_digits=20, decimal_places=8
+    )
+    variation_range_20 = models.DecimalField(
+        "Variation Range (t-20)", max_digits=20, decimal_places=8
+    )
 
     class Meta:
         verbose_name = "Training Data"
@@ -1071,7 +1081,13 @@ class TrainingData(models.Model):
         """
         Only one Training Data will be generated for each kline
         """
-        columns = ["time_close", "time_interval", "price_close", "variation"]
+        columns = [
+            "time_close",
+            "time_interval",
+            "price_close",
+            "variation",
+            "variation_range",
+        ]
         last_td = symbol.training_data.order_by("time").last()
         if not last_td:
             ts = (
@@ -1096,6 +1112,9 @@ class TrainingData(models.Model):
 
         for i in range(1, cls.WINDOW + 1):
             df[f"variation_{i:02d}"] = df["variation"].shift(-i)
+        #
+        for i in range(1, cls.WINDOW + 1):
+            df[f"variation_range_{i:02d}"] = df["variation_range"].shift(-i)
 
         # Drop rows where there is a NaN - TODO: slow, check
         df = df.dropna(axis=0)
@@ -1129,26 +1148,26 @@ class TrainingData(models.Model):
                     variation_18=row[21],
                     variation_19=row[22],
                     variation_20=row[23],
-                    # variation_21=row[24],
-                    # variation_22=row[25],
-                    # variation_23=row[26],
-                    # variation_24=row[27],
-                    # variation_25=row[28],
-                    # variation_26=row[29],
-                    # variation_27=row[30],
-                    # variation_28=row[31],
-                    # variation_29=row[32],
-                    # variation_30=row[33],
-                    # variation_31=row[34],
-                    # variation_32=row[35],
-                    # variation_33=row[36],
-                    # variation_34=row[37],
-                    # variation_35=row[38],
-                    # variation_36=row[39],
-                    # variation_37=row[40],
-                    # variation_38=row[41],
-                    # variation_39=row[42],
-                    # variation_40=row[43],
+                    variation_range_01=row[24],
+                    variation_range_02=row[25],
+                    variation_range_03=row[26],
+                    variation_range_04=row[27],
+                    variation_range_05=row[28],
+                    variation_range_06=row[29],
+                    variation_range_07=row[30],
+                    variation_range_08=row[31],
+                    variation_range_09=row[32],
+                    variation_range_10=row[33],
+                    variation_range_11=row[34],
+                    variation_range_12=row[35],
+                    variation_range_13=row[36],
+                    variation_range_14=row[37],
+                    variation_range_15=row[38],
+                    variation_range_16=row[39],
+                    variation_range_17=row[40],
+                    variation_range_18=row[41],
+                    variation_range_19=row[42],
+                    variation_range_20=row[43],
                 )
             )
             times.add(row[0])
@@ -1206,10 +1225,16 @@ class PredictionModel(TraderoMixin, models.Model):
 
     def predict_next(self):
         last_td = self.symbol.training_data.first()
-        obs = {"variation_01": last_td.variation}
+        obs = {
+            "variation_01": last_td.variation,
+            "variation_range_01": None,
+        }
         for i in range(2, self.get_window_size() + 1):
             obs[f"variation_{i:02d}"] = getattr(
                 last_td, f"variation_{(i - 1):02d}"
+            )
+            obs[f"variation_range_{i:02d}"] = getattr(
+                last_td, f"variation_range_{(i - 1):02d}"
             )
 
         pred = self.h_predict(obs)
@@ -1228,9 +1253,13 @@ class PredictionModel(TraderoMixin, models.Model):
             for w in range(1, self.get_window_size() + 1):
                 try:
                     obs[f"variation_{w:02d}"] = preds[w - 1]
+                    obs[f"variation_range_{w:02d}"] = None
                 except Exception:
                     obs[f"variation_{w:02d}"] = getattr(
                         last_td, f"variation_{w - i + 1:02d}"
+                    )
+                    obs[f"variation_range_{w:02d}"] = getattr(
+                        last_td, f"variation_range_{w - i + 1:02d}"
                     )
             obss.append(obs)
             preds.append(self.h_predict(obs)[0])
@@ -1242,6 +1271,13 @@ class PredictionModel(TraderoMixin, models.Model):
             self.learning_fields = ", ".join(
                 [f"variation_{j:02d}" for j in range(1, i + 1)]
             )
+            self.learning_fields = (
+                self.learning_fields
+                + ", "
+                + ", ".join(
+                    [f"variation_range_{j:02d}" for j in range(1, i + 1)]
+                )
+            )
             self.perform_inference(save=False)
             score = self.metadata["inference"]["current"]["scores"]["r2"]
             scores.append(score)
@@ -1252,6 +1288,13 @@ class PredictionModel(TraderoMixin, models.Model):
         )
         self.learning_fields = ", ".join(
             [f"variation_{j:02d}" for j in range(1, win_size + 1)]
+        )
+        self.learning_fields = (
+            self.learning_fields
+            + ", "
+            + ", ".join(
+                [f"variation_range_{j:02d}" for j in range(1, win_size + 1)]
+            )
         )
         if save:  # pragma: no cover
             self.save()
@@ -1274,7 +1317,7 @@ class PredictionModel(TraderoMixin, models.Model):
         return gs_eo.best_params_
 
     def get_window_size(self):
-        return len(self._get_data_learning_fields())
+        return TrainingData.WINDOW
 
     class Meta:
         abstract = True
