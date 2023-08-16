@@ -231,6 +231,58 @@ class TestViews(TestCase):
             TraderoBot.objects.filter(name="testing botzinho").count(),
             1,
         )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinho 2",
+                "group": self.group1.pk,
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "strategy_params": "microgain=0.3",
+                "jumpy_whitelist": "s1busd,s8978ygbusd",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Unrecognized Symbols",
+            response.content,
+        )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinho 2",
+                "group": self.group1.pk,
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "strategy_params": "microgain=0.3",
+                "jumpy_blacklist": "sghkgjhvbusd",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Unrecognized Symbols",
+            response.content,
+        )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinho 2",
+                "group": self.group1.pk,
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "strategy_params": "microgain=0.3",
+                "jumpy_whitelist": "s1busd",
+                "jumpy_blacklist": "s1busd",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBot.objects.filter(name="testing botzinho 2").count(),
+            1,
+        )
 
     def test_botzinhos_update(self):
         self.client.force_login(self.user1)
@@ -1061,6 +1113,19 @@ class TestStrategies(BotTestCase):
                 "no other symbol to go", self.bot1.others["last_logs"][-1]
             )
             self.bot1.strategy_params = "microgain=0.3,ol_prot=0"
+            self.bot1.jumpy_whitelist = None
+            self.bot1.jumpy_blacklist = "S2BUSD"
+            self.bot1.decide()
+            self.assertIn(
+                "no other symbol to go", self.bot1.others["last_logs"][-1]
+            )
+            self.bot1.jumpy_whitelist = "S1BUSD"
+            self.bot1.jumpy_blacklist = None
+            self.bot1.decide()
+            self.assertIn(
+                "no other symbol to go", self.bot1.others["last_logs"][-1]
+            )
+            self.bot1.jumpy_whitelist = "S2BUSD"
             self.bot1.decide()
             self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
@@ -1135,6 +1200,20 @@ class TestStrategies(BotTestCase):
             self.s1.others["scg"]["line_l_var"] = [1, 1, 2]
             self.s1.others["scg"]["line_s_var"] = [1, 1, 2]
             self.s1.save()
+            self.bot1.jumpy_whitelist = None
+            self.bot1.jumpy_blacklist = "S1BUSD, S2BUSD"
+            self.bot1.decide()
+            self.assertIn(
+                "no other symbol to go", self.bot1.others["last_logs"][-1]
+            )
+            self.bot1.jumpy_whitelist = "S2BUSD"
+            self.bot1.jumpy_blacklist = None
+            self.bot1.decide()
+            self.assertIn(
+                "no other symbol to go", self.bot1.others["last_logs"][-1]
+            )
+            self.bot1.jumpy_whitelist = None
+            self.bot1.jumpy_blacklist = None
             self.bot1.decide()
             self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])

@@ -134,7 +134,8 @@ class ACMadness(TradingStrategy):
         symbols = sorted(
             symbols, key=lambda s: s.others["stp"]["next_n_sum"], reverse=True
         )
-        symbols_blacklist = self.bot.jumpy_blacklist.split(",")
+        symbols_blacklist = self.bot.get_jumpy_blacklist()
+        symbols_whitelist = self.bot.get_jumpy_whitelist()
         for symbol in symbols:
             symbol_ac = Decimal(symbol.others["stp"]["next_n_sum"])
             symbol_ac = (
@@ -147,6 +148,11 @@ class ACMadness(TradingStrategy):
                 and symbol.pk not in symbols_with_siblings
                 and symbol.symbol not in symbols_blacklist
             ):
+                if (
+                    symbols_whitelist
+                    and symbol.symbol not in symbols_whitelist
+                ):
+                    continue
                 if self.outlier_protection:
                     if symbol.others["outliers"]["o1"]:
                         continue
@@ -224,7 +230,8 @@ class CatchTheWave(TradingStrategy):
             key=key,
             reverse=True,
         )
-        symbols_blacklist = self.bot.jumpy_blacklist.split(",")
+        symbols_blacklist = self.bot.get_jumpy_blacklist()
+        symbols_whitelist = self.bot.get_jumpy_whitelist()
         for symbol in symbols:
             strat_in_symbol = self.bot.get_strategy(symbol)
             should_buy, _ = strat_in_symbol.evaluate_buy()
@@ -233,6 +240,11 @@ class CatchTheWave(TradingStrategy):
                 and symbol.pk not in symbols_with_siblings
                 and symbol.symbol not in symbols_blacklist
             ):
+                if (
+                    symbols_whitelist
+                    and symbol.symbol not in symbols_whitelist
+                ):
+                    continue
                 return True, symbol
         return False, None
 
