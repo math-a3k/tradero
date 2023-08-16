@@ -6,7 +6,7 @@ Statistical / AI Models
 
 The main transformation from Klines is the generation of Training Data [1]_, from which the AI models are fed.
 
-Given a ``WINDOW`` - the amount of periods to be considered - each Training Data point consists of the porcentual variation of the corresponding period and the ``WINDOW`` previous ones.
+Given a ``WINDOW`` - the amount of periods to be considered - each Training Data point consists of the porcentual variation on open and close (``variation``) and on the high and low (``variation_range``) of the corresponding period and the ``WINDOW`` previous ones.
 
 .. _prediction_model:
 
