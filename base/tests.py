@@ -1017,6 +1017,10 @@ class TestTraderoBots(BotTestCase):
                 "test": [2]
             } == self.bot1.get_local_memory()
             self.assertTrue(self.bot1.has_local_memory() is True)
+        # Test a running TraderoBot which hasn't been re-init'ed after local
+        # memory has been introduced
+        bot3 = TraderoBot(symbol=self.s1, status=TraderoBot.Status.BUYING)
+        self.assertEqual(bot3.get_local_memory(), {})
 
 
 class TestStrategies(BotTestCase):

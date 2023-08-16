@@ -1749,7 +1749,11 @@ class TraderoBot(models.Model):
 
     def get_local_memory(self, symbol=None):
         symbol = symbol or self.symbol
-        return self.others["local_memory"].get(symbol.symbol, {})
+        if self.others.get("local_memory", {}):
+            return self.others["local_memory"].get(symbol.symbol, {})
+        else:
+            self.others["local_memory"] = {}
+            return self.others["local_memory"]
 
     def set_local_memory(self, symbol=None, value={}):
         symbol = symbol or self.symbol
