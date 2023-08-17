@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     #
     "axes",
+    "django_ratelimit",
     "clearcache",
     "django_celery_beat",
     "django_celery_results",

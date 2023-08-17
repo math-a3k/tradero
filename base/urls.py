@@ -1,74 +1,88 @@
 # urls.py
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
+from django_ratelimit.decorators import ratelimit
 
 from base import views as base_views
+
+
+def rate_tuples(group, request):
+    if request.user.is_authenticated:
+        return (100, 60)
+    return (12, 60)
+
+
+def default_rate_limit(v):
+    return ratelimit(key="ip", rate=rate_tuples)(v)
+
 
 urlpatterns = [
     path("", base_views.HomeView.as_view(), name="home"),
     path(
         "Instruções",
-        base_views.InstrucoesView.as_view(),
+        default_rate_limit(base_views.InstrucoesView.as_view()),
         name="instrucoes",
     ),
     path(
         "Usuário",
-        base_views.UsersDetailView.as_view(),
+        default_rate_limit(base_views.UsersDetailView.as_view()),
         name="users-detail",
     ),
     path(
         "Usuário/Entrar",
-        auth_views.LoginView.as_view(template_name="base/login.html"),
+        default_rate_limit(
+            auth_views.LoginView.as_view(template_name="base/login.html")
+        ),
         name="login",
     ),
     path(
         "Usuário/Sair",
-        auth_views.LogoutView.as_view(),
+        default_rate_limit(auth_views.LogoutView.as_view()),
         name="logout",
     ),
     path(
         "Usuário/Atualizar",
-        base_views.UsersUpdateView.as_view(),
+        default_rate_limit(base_views.UsersUpdateView.as_view()),
         name="users-update",
     ),
     path(
         "Botzinhos",
-        base_views.BotzinhosView.as_view(),
+        default_rate_limit(base_views.BotzinhosView.as_view()),
         name="botzinhos-list",
     ),
     path(
         "Botzinhos/Novo",
-        base_views.BotzinhosCreateView.as_view(),
+        default_rate_limit(base_views.BotzinhosCreateView.as_view()),
         name="botzinhos-create",
     ),
     path(
         "Botzinhos/<pk>/Atualizar",
-        base_views.BotzinhosUpdateView.as_view(),
+        default_rate_limit(base_views.BotzinhosUpdateView.as_view()),
         name="botzinhos-update",
     ),
     path(
         "Botzinhos/<pk>",
-        base_views.BotzinhosDetailView.as_view(),
+        default_rate_limit(base_views.BotzinhosDetailView.as_view()),
         name="botzinhos-detail",
     ),
     path(
         "Botzinhos/<pk>/Acção/<path:action>",
-        base_views.BotzinhosActionsView.as_view(),
+        default_rate_limit(base_views.BotzinhosActionsView.as_view()),
         name="botzinhos-actions",
     ),
     path(
         "Botzinhos/Grupo/Novo",
-        base_views.BotzinhosGroupCreateView.as_view(),
+        default_rate_limit(base_views.BotzinhosGroupCreateView.as_view()),
         name="botzinhos-group-create",
     ),
     path(
         "Botzinhos/Grupo/<pk>",
-        base_views.BotzinhosGroupDetailView.as_view(),
+        default_rate_limit(base_views.BotzinhosGroupDetailView.as_view()),
         name="botzinhos-group-detail",
     ),
     path(
         "Botzinhos/Grupo/<pk>/Atualizar",
-        base_views.BotzinhosGroupUpdateView.as_view(),
+        default_rate_limit(base_views.BotzinhosGroupUpdateView.as_view()),
         name="botzinhos-group-update",
     ),
     #
