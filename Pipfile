@@ -43,6 +43,7 @@ python-crontab = "*"
 pytest-celery = "*"
 django-axes = {version = "*", extras = ["ipware"]}
 django-clearcache = "*"
+django-ratelimit = "*"
 
 [dev-packages]
 pre-commit = "*"
