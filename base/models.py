@@ -13,6 +13,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -1519,6 +1520,7 @@ class TraderoBot(models.Model):
         "Fund (Quote Asset)",
         max_digits=40,
         decimal_places=8,
+        validators=[MinValueValidator(Decimal(15))],
         blank=True,
         null=True,
     )
@@ -1526,6 +1528,7 @@ class TraderoBot(models.Model):
         "Initial Fund (Quote Asset)",
         max_digits=40,
         decimal_places=8,
+        validators=[MinValueValidator(Decimal(15))],
         blank=True,
         null=True,
     )
@@ -1597,6 +1600,24 @@ class TraderoBot(models.Model):
             super().save(*args, **kwargs)
         self.render_html_snippet(set_cache=True)
         async_to_sync(self.push_to_ws)()
+
+    @property
+    def current_valuation(self):
+        if self.status == self.Status.INACTIVE:
+            if self.receipt_buying:
+                return self.fund_base_asset * self.price_current
+            else:
+                return self.fund_quote_asset or self.fund_quote_asset_initial
+        elif self.status == self.Status.SELLING:
+            return self.fund_base_asset * self.price_current
+        else:
+            return self.fund_quote_asset or self.fund_quote_asset_initial
+
+    @property
+    def executed_quote_asset(self):
+        if self.receipt_buying:
+            return Decimal(self.receipt_buying["cummulativeQuoteQty"])
+        return None
 
     def get_client(self, reinit=False):  # pragma: no cover
         if not self._client or reinit:

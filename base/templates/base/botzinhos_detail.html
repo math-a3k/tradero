@@ -19,14 +19,19 @@
 		</div>
 
 		<p></p>
+		<p><strong>Group</strong>: <a href="{% url "base:botzinhos-group-detail" bot.group.pk %}">{{ bot.group|default:"-" }}</a></p>
 		{% if bot.jumpy_whitelist or bot.jumpy_blacklist %}
 		<p><strong>Jumpy lists</strong>: {{ bot.jumpy_whitelist|default:"-" }} (White) | {{ bot.jumpy_blacklist|default:"-" }} (Black)</p>
 		{% endif %}
+
 		{% if bot.fund_quote_asset %}
-		<p><strong>Fund (Quote Assett)</strong>: {{ bot.fund_quote_asset }} {{ bot.symbol.quote_asset }}</p>
+		<p><strong>Fund (Quote Assett)</strong>: {{ bot.fund_quote_asset|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
 		{% endif %}
 		{% if bot.fund_quote_asset_initial %}
-		<p><strong>Fund (Quote Assett) Initial</strong>: {{ bot.fund_quote_asset_initial }} {{ bot.symbol.quote_asset }}</p>
+		<p><strong>Fund (Quote Assett) Initial</strong>: {{ bot.fund_quote_asset_initial|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
+		{% endif %}
+		{% if bot.executed_quote_asset %}
+		<p><strong>Executed Fund (Quote Assett)</strong>: {{ bot.executed_quote_asset|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
 		{% endif %}
 		{% if bot.fund_base_asset %}
 		<p><strong>Fund (Base Assett)</strong>: {{ bot.fund_base_asset }} {{ bot.symbol.base_asset }}</p>
@@ -42,6 +47,7 @@
 			<strong>Current Market Price</strong>: {{ bot.price_current }}
 		</p>
 		{% endif %}
+		<p><strong>Current Market Valuation</strong>: {{ bot.current_valuation|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
 		{% if bot.timestamp_start %}
 		<p><strong>Timestamp - Start</strong>: {{ bot.timestamp_start }} ({{ bot.timestamp_start|timesince }} ago)</p>
 		{% endif %}
