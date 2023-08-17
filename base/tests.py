@@ -1028,9 +1028,14 @@ class TestTraderoBots(BotTestCase):
                 f"{BINANCE_API_URL}/api/v3/ticker/price",
                 json={"symbol": "S2BUSD", "price": "2.0"},
             )
+            self.bot1.fund_base_asset = 0.1
             self.bot1.jump(self.s2)
             self.assertEqual(self.bot1.symbol, self.s2)
             self.assertEqual(self.bot1.price_current, 2)
+            self.assertIn(
+                "leaving 0.100000 S1BUSD behind",
+                self.bot1.others["last_logs"][-1],
+            )
             # Test decide
             self.bot1.on()
             self.bot1.buy()
