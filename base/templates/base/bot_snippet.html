@@ -17,7 +17,8 @@
       			{{ bot.symbol.base_asset }}/{{ bot.symbol.quote_asset }}
       		</a>
       	</h5>
-      	<small class="text-muted text-end" >
+      	<small class="text-muted text-end">
+      		<span class="badge bg-success rounded-pill"><a class="text-warning" href="{% url "base:botzinhos-group-detail" bot.group.pk %}">{{ bot.group.name|default:"(Sem Nome)" }}</a></span>
       		{% if bot.is_dummy %}
       		<span class="badge bg-danger rounded-pill">DUMMY</span>
 	      	{% endif %}

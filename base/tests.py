@@ -19,6 +19,7 @@ from django.utils import timezone
 from base import tasks
 
 from .consumers import BotHTMLConsumer, SymbolHTMLConsumer, SymbolJSONConsumer
+from .forms import TraderoBotForm
 from .handlers import message_handler
 from .models import (
     Kline,
@@ -159,7 +160,7 @@ class TestViews(TestCase):
             group=cls.group1,
             symbol=cls.s1,
             user=cls.user1,
-            fund_quote_asset_initial=Decimal("10"),
+            fund_quote_asset_initial=Decimal("20"),
         )
         cls.bot1.save()
         cls.bot1.on()
@@ -170,6 +171,9 @@ class TestViews(TestCase):
             )
             cls.bot1.buy()
             cls.bot1.sell()
+            cls.bot1.buy()
+            cls.bot1.price_current = cls.bot1.price_buying
+            cls.bot1.save()
         super().setUpClass()
 
     def test_home(self):
@@ -209,6 +213,22 @@ class TestViews(TestCase):
         url = reverse("base:botzinhos-detail", args=[self.bot1.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
+        self.client.force_login(self.user1)
+        self.bot1.off()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.bot1.on()
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            self.bot1.sell()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.bot1.off()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
 
     def test_botzinhos_create(self):
         self.client.force_login(self.user1)
@@ -289,15 +309,11 @@ class TestViews(TestCase):
         url = reverse("base:botzinhos-update", args=[self.bot1.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+        form = TraderoBotForm(user=self.user1, instance=self.bot1)
+        form.initial.update(name="testing botzinho update")
         response = self.client.post(
             url,
-            {
-                "name": "testing botzinho update",
-                "group": self.group1.pk,
-                "symbol": self.s1.pk,
-                "strategy": "acmadness",
-                "strategy_params": "microgain=0.3",
-            },
+            {key: value for key, value in form.initial.items() if value},
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
@@ -864,7 +880,7 @@ class BotTestCase(TestCase):
             group=cls.group1,
             strategy="acmadness",
             strategy_params="",
-            fund_quote_asset_initial=10,
+            fund_quote_asset_initial=20,
             is_dummy=True,
             is_jumpy=True,
         )
@@ -876,7 +892,7 @@ class BotTestCase(TestCase):
             group=cls.group1,
             strategy="acmadness",
             strategy_params="microgain=0.3",
-            fund_quote_asset_initial=10,
+            fund_quote_asset_initial=20,
             is_dummy=True,
             is_jumpy=True,
         )

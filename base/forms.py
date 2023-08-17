@@ -1,10 +1,17 @@
 from django import forms
 
-from .models import TraderoBot, TraderoBotGroup, User
+from .models import Symbol, TraderoBot, TraderoBotGroup, User
+from .strategies import get_strategies
 
 
 class TraderoBotForm(forms.ModelForm):
     group = forms.ModelChoiceField(queryset=None, empty_label="(Selecionar)")
+    symbol = forms.ModelChoiceField(
+        queryset=Symbol.objects.available(), empty_label="(Selecionar)"
+    )
+    strategy = forms.ChoiceField(
+        choices=[(k, v.__name__) for k, v in get_strategies().items()]
+    )
 
     class Meta:
         model = TraderoBot
