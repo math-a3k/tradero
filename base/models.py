@@ -1767,7 +1767,7 @@ class TraderoBot(models.Model):
 
     def jump(self, to_symbol):
         current_symbol = self.symbol
-        fba = self.fund_quote_asset
+        fba = self.fund_base_asset
         fba_msg = (
             f" (leaving {fba:.6f} {current_symbol.symbol} behind)"
             if fba
