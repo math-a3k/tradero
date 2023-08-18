@@ -1432,6 +1432,27 @@ class TraderoBotGroup(models.Model):
     def get_absolute_url(self):
         return reverse("base:botzinhos-group-detail", kwargs={"pk": self.pk})
 
+    def on(self):
+        for bot in self.bots.all():
+            if bot.status == TraderoBot.Status.INACTIVE:
+                bot.on()
+        return True
+
+    def off(self):
+        for bot in self.bots.all():
+            if bot.status != TraderoBot.Status.INACTIVE:
+                bot.off()
+        return True
+
+    def liquidate(self):
+        for bot in self.bots.all():
+            if bot.status == TraderoBot.Status.SELLING:
+                bot.sell()
+                bot.off()
+            elif bot.status == TraderoBot.Status.BUYING:
+                bot.off()
+        return True
+
 
 class TraderoBotManager(models.Manager):
     def enabled(self):

@@ -164,6 +164,22 @@ class TestViews(TestCase):
         )
         cls.bot1.save()
         cls.bot1.on()
+        cls.bot2 = TraderoBot(
+            group=cls.group1,
+            symbol=cls.s1,
+            user=cls.user1,
+            fund_quote_asset_initial=Decimal("20"),
+        )
+        cls.bot2.save()
+        cls.bot2.on()
+        cls.bot3 = TraderoBot(
+            group=cls.group1,
+            symbol=cls.s1,
+            user=cls.user1,
+            fund_quote_asset_initial=Decimal("20"),
+        )
+        cls.bot3.save()
+        cls.bot3.on()
         with requests_mock.Mocker() as m:
             m.get(
                 f"{BINANCE_API_URL}/api/v3/ticker/price",
@@ -371,7 +387,7 @@ class TestViews(TestCase):
     def test_botzinhos_actions(self):
         self.client.force_login(self.user1)
         url = reverse(
-            "base:botzinhos-actions",
+            "base:botzinhos-action",
             kwargs={
                 "pk": self.bot1.pk,
                 "action": "start",
@@ -380,7 +396,7 @@ class TestViews(TestCase):
         response = self.client.post(url, follow=True)
         self.assertEqual(response.status_code, 404)
         url = reverse(
-            "base:botzinhos-actions",
+            "base:botzinhos-action",
             kwargs={
                 "pk": self.bot1.pk,
                 "action": "on",
@@ -391,7 +407,7 @@ class TestViews(TestCase):
         with mock.patch("base.models.TraderoBot.on") as bot_on_mock:
             bot_on_mock.side_effect = Exception("New Exception")
             url = reverse(
-                "base:botzinhos-actions",
+                "base:botzinhos-action",
                 kwargs={
                     "pk": self.bot1.pk,
                     "action": "on",
@@ -400,6 +416,58 @@ class TestViews(TestCase):
             response = self.client.post(url, follow=True)
             self.assertEqual(response.status_code, 200)
             self.assertIn(b"ERROR at", response.content)
+
+    def test_botzinhos_group_actions(self):
+        self.client.force_login(self.user1)
+        self.bot3.off()
+        url = reverse(
+            "base:botzinhos-group-action",
+            kwargs={
+                "pk": self.group1.pk,
+                "action": "off",
+            },
+        )
+        response = self.client.post(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.bot1.refresh_from_db()
+        self.bot2.refresh_from_db()
+        self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+        self.assertEqual(self.bot2.status, TraderoBot.Status.INACTIVE)
+        self.bot3.on()
+        url = reverse(
+            "base:botzinhos-group-action",
+            kwargs={
+                "pk": self.group1.pk,
+                "action": "on",
+            },
+        )
+        response = self.client.post(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.bot1.refresh_from_db()
+        self.bot2.refresh_from_db()
+        self.assertEqual(self.bot1.status, TraderoBot.Status.SELLING)
+        self.assertEqual(self.bot2.status, TraderoBot.Status.BUYING)
+        self.bot3.off()
+        url = reverse(
+            "base:botzinhos-group-action",
+            kwargs={
+                "pk": self.group1.pk,
+                "action": "liquidate",
+            },
+        )
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            response = self.client.post(url, follow=True)
+            self.assertEqual(response.status_code, 200)
+        self.bot1.refresh_from_db()
+        self.bot2.refresh_from_db()
+        self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+        self.assertEqual(self.bot2.status, TraderoBot.Status.INACTIVE)
+        self.assertIn("Sold", self.bot1.others["last_logs"][-2])
+        self.assertIn("OFF", self.bot1.others["last_logs"][-1])
 
 
 class TestAdmin(TestCase):

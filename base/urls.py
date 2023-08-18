@@ -67,8 +67,8 @@ urlpatterns = [
     ),
     path(
         "Botzinhos/<pk>/Acção/<path:action>",
-        default_rate_limit(base_views.BotzinhosActionsView.as_view()),
-        name="botzinhos-actions",
+        default_rate_limit(base_views.BotzinhosActionView.as_view()),
+        name="botzinhos-action",
     ),
     path(
         "Botzinhos/Grupo/Novo",
@@ -84,6 +84,11 @@ urlpatterns = [
         "Botzinhos/Grupo/<pk>/Atualizar",
         default_rate_limit(base_views.BotzinhosGroupUpdateView.as_view()),
         name="botzinhos-group-update",
+    ),
+    path(
+        "Botzinhos/Grupo/<pk>/Acção/<path:action>",
+        default_rate_limit(base_views.BotzinhosGroupActionView.as_view()),
+        name="botzinhos-group-action",
     ),
     #
     path("api/v1/", include(("base.api.v1.urls", "base"), namespace="v1")),

@@ -146,22 +146,18 @@ class BotzinhosUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
         return kwargs
 
 
-class BotzinhosActionsView(OwnerMixin, LoginRequiredMixin, RedirectView):
+class ActionView(OwnerMixin, LoginRequiredMixin, RedirectView):
     """
-    Runs Actions on Botzinhos
+    Runs Action on Objects
     """
 
     permanent = False
     http_method_names = ["post"]
     #: Available Actions
-    ACTIONS = ["buy", "sell", "on", "off", "reset"]
-
-    # def test_func(self):
-    #     return self.request.user.is_superuser or self.request.user.is_staff
+    ACTIONS = []
 
     def get_object(self):
-        self.object = get_object_or_404(TraderoBot, pk=self.pk)
-        return self.object
+        raise NotImplementedError
 
     def run_action(self, action):
         try:
@@ -191,6 +187,18 @@ class BotzinhosActionsView(OwnerMixin, LoginRequiredMixin, RedirectView):
         self.get_object()
         self.run_action(kwargs["action"])
         return self.request.META.get("HTTP_REFERER", "/")
+
+
+class BotzinhosActionView(ActionView):
+    """
+    Runs Actions on Botzinhos
+    """
+
+    ACTIONS = ["buy", "sell", "on", "off", "reset"]
+
+    def get_object(self):
+        self.object = get_object_or_404(TraderoBot, pk=self.pk)
+        return self.object
 
 
 class BotzinhosGroupDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
@@ -233,3 +241,15 @@ class BotzinhosGroupUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
     form = TraderoBotGroupForm
     template_name = "base/botzinhos_group_form.html"
     fields = ["name"]
+
+
+class BotzinhosGroupActionView(ActionView):
+    """
+    Runs Actions on Botzinhos Group
+    """
+
+    ACTIONS = ["on", "off", "liquidate"]
+
+    def get_object(self):
+        self.object = get_object_or_404(TraderoBotGroup, pk=self.pk)
+        return self.object

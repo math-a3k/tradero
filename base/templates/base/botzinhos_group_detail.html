@@ -33,6 +33,18 @@
 				<li>
 					<a class="btn btn-primary" href="{% url "base:botzinhos-create" %}">Novo Botzinho</a>
 				</li>
+				<li>
+					{% url "base:botzinhos-group-action" group.pk "off" as action_url %}
+					{% action_button action_url "Turn OFF" "btn-dark" %}
+				</li>
+				<li>
+					{% url "base:botzinhos-group-action" group.pk "on" as action_url %}
+					{% action_button action_url "Turn ON" "btn-primary" %}
+				</li>
+				<li>
+					{% url "base:botzinhos-group-action" group.pk "liquidate" as action_url %}
+					{% action_button action_url "LIQUIDATE (FORCE SELL and Turn OFF)" "btn-danger" %}
+				</li>
 			</ul>
 		</div>
 	</div>
