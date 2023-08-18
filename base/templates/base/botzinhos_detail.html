@@ -14,7 +14,9 @@
 			<strong>UTC</strong> - Time Interval: <span class="text-primary fw-bolder">| {{ time_interval }}m |</span>
 		</h6>
 
-		<div id="bots-list" class="list-group">
+		{% groups_breadcrumbs request.user %}
+
+		<div id="bots-list" class="list-group pt-2">
 			{% bot_render_html_snippet bot=bot %}
 		</div>
 

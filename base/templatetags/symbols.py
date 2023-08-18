@@ -75,3 +75,9 @@ def action_button(context, action, text, css_classes):
         "text": text,
         "css_classes": css_classes,
     }
+
+
+@register.inclusion_tag("base/_groups_breadcrumbs.html", takes_context=True)
+def groups_breadcrumbs(context, user):
+    context["groups"] = user.botgroups.all().order_by("name")
+    return context

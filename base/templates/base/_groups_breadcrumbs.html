@@ -1,0 +1,9 @@
+<div class="container text-center">
+{% for g in groups %}
+  {% if g == group or g == bot.group %}
+  <span class="badge bg-warning bg-gradient rounded-pill"><a class="text-dark" href="{% url "base:botzinhos-group-detail" g.pk %}">{{ g.name|default:"(Sem Nome)" }}</a></span>
+  {% else %}
+  <span class="badge bg-success bg-gradient rounded-pill"><a class="text-warning" href="{% url "base:botzinhos-group-detail" g.pk %}">{{ g.name|default:"(Sem Nome)" }}</a></span>
+  {% endif %}
+{% endfor %}
+</div>

@@ -125,6 +125,13 @@ class BotzinhosCreateView(LoginRequiredMixin, CreateView):
     form_class = TraderoBotForm
     template_name = "base/botzinhos_form.html"
 
+    def get_initial(self):
+        initial = super().get_initial()
+        group_pk = self.request.GET.get("group", None)
+        if group_pk:
+            initial["group"] = get_object_or_404(TraderoBotGroup, pk=group_pk)
+        return initial
+
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
