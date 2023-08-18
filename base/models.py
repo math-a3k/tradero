@@ -1998,6 +1998,16 @@ class TraderoBot(models.Model):
                 raise ValidationError(
                     {"jumpy_blacklist": "Unrecognized Symbols."}
                 )
+        # Check either fund_quote_asset or fund_quote_asset_initial are present
+        if not (self.fund_quote_asset or self.fund_quote_asset_initial):
+            raise ValidationError(
+                {
+                    "fund_quote_asset_initial": (
+                        "Either 'Fund (Quote Asset)' or "
+                        "'Initial Fund (Quote Asset)' is required"
+                    )
+                }
+            )
 
     @classmethod
     def update_all_bots(cls):

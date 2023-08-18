@@ -265,6 +265,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
+                "fund_quote_asset": Decimal("20"),
             },
             follow=True,
         )
@@ -281,6 +282,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
+                "fund_quote_asset": Decimal("20"),
                 "jumpy_whitelist": "s1busd,s8978ygbusd",
             },
             follow=True,
@@ -298,6 +300,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
+                "fund_quote_asset": Decimal("20"),
                 "jumpy_blacklist": "sghkgjhvbusd",
             },
             follow=True,
@@ -315,6 +318,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
+                "fund_quote_asset": Decimal("20"),
                 "jumpy_whitelist": "s1busd",
                 "jumpy_blacklist": "s1busd",
             },
@@ -324,6 +328,22 @@ class TestViews(TestCase):
         self.assertEqual(
             TraderoBot.objects.filter(name="testing botzinho 2").count(),
             1,
+        )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinho 2",
+                "group": self.group1.pk,
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "strategy_params": "microgain=0.3",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Either &#x27;Fund (Quote Asset)&#x27;",
+            response.content,
         )
 
     def test_botzinhos_update(self):
