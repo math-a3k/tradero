@@ -1453,6 +1453,28 @@ class TraderoBotGroup(models.Model):
                 bot.off()
         return True
 
+    @property
+    def current_valuation(self):
+        valuations = [
+            bot.current_valuation
+            for bot in self.bots.all()
+            if bot.current_valuation
+        ]
+        return sum(valuations)
+
+    @property
+    def initial_valuation(self):
+        valuations = [
+            bot.executed_quote_asset
+            or bot.fund_quote_asset
+            or bot.fund_quote_asset_initial
+            for bot in self.bots.all()
+            if bot.executed_quote_asset
+            or bot.fund_quote_asset
+            or bot.fund_quote_asset_initial
+        ]
+        return sum(valuations)
+
 
 class TraderoBotManager(models.Manager):
     def enabled(self):
