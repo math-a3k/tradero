@@ -251,6 +251,12 @@ class TestViews(TestCase):
         url = reverse("base:botzinhos-create")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+        response = self.client.get(f"{url}?group={self.group1.pk}")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"selected>Test Group 1",
+            response.content,
+        )
         response = self.client.post(
             url,
             {

@@ -14,6 +14,8 @@
 			<strong>UTC</strong> - Time Interval: <span class="text-primary fw-bolder">| {{ time_interval }}m |</span>
 		</h6>
 
+		{% groups_breadcrumbs request.user %}
+
 		<div class="container bg-warning bg-gradient">
 			<h4 class="mt-1 mb-0 p-2">GROUP: {{ group.name|default:"(Sem Nome)" }}</h4>
 		</div>
@@ -31,7 +33,7 @@
 					<a class="btn btn-warning" href="{% url "base:botzinhos-group-update" group.pk %}">Atualizar Grupo</a>
 				</li>
 				<li>
-					<a class="btn btn-primary" href="{% url "base:botzinhos-create" %}">Novo Botzinho</a>
+					<a class="btn btn-primary" href="{% url "base:botzinhos-create" %}?group={{group.pk}}">Novo Botzinho</a>
 				</li>
 				<li>
 					{% url "base:botzinhos-group-action" group.pk "off" as action_url %}
