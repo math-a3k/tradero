@@ -68,12 +68,9 @@ def get(value, key):
     return value.get(key, "")
 
 
-@register.inclusion_tag(
-    "base/_botzinhos_action_button.html", takes_context=True
-)
-def bot_action_button(context, action, text, css_classes):
+@register.inclusion_tag("base/_action_button.html", takes_context=True)
+def action_button(context, action, text, css_classes):
     return {
-        "bot": context["bot"],
         "action": action,
         "text": text,
         "css_classes": css_classes,

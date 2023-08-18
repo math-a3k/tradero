@@ -65,20 +65,25 @@
 			</li>
 			<li>
 				{% if not bot.price_buying %}
-				{% bot_action_button "buy" "Force BUY" "btn-success" %}
+				{% url "base:botzinhos-action" bot.pk "buy" as action_url %}
+				{% action_button action_url "Force BUY" "btn-success" %}
 				{% else %}
-				{% bot_action_button "sell" "Force SELL" "btn-danger" %}
+				{% url "base:botzinhos-action" bot.pk "sell" as action_url %}
+				{% action_button action_url "Force SELL" "btn-danger" %}
 				{% endif %}
 			</li>
 			<li>
 				{% if bot.status > bot.Status.INACTIVE %}
-				{% bot_action_button "off" "Turn OFF" "btn-dark" %}
+				{% url "base:botzinhos-action" bot.pk "off" as action_url %}
+				{% action_button action_url "Turn OFF" "btn-dark" %}
 				{% else %}
-				{% bot_action_button "on" "Turn ON" "btn-primary" %}
+				{% url "base:botzinhos-action" bot.pk "on" as action_url %}
+				{% action_button action_url "Turn ON" "btn-primary" %}
 				{% endif %}
 			</li>
 			<li>
-				{% bot_action_button "reset" "RESET" "btn-danger" %}
+				{% url "base:botzinhos-action" bot.pk "reset" as action_url %}
+				{% action_button action_url "RESET" "btn-danger" %}
 			</li>
 		</ul>
 
