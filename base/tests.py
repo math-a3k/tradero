@@ -345,6 +345,40 @@ class TestViews(TestCase):
             b"Either &#x27;Fund (Quote Asset)&#x27;",
             response.content,
         )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinho 2",
+                "group": self.group1.pk,
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "strategy_params": "microgain=0.3,abc123",
+                "fund_quote_asset": Decimal("20"),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Unrecognized parameters",
+            response.content,
+        )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing botzinho 2",
+                "group": self.group1.pk,
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "strategy_params": "microgain=0.3,abc123=1",
+                "fund_quote_asset": Decimal("20"),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Unrecognized parameters",
+            response.content,
+        )
 
     def test_botzinhos_update(self):
         self.client.force_login(self.user1)
