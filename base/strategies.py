@@ -18,6 +18,7 @@ def get_strategies():
 class TradingStrategy:
     bot = None
     slug = None
+    params = {}
 
     def evaluate_buy(self):
         raise NotImplementedError
@@ -38,6 +39,15 @@ class TradingStrategy:
     def has_local_memory(self, symbol):
         pass
 
+    def get_param(self, param, kwargs):
+        param_value = kwargs.get(param, self.params[param]["default"])
+        if self.params[param]["type"] == "bool":
+            return bool(int(param_value))
+        elif self.params[param]["type"] == "decimal":
+            return Decimal(param_value)
+        else:
+            return int(param_value)
+
 
 class ACMadness(TradingStrategy):
     """
@@ -47,19 +57,28 @@ class ACMadness(TradingStrategy):
     """
 
     slug = "acmadness"
+    params = {
+        "microgain": {"default": "0.3", "type": "decimal"},
+        "ac_factor": {"default": "3", "type": "decimal"},
+        "keep_going": {"default": "0", "type": "bool"},
+        "ol_prot": {"default": "1", "type": "bool"},
+        "max_var_prot": {"default": "0", "type": "bool"},
+        "ac_adjusted": {"default": "1", "type": "bool"},
+    }
 
     def __init__(self, bot, symbol=None, **kwargs):
         self.bot = bot
         self.symbol = symbol or self.bot.symbol
         self.ac = Decimal(self.bot.symbol.others["stp"]["next_n_sum"])
-        self.microgain = Decimal(kwargs.get("microgain", "0.3"))
-        self.ac_threshold = self.microgain * Decimal(
-            kwargs.get("ac_factor", 3)
+        #
+        self.microgain = self.get_param("microgain", kwargs)
+        self.ac_threshold = self.microgain * self.get_param(
+            "ac_factor", kwargs
         )
-        self.keep_going = bool(int(kwargs.get("keep_going", "0")))
-        self.outlier_protection = bool(int(kwargs.get("ol_prot", "1")))
-        self.max_var_protection = Decimal(kwargs.get("max_var_prot", "0"))
-        self.ac_adjusted = Decimal(kwargs.get("ac_adjusted", "1"))
+        self.keep_going = self.get_param("keep_going", kwargs)
+        self.outlier_protection = self.get_param("ol_prot", kwargs)
+        self.max_var_protection = self.get_param("max_var_prot", kwargs)
+        self.ac_adjusted = self.get_param("ac_adjusted", kwargs)
 
     def evaluate_buy(self):
         if self.time_safeguard:
@@ -174,6 +193,15 @@ class CatchTheWave(TradingStrategy):
     """
 
     slug = "catchthewave"
+    params = {
+        "early_onset": {"default": "0", "type": "bool"},
+        "sell_on_maxima": {"default": "1", "type": "bool"},
+        "onset_periods": {"default": "2", "type": "int"},
+        "maxima_tol": {"default": "0.1", "type": "decimal"},
+        "sell_safeguard": {"default": "0.3", "type": "decimal"},
+        "use_local_memory": {"default": "1", "type": "bool"},
+        "use_matrix_time_res": {"default": "0", "type": "bool"},
+    }
 
     def __init__(self, bot, symbol=None, **kwargs):
         self.bot = bot
@@ -184,14 +212,14 @@ class CatchTheWave(TradingStrategy):
         self.s_var = self.scg["line_s_var"]  # Var of the Short tendency
         self.l_var = self.scg["line_l_var"]  # Var of the Long tendency
         #
-        self.early_onset = bool(int(kwargs.get("early_onset", "0")))
-        self.sell_on_maxima = bool(int(kwargs.get("sell_on_maxima", "1")))
-        self.onset_periods = int(kwargs.get("onset_periods", "2"))
-        self.maxima_tol = Decimal(kwargs.get("maxima_tol", "0.1"))
-        self.sell_safeguard = Decimal(kwargs.get("sell_safeguard", "0.3"))
-        self.use_local_memory = bool(int(kwargs.get("use_local_memory", "1")))
-        self.use_matrix_time_res = bool(
-            int(kwargs.get("use_matrix_time_res", "0"))
+        self.early_onset = self.get_param("early_onset", kwargs)
+        self.sell_on_maxima = self.get_param("sell_on_maxima", kwargs)
+        self.onset_periods = self.get_param("onset_periods", kwargs)
+        self.maxima_tol = self.get_param("maxima_tol", kwargs)
+        self.sell_safeguard = self.get_param("sell_safeguard", kwargs)
+        self.use_local_memory = self.get_param("use_local_memory", kwargs)
+        self.use_matrix_time_res = self.get_param(
+            "use_matrix_time_res", kwargs
         )
 
     def evaluate_buy(self):

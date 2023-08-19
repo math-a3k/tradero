@@ -1535,7 +1535,8 @@ class TraderoBot(models.Model):
     strategy_params = models.CharField(
         "Strategy parameters",
         max_length=510,
-        default="microgain=0.3,ac_factor=6",
+        blank=True,
+        null=True,
     )
     is_jumpy = models.BooleanField("Jumpy?", default=False)
     jumpy_whitelist = models.CharField(
@@ -2008,6 +2009,26 @@ class TraderoBot(models.Model):
                     )
                 }
             )
+        # Check vailidity of strategy params
+        try:
+            strategy = self.get_strategy()
+        except Exception:
+            raise ValidationError(
+                {
+                    "strategy_params": (
+                        "Unrecognized parameters or format for the strategy"
+                    )
+                }
+            )
+        for param in self.get_strategy_params():
+            if param not in strategy.params:
+                raise ValidationError(
+                    {
+                        "strategy_params": (
+                            "Unrecognized parameters or format for the strategy"
+                        )
+                    }
+                )
 
     @classmethod
     def update_all_bots(cls):

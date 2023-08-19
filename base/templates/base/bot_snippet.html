@@ -31,7 +31,7 @@
 	      	{% if bot.should_stop %}
       		<span class="badge bg-primary rounded-pill">Stop After Selling</span>
 	      	{% endif %}
-      		<br>{{ bot.strategy|upper }}({{ bot.strategy_params }})
+      		<br>{{ bot.strategy|upper }}({{ bot.strategy_params|default:"defaults" }})
       	</small>
     </div>
 
