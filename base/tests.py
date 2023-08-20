@@ -423,6 +423,58 @@ class TestViews(TestCase):
             ).count(),
             1,
         )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing group bot create",
+                "add_edit_bots": True,
+                "bots_quantity": 2,
+                "bot_name": "tt",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"This field is required",
+            response.content,
+        )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing group bot create",
+                "add_edit_bots": True,
+                "bots_quantity": 2,
+                "bot_name": "tt",
+                "bot_strategy": "acmadness",
+                "bot_symbol": self.s1.pk,
+                "bot_fund_quote_asset_initial": 20,
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBot.objects.filter(name__startswith="tt").count(),
+            2,
+        )
+        response = self.client.post(
+            url,
+            {
+                "name": "testing group bot create 2",
+                "add_edit_bots": True,
+                "bots_quantity": 2,
+                "bot_strategy": "acmadness",
+                "bot_symbol": self.s1.pk,
+                "bot_fund_quote_asset_initial": 55,
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBot.objects.filter(
+                name__startswith="BT", fund_quote_asset_initial=55
+            ).count(),
+            2,
+        )
 
     def test_botzinhos_group_update(self):
         self.client.force_login(self.user1)
@@ -442,6 +494,35 @@ class TestViews(TestCase):
                 name="testing botzinhos group update"
             ).count(),
             1,
+        )
+        response = self.client.post(
+            url,
+            {
+                "add_edit_bots": True,
+                "bot_name": "Group 1",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBot.objects.filter(name__startswith="Group 1").count(),
+            3,
+        )
+        # import ipdb; ipdb.set_trace()
+        response = self.client.post(
+            url,
+            {
+                "add_edit_bots": True,
+                "bot_fund_quote_asset_initial": 25,
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBot.objects.filter(
+                name__startswith="Group 1", fund_quote_asset_initial=25
+            ).count(),
+            3,
         )
 
     def test_botzinhos_actions(self):

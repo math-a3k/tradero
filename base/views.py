@@ -15,7 +15,12 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import TraderoBotForm, TraderoBotGroupForm, UserForm
+from .forms import (
+    TraderoBotForm,
+    TraderoBotGroupEditForm,
+    TraderoBotGroupForm,
+    UserForm,
+)
 from .models import Symbol, TradeHistory, TraderoBot, TraderoBotGroup, User
 
 
@@ -235,20 +240,50 @@ class BotzinhosGroupDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
 
 class BotzinhosGroupCreateView(LoginRequiredMixin, CreateView):
     model = TraderoBotGroup
-    form = TraderoBotGroupForm
+    form_class = TraderoBotGroupForm
     template_name = "base/botzinhos_group_form.html"
-    fields = ["name"]
 
     def form_valid(self, form):
         form.instance.user = self.request.user
+        self.object = form.save()
+        if form.cleaned_data["add_edit_bots"]:
+            bot_kwargs = form.get_bot_data(form.cleaned_data)
+            bot_kwargs.update(
+                {"user": self.request.user, "group": self.object}
+            )
+            bot_name = bot_kwargs["name"]
+            for i in range(form.cleaned_data["bots_quantity"]):
+                if bot_name:
+                    bot_kwargs.update({"name": f"{bot_name}-{i+1:03d}"})
+                bot = TraderoBot(**bot_kwargs)
+                bot.save()
         return super().form_valid(form)
 
 
 class BotzinhosGroupUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
     model = TraderoBotGroup
-    form = TraderoBotGroupForm
+    form_class = TraderoBotGroupEditForm
     template_name = "base/botzinhos_group_form.html"
-    fields = ["name"]
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        self.object = form.save()
+        if form.cleaned_data["add_edit_bots"]:
+            bot_data = form.get_bot_data(form.cleaned_data)
+            bot_name = bot_data.pop("name", None)
+            for index, bot in enumerate(self.object.bots.all()):
+                if bot_name:
+                    bot.name = f"{bot_name}-{index + 1:03d}"
+                for field in bot_data:
+                    if (
+                        bot_data[field]
+                        not in form.fields[
+                            f"{form.prefix_bot_data}{field}"
+                        ].empty_values
+                    ):
+                        setattr(bot, field, bot_data[field])
+                bot.save()
+        return super().form_valid(form)
 
 
 class BotzinhosGroupActionView(ActionView):
