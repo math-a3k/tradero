@@ -545,6 +545,37 @@ class TestViews(TestCase):
         )
         response = self.client.post(url, follow=True)
         self.assertEqual(response.status_code, 200)
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            url = reverse(
+                "base:botzinhos-action",
+                kwargs={
+                    "pk": self.bot1.pk,
+                    "action": "jump",
+                },
+            )
+            response = self.client.post(
+                url, {"to_symbol": self.s1.pk}, follow=True
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b"SUCCESS at", response.content)
+            with mock.patch(
+                "base.views.BotzinhosActionView.ACTIONS",
+                {"on": {"params": {"test_param": {"type": "test"}}}},
+            ):
+                url = reverse(
+                    "base:botzinhos-action",
+                    kwargs={
+                        "pk": self.bot1.pk,
+                        "action": "on",
+                    },
+                )
+                response = self.client.post(url, follow=True)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(b"SUCCESS at", response.content)
         with mock.patch("base.models.TraderoBot.on") as bot_on_mock:
             bot_on_mock.side_effect = Exception("New Exception")
             url = reverse(

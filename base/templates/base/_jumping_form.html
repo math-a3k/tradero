@@ -1,0 +1,11 @@
+{% load bootstrap5 %}
+
+<form method="post" action="{% url view obj.pk "jump" %}" class="row">
+	{% csrf_token %}
+	<div class="col-12">
+		<button type="submit" class="btn btn-primary">JUMP: </button>
+	</div>
+	<div class="col-3">
+		{% bootstrap_field form_jumping.to_symbol show_label=False wrapper_class="col-s12" %}
+	</div>
+</form>

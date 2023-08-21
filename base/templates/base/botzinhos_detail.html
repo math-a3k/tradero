@@ -74,6 +74,11 @@
 				{% action_button action_url "Force SELL" "btn-danger" %}
 				{% endif %}
 			</li>
+			{% if not bot.price_buying %}
+			<li>
+				{% include "base/_jumping_form.html" with view="base:botzinhos-action" obj=bot %}
+			</li>
+			{% endif %}
 			<li>
 				{% if bot.status > bot.Status.INACTIVE %}
 				{% url "base:botzinhos-action" bot.pk "off" as action_url %}

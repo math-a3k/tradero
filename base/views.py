@@ -16,6 +16,7 @@ from django.views.generic import (
 )
 
 from .forms import (
+    JumpingForm,
     TraderoBotForm,
     TraderoBotGroupEditForm,
     TraderoBotGroupForm,
@@ -122,6 +123,7 @@ class BotzinhosDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
         context["page_obj"] = page_obj
         context["time_interval"] = settings.TIME_INTERVAL_BOTS
         context["summary"] = summary
+        context["form_jumping"] = JumpingForm()
         return context
 
 
@@ -171,14 +173,17 @@ class ActionView(OwnerMixin, LoginRequiredMixin, RedirectView):
     def get_object(self):
         raise NotImplementedError
 
-    def run_action(self, action):
+    def run_action(self):
         try:
-            action_method = getattr(self.object, action)
-            action_method()
+            action_method = getattr(self.object, self.action)
+            if self.action_params:
+                action_method(**self.action_params)
+            else:
+                action_method()
             messages.success(
                 self.request,
-                f"SUCCESS at {action.upper()} for {self.object.pk}:"
-                f"{self.object.name}",
+                f"SUCCESS at {self.action.upper()}({self.get_params_str()}) "
+                f"for [{self.object.pk}] {self.object.name}",
             )
         except Exception as e:
             msg = e.args[0]
@@ -187,18 +192,41 @@ class ActionView(OwnerMixin, LoginRequiredMixin, RedirectView):
             modname = mod.__name__ if mod else frm[1]
             messages.error(
                 self.request,
-                f"ERROR at {action.upper()} for {self.object.pk}:"
-                f"{self.object.name}",
+                f"ERROR at {self.action.upper()}({self.get_params_str()}) "
+                f"for [{self.object.pk}] {self.object.name}: "
                 f"[{modname}] {str(msg)}",
             )
 
     def get_redirect_url(self, *args, **kwargs):
-        if kwargs["action"] not in self.ACTIONS:
+        self.action = kwargs["action"]
+        if self.action not in self.ACTIONS:
             raise Http404("Action not Found")
+        self.action_params = self.process_params(self.request.POST)
         self.pk = kwargs["pk"]
         self.get_object()
-        self.run_action(kwargs["action"])
+        self.run_action()
         return self.request.META.get("HTTP_REFERER", "/")
+
+    def get_params_str(self):
+        if self.action_params:
+            return ",".join(
+                [f"{k}={v}" for k, v in self.action_params.items()]
+            )
+        return ""
+
+    def process_params(self, data):
+        data = {k: v for k, v in data.items() if k != "csrfmiddlewaretoken"}
+        action_params = {}
+        action_params_conf = self.ACTIONS[self.action]["params"]
+        if action_params_conf:
+            for param in action_params_conf:
+                if action_params_conf[param]["type"] == "Model":
+                    action_params[param] = get_object_or_404(
+                        action_params_conf[param]["class"],
+                        pk=data[param],
+                    )
+                # Ignore non-compliant parameters
+        return action_params
 
 
 class BotzinhosActionView(ActionView):
@@ -206,7 +234,14 @@ class BotzinhosActionView(ActionView):
     Runs Actions on Botzinhos
     """
 
-    ACTIONS = ["buy", "sell", "on", "off", "reset"]
+    ACTIONS = {
+        "buy": {"params": None},
+        "sell": {"params": None},
+        "on": {"params": None},
+        "off": {"params": None},
+        "reset": {"params": None},
+        "jump": {"params": {"to_symbol": {"type": "Model", "class": Symbol}}},
+    }
 
     def get_object(self):
         self.object = get_object_or_404(TraderoBot, pk=self.pk)
