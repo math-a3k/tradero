@@ -44,6 +44,9 @@
 					<a class="btn btn-primary" href="{% url "base:botzinhos-create" %}?group={{group.pk}}">Novo Botzinho</a>
 				</li>
 				<li>
+					{% include "base/_jumping_form.html" with view="base:botzinhos-group-action" obj=group %}
+				</li>
+				<li>
 					{% url "base:botzinhos-group-action" group.pk "off" as action_url %}
 					{% action_button action_url "Turn OFF" "btn-dark" %}
 				</li>

@@ -1453,6 +1453,12 @@ class TraderoBotGroup(models.Model):
                 bot.off()
         return True
 
+    def jump(self, to_symbol):
+        for bot in self.bots.all():
+            if not bot.price_buying:
+                bot.jump(to_symbol)
+        return True
+
     @property
     def current_valuation(self):
         valuations = [

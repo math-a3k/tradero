@@ -270,6 +270,7 @@ class BotzinhosGroupDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
         context["bots"] = bots
         context["summary"] = summary
         context["quote_asset"] = settings.QUOTE_ASSET
+        context["form_jumping"] = JumpingForm()
         return context
 
 
@@ -326,7 +327,12 @@ class BotzinhosGroupActionView(ActionView):
     Runs Actions on Botzinhos Group
     """
 
-    ACTIONS = ["on", "off", "liquidate"]
+    ACTIONS = {
+        "on": {"params": None},
+        "off": {"params": None},
+        "liquidate": {"params": None},
+        "jump": {"params": {"to_symbol": {"type": "Model", "class": Symbol}}},
+    }
 
     def get_object(self):
         self.object = get_object_or_404(TraderoBotGroup, pk=self.pk)
