@@ -126,3 +126,9 @@ class UserForm(forms.ModelForm):
             "api_key",
             "api_secret",
         ]
+
+
+class JumpingForm(forms.Form):
+    to_symbol = forms.ModelChoiceField(
+        queryset=Symbol.objects.available(), empty_label="(Selecionar)"
+    )
