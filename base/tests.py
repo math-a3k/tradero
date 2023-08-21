@@ -640,6 +640,24 @@ class TestViews(TestCase):
         self.assertEqual(self.bot2.status, TraderoBot.Status.INACTIVE)
         self.assertIn("Sold", self.bot1.others["last_logs"][-2])
         self.assertIn("OFF", self.bot1.others["last_logs"][-1])
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            self.bot2.buy()
+            url = reverse(
+                "base:botzinhos-group-action",
+                kwargs={
+                    "pk": self.group1.pk,
+                    "action": "jump",
+                },
+            )
+            response = self.client.post(
+                url, {"to_symbol": self.s1.pk}, follow=True
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b"SUCCESS at", response.content)
 
 
 class TestAdmin(TestCase):
