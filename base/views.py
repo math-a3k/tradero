@@ -129,6 +129,25 @@ class BotzinhosDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
         return context
 
 
+class BotzinhosLogsView(OwnerMixin, LoginRequiredMixin, DetailView):
+    model = TraderoBot
+    template_name = "base/botzinhos_logs.html"
+    context_object_name = "bot"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        logs = self.object.logs.all().order_by("-id")
+        #
+        paginator = Paginator(logs, 30)
+        page_number = self.request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+        #
+        context["page_obj"] = page_obj
+        context["time_interval"] = settings.TIME_INTERVAL_BOTS
+
+        return context
+
+
 class BotzinhosCreateView(LoginRequiredMixin, CreateView):
     model = TraderoBot
     form_class = TraderoBotForm

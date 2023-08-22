@@ -61,6 +61,11 @@ urlpatterns = [
         name="botzinhos-update",
     ),
     path(
+        "Botzinhos/<pk>/Bitácula",
+        default_rate_limit(base_views.BotzinhosLogsView.as_view()),
+        name="botzinhos-logs",
+    ),
+    path(
         "Botzinhos/<pk>",
         default_rate_limit(base_views.BotzinhosDetailView.as_view()),
         name="botzinhos-detail",

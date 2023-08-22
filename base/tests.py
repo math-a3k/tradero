@@ -225,6 +225,12 @@ class TestViews(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
+    def test_botzinhos_logs(self):
+        self.client.force_login(self.user1)
+        url = reverse("base:botzinhos-logs", args=[self.bot1.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
     def test_botzinhos_detail(self):
         self.client.force_login(self.user2)
         url = reverse("base:botzinhos-detail", args=[self.bot1.pk])

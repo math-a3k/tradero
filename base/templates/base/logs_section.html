@@ -1,0 +1,15 @@
+<div class="container">
+
+    <h4>Logs</h4>
+
+	<div id="logs-list" class="list-group">
+	{% for log in page_obj %}
+		{{ log.timestamp|date:"r" }}| {{ log.message }} <br>
+	{% endfor %}
+	</div>
+
+    <div class="container">
+        {% include "base/_paginator.html" with page_obj=page_obj %}
+    </div>
+
+</div>
