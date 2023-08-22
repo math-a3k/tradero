@@ -213,6 +213,7 @@ class CatchTheWave(TradingStrategy):
         "sell_safeguard": {"default": "0.3", "type": "decimal"},
         "use_local_memory": {"default": "1", "type": "bool"},
         "use_matrix_time_res": {"default": "0", "type": "bool"},
+        "vr24h_min": {"default": "3", "type": "decimal"},
     }
 
     def __init__(self, bot, symbol=None, **kwargs):
@@ -233,10 +234,21 @@ class CatchTheWave(TradingStrategy):
         self.use_matrix_time_res = self.get_param(
             "use_matrix_time_res", kwargs
         )
+        self.vr24h_min = self.get_param("vr24h_min", kwargs)
 
     def evaluate_buy(self):
         if self.use_matrix_time_res and self.time_safeguard:
             return (False, "Holding - Using matrix's time resolution...")
+        if (
+            self.vr24h_min > 0
+            and self.bot.symbol.variation_range_24h < self.vr24h_min
+        ):
+            return (
+                False,
+                f"Symbol's Variation Range below threshold "
+                f"({self.bot.symbol.variation_range_24h:.3f} < "
+                f"{self.vr24h_min:.3f}) - waiting for next turn...",
+            )
         if self.is_on_good_status() and self.is_on_wave_onset():
             return True, None
         return (False, "Symbol is not in good status and ascending...")

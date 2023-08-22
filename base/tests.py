@@ -1575,6 +1575,13 @@ class TestStrategies(BotTestCase):
                 "Using matrix's time resolution",
                 self.bot1.others["last_logs"][-1],
             )
+            self.bot1.symbol.last_updated = timezone.now()
+            self.bot1.symbol.variation_range_24h = 1
+            self.bot1.decide()
+            self.assertIn(
+                "Variation Range",
+                self.bot1.others["last_logs"][-1],
+            )
 
 
 @pytest.mark.usefixtures("celery_session_app")
