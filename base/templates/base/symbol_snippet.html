@@ -19,7 +19,8 @@
       		{% endif %}
       		MS: <span class="ms-value">{{ symbol.model_score|floatformat:2 }}</span> |
       		VOL24h: <span class="vol24h-value">{{ symbol.volume_quote_asset|floatformat:"0g" }}</span> |
-      		VAR24h: <span class="var24h-value {% if symbol.last_variation_24h > 0 %}text-success{% else %}text-danger{% endif %}">{{ symbol.last_variation_24h|floatformat:2 }}%</span>
+      		VAR24h: <span class="var24h-value {% if symbol.last_variation_24h > 0 %}text-success{% else %}text-danger{% endif %}">{{ symbol.last_variation_24h|floatformat:2 }}%</span> |
+      		VR24h: <span class="vr24h-value">{{ symbol.variation_range_24h|floatformat:2 }}%</span>
       	</small>
     </div>
     <p class="mb-1">

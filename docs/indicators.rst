@@ -14,6 +14,7 @@ The six main indicators of ``tradero`` are:
 
   * the :ref:`Model Score <prediction_model>` (MS) (``model_score``),
   * *Variation (last 24h)* (VAR24h) (``last_variation_24h``),
+  * *Variation Range (last 24h)* (VR24h) (``variation_range_24h``),
   * :setting:`Quote Asset Volume (24h) <MARKET_SIZE_THRESHOLD>` (VOL24h) (``volume_quote_asset``),
   * :ref:`Outliers <outliers>`, and the
   * :ref:`macd_cg`.
