@@ -58,10 +58,12 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        trades = self.object.trades.all().order_by("-id")
+        trades = self.object.trades.filter(is_complete=True).order_by(
+            "-timestamp_selling"
+        )
         summary = TradeHistory.summary_for_object(self.object)
         #
-        paginator = Paginator(trades, 5)
+        paginator = Paginator(trades, 10)
         page_number = self.request.GET.get("page", 1)
         page_obj = paginator.get_page(page_number)
         #
@@ -116,7 +118,7 @@ class BotzinhosDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
         trades = self.object.trades.all().order_by("-id")
         summary = TradeHistory.summary_for_object(self.object)
         #
-        paginator = Paginator(trades, 5)
+        paginator = Paginator(trades, 10)
         page_number = self.request.GET.get("page", 1)
         page_obj = paginator.get_page(page_number)
         #
@@ -258,7 +260,7 @@ class BotzinhosGroupDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
         bots = TraderoBot.objects.filter(group=self.object)
         trades = TradeHistory.objects.filter(
             bot__group=self.object, is_complete=True
-        ).order_by("-id")
+        ).order_by("-timestamp_selling")
         summary = TradeHistory.summary_for_object(self.object)
         #
         paginator = Paginator(trades, 10)
