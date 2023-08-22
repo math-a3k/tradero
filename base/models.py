@@ -210,6 +210,13 @@ class Symbol(models.Model):
         blank=True,
         null=True,
     )
+    variation_range_24h = models.DecimalField(
+        "Variation Range - 24 hs",
+        max_digits=16,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
     model_score = models.DecimalField(
         "Model Score",
         max_digits=16,
@@ -377,6 +384,15 @@ class Symbol(models.Model):
         if klines_24h:  # pragma: no cover
             self.last_variation_24h = (
                 self._last_td.price_close / klines_24h[0].price_close * 100
+            ) - 100
+            ceil_floor = klines_24h.aggregate(
+                models.Min("price_low", default=1),
+                models.Max("price_high", default=1),
+            )
+            self.variation_range_24h = (
+                ceil_floor["price_high__max"]
+                / ceil_floor["price_low__min"]
+                * 100
             ) - 100
         self.last_value = self._last_td.price_close
         self.last_value_time = self._last_td.time + timezone.timedelta(

@@ -39,6 +39,13 @@
 			  </label>
 		</div>
 
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="vr24h" onchange="sort_symbols()">
+			  <label class="form-check-label">
+			    VR24h
+			  </label>
+		</div>
+
 		{% indicators_radio_buttons %}
 
 		<div id="symbols-list" class="list-group">
@@ -95,6 +102,10 @@
 					},
 			"var24h": function get_var24h_value(list_item) {
 					text = list_item.getElementsByClassName("var24h-value")[0].textContent
+					return new Number(text.substring(0, text.length - 1))
+				},
+			"vr24h": function get_vr24h_value(list_item) {
+					text = list_item.getElementsByClassName("vr24h-value")[0].textContent
 					return new Number(text.substring(0, text.length - 1))
 				}
 		}
