@@ -127,6 +127,7 @@ class TestViews(TestCase):
             defaults={
                 "model_score": 0.99,
                 "volume_quote_asset": Decimal(1000000),
+                "variation_range_24h": Decimal(9),
                 "info": {
                     "filters": [
                         {},
@@ -1102,6 +1103,7 @@ class BotTestCase(TestCase):
             defaults={
                 "model_score": 0.99,
                 "volume_quote_asset": Decimal(1000000),
+                "variation_range_24h": Decimal(9),
                 "info": {
                     "filters": [
                         {},
@@ -1118,6 +1120,7 @@ class BotTestCase(TestCase):
             defaults={
                 "model_score": 0.99,
                 "volume_quote_asset": Decimal(1000000),
+                "variation_range_24h": Decimal(9),
                 "info": {
                     "filters": [
                         {},
@@ -1377,6 +1380,10 @@ class TestStrategies(BotTestCase):
                 "Outlier Protection", self.bot1.others["last_logs"][-1]
             )
             self.s1.others["outliers"]["o1"] = False
+            self.s1.variation_range_24h = 11
+            self.bot1.decide()
+            self.assertIn("Variation Range", self.bot1.others["last_logs"][-1])
+            self.s1.variation_range_24h = 9
             self.s1.last_variation = Decimal("12")
             self.bot1.strategy_params = "microgain=0.3,max_var_prot=10"
             self.bot1.decide()
