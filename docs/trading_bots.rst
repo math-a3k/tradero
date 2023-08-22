@@ -55,6 +55,9 @@ Parameters
 ``keep_going``
   Do not sell if the price has reached the threshold if the ``AC`` is still at a buying point (``1`` | ``0``).
 
+``vr24h_max``
+  Maximum Variation Range (24h) of a Symbol to buy (``Decimal``, defaults to ``10``) if enabled (greater than zero). Meant to keep the bot out of the market when it is not moving sideways.
+
 
 CatchTheWave
 -------------

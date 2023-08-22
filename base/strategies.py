@@ -64,6 +64,7 @@ class ACMadness(TradingStrategy):
         "ol_prot": {"default": "1", "type": "bool"},
         "max_var_prot": {"default": "0", "type": "bool"},
         "ac_adjusted": {"default": "1", "type": "bool"},
+        "vr24h_max": {"default": "10", "type": "decimal"},
     }
 
     def __init__(self, bot, symbol=None, **kwargs):
@@ -79,6 +80,7 @@ class ACMadness(TradingStrategy):
         self.outlier_protection = self.get_param("ol_prot", kwargs)
         self.max_var_protection = self.get_param("max_var_prot", kwargs)
         self.ac_adjusted = self.get_param("ac_adjusted", kwargs)
+        self.vr24h_max = self.get_param("vr24h_max", kwargs)
 
     def evaluate_buy(self):
         if self.time_safeguard:
@@ -102,6 +104,16 @@ class ACMadness(TradingStrategy):
                 False,
                 f"Max Var Protection ({self.bot.symbol.last_variation:.3f} > "
                 f"{self.max_var_protection:.3f}) - waiting for next turn...",
+            )
+        if (
+            self.vr24h_max > 0
+            and self.bot.symbol.variation_range_24h > self.vr24h_max
+        ):
+            return (
+                False,
+                f"Symbol's Variation Range above threshold "
+                f"({self.bot.symbol.variation_range_24h:.3f} > "
+                f"{self.vr24h_max:.3f}) - waiting for next turn...",
             )
         if self.get_ac() > self.ac_threshold:
             return True, None
