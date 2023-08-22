@@ -1129,26 +1129,43 @@ class BotTestCase(TestCase):
                 },
             },
         )
+        cls.s3, _ = Symbol.objects.update_or_create(
+            symbol="S3BUSD",
+            status="TRADING",
+            base_asset="S3",
+            quote_asset="BUSD",
+            defaults={
+                "model_score": 0.99,
+                "volume_quote_asset": Decimal(1000000),
+                "variation_range_24h": Decimal(9),
+                "info": {
+                    "filters": [
+                        {},
+                        {"stepSize": "0.10000000", "filterType": "LOT_SIZE"},
+                    ]
+                },
+            },
+        )
         cls.user1, _ = User.objects.get_or_create(
             username="user1", password="secret", email="admin@example.com"
         )
         cls.group1, _ = TraderoBotGroup.objects.get_or_create(
-            user=cls.user1, name="Test Group 1"
+            user=cls.user1, name="BotTest Group 1"
         )
-        cls.bot1 = TraderoBot(
+        cls.bot1, _ = TraderoBot.objects.get_or_create(
+            name="test_bot1",
             symbol=cls.s1,
             user=cls.user1,
             group=cls.group1,
             strategy="acmadness",
-            strategy_params="",
             fund_quote_asset_initial=20,
             is_dummy=True,
             is_jumpy=True,
         )
-        cls.bot1.save()
         cls.bot1.on()
-        cls.bot2 = TraderoBot(
-            symbol=cls.s2,
+        cls.bot2, _ = TraderoBot.objects.get_or_create(
+            name="test_bot2",
+            symbol=cls.s3,
             user=cls.user1,
             group=cls.group1,
             strategy="acmadness",
@@ -1157,7 +1174,6 @@ class BotTestCase(TestCase):
             is_dummy=True,
             is_jumpy=True,
         )
-        cls.bot2.save()
         cls.bot2.on()
         with requests_mock.Mocker() as m:
             with open("base/fixtures/klines_response_mock.json") as f:
@@ -1172,13 +1188,21 @@ class BotTestCase(TestCase):
                     f"&interval={settings.TIME_INTERVAL}m",
                     text=content,
                 )
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/klines?symbol=S3BUSD"
+                    f"&interval={settings.TIME_INTERVAL}m",
+                    text=content,
+                )
             Symbol.update_all_indicators()
         cls.s1.refresh_from_db()
         cls.s2.refresh_from_db()
+        cls.s3.refresh_from_db()
         cls.s1.volume_quote_asset = 1000000
         cls.s2.volume_quote_asset = 1000000
+        cls.s3.volume_quote_asset = 1000000
         cls.s1.save()
         cls.s2.save()
+        cls.s3.save()
         super().setUpClass()
 
 
@@ -1190,6 +1214,7 @@ class TestTraderoBots(BotTestCase):
                 json=[
                     {"symbol": "S1BUSD", "price": "1.0"},
                     {"symbol": "S2BUSD", "price": "1.0"},
+                    {"symbol": "S3BUSD", "price": "1.0"},
                 ],
             )
             TraderoBot.update_all_bots()
@@ -1365,6 +1390,7 @@ class TestStrategies(BotTestCase):
                 json={"symbol": "S1BUSD", "price": "1.0"},
             )
             self.bot1.strategy = "acmadness"
+            self.bot1.symbol = self.s1
             #
             self.s1.others["stp"]["next_n_sum"] = 4
             self.s1.last_updated = timezone.now() - timezone.timedelta(
@@ -1412,6 +1438,8 @@ class TestStrategies(BotTestCase):
                 "no other symbol to go", self.bot1.others["last_logs"][-1]
             )
             self.bot1.jumpy_whitelist = "S2BUSD"
+            self.s2.others["outliers"]["o1"] = False
+            self.s2.save()
             self.bot1.decide()
             self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
@@ -1438,6 +1466,7 @@ class TestStrategies(BotTestCase):
                 f"{BINANCE_API_URL}/api/v3/ticker/price",
                 json={"symbol": "S1BUSD", "price": "1.0"},
             )
+            self.bot1.symbol = self.s1
             self.bot1.strategy = "catchthewave"
             self.bot1.strategy_params = "use_local_memory=0"
             #
@@ -1594,6 +1623,7 @@ class TestTasks(BotTestCase):
                 json=[
                     {"symbol": "S1BUSD", "price": "1.0"},
                     {"symbol": "S2BUSD", "price": "1.0"},
+                    {"symbol": "S3BUSD", "price": "1.0"},
                 ],
             )
             task = tasks.update_all_bots_job.delay()
