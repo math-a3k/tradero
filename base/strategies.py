@@ -48,6 +48,20 @@ class TradingStrategy:
         else:
             return int(param_value)
 
+    def get_symbols_with_siblings(self):
+        return self.bot.user.bots.filter(
+            Q(
+                timestamp_buying__gt=timezone.now()
+                - timezone.timedelta(hours=3)
+            )
+            | Q(
+                timestamp_start__gt=timezone.now()
+                - timezone.timedelta(hours=3)
+            ),
+            status__gte=self.bot.Status.INACTIVE,
+            group=self.bot.group,
+        ).values_list("symbol", flat=True)
+
 
 class ACMadness(TradingStrategy):
     """
@@ -146,21 +160,7 @@ class ACMadness(TradingStrategy):
     def evaluate_jump(self):
         if self.time_safeguard:
             return False, None
-        symbols_with_siblings = list(
-            self.bot.user.bots.filter(
-                Q(
-                    timestamp_buying__gt=timezone.now()
-                    - timezone.timedelta(hours=1)
-                )
-                | Q(
-                    timestamp_start__gt=timezone.now()
-                    - timezone.timedelta(hours=1)
-                ),
-                status__gte=self.bot.Status.INACTIVE,
-                strategy=self.bot.strategy,
-                strategy_params=self.bot.strategy_params,
-            ).values_list("symbol", flat=True)
-        )
+        symbols_with_siblings = self.get_symbols_with_siblings()
         symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
         symbols = sorted(
             symbols, key=lambda s: s.others["stp"]["next_n_sum"], reverse=True
@@ -299,13 +299,6 @@ class CatchTheWave(TradingStrategy):
                     continue
                 return True, symbol
         return False, None
-
-    def get_symbols_with_siblings(self):
-        return self.bot.user.bots.filter(
-            status__gte=self.bot.Status.INACTIVE,
-            strategy=self.bot.strategy,
-            strategy_params=self.bot.strategy_params,
-        ).values_list("symbol", flat=True)
 
     def all_positive(self, ts):
         return all([t > 0 for t in ts])
