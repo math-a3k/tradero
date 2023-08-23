@@ -2,6 +2,20 @@
 
 {% load bootstrap5 mathfilters symbols %}
 
+{% block bootstrap5_extra_head %}
+<style type="text/css">
+.bot-detail {
+	margin-top: -1px;
+	border-width-top: 0px;
+	border:1px solid rgba(0,0,0,.125);
+}
+
+.bot-detail .list-group-item {
+	border: 0;
+}
+</style>
+{% endblock bootstrap5_extra_head %}
+
 {% block title %}
 	Botzinhos (小bots)
 {% endblock title %}
@@ -24,42 +38,41 @@
 			{% for bot in bots %}
 			{% bot_render_html_snippet bot=bot %}
 			{% endfor %}
+
+			<div class="bot-detail" style="">
+				<ul class="list-group mt-0" style="border-width: 0px !important; ">
+					{% if group.valuation_current and group.valuation_initial %}
+					<li class="list-group-item">
+						<strong>Group Valuation</strong>: {{group.valuation_current|floatformat:3 }} {{ quote_asset }} [{% with group.valuation_current|div:group.valuation_initial|sub:1|mul:100 as var_val %}
+						<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:3 }}%</span>]
+					{% endwith %} <span class="text-muted">(Current)</span> | {{group.valuation_initial|floatformat:3 }} {{ quote_asset }} <span class="text-muted">(Initial)</span>
+					</li>
+					{% endif %}
+				</ul>
+			</div>
+
 		</div>
 
-		{% if group.valuation_current and group.valuation_initial %}
-		<div class="container mt-2 mb-0">
-			<p><strong>Valuation</strong>: {{group.valuation_current|floatformat:3 }} {{ quote_asset }} [{% with group.valuation_current|div:group.valuation_initial|sub:1|mul:100 as var_val %}
-			<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:3 }}%</span>]
-		{% endwith %} <span class="text-muted">(Current)</span> | {{group.valuation_initial|floatformat:3 }} {{ quote_asset }} <span class="text-muted">(Initial)</span></p>
-		</div>
-		{% endif %}
+		<div class="container">
+			<h4 class="m-2">Group Actions</h4>
 
-		<div class="container mt-2 mb-0">
-			<h4 class="mt-3">Actions</h4>
-			<ul>
-				<li>
-					<a class="btn btn-warning" href="{% url "base:botzinhos-group-update" group.pk %}">Atualizar Grupo</a>
-				</li>
-				<li>
-					<a class="btn btn-primary" href="{% url "base:botzinhos-create" %}?group={{group.pk}}">Novo Botzinho</a>
-				</li>
-				<li>
-					{% include "base/_jumping_form.html" with view="base:botzinhos-group-action" obj=group %}
-				</li>
-				<li>
-					{% url "base:botzinhos-group-action" group.pk "off" as action_url %}
-					{% action_button action_url "Turn OFF" "btn-dark" %}
-				</li>
-				<li>
-					{% url "base:botzinhos-group-action" group.pk "on" as action_url %}
-					{% action_button action_url "Turn ON" "btn-primary" %}
-				</li>
-				<li>
-					{% url "base:botzinhos-group-action" group.pk "liquidate" as action_url %}
-					{% action_button action_url "LIQUIDATE (FORCE SELL and Turn OFF)" "btn-danger" %}
-				</li>
-			</ul>
+			<div class="btn-group">
+				<a class="btn btn-warning" href="{% url "base:botzinhos-group-update" group.pk %}">Atualizar Grupo</a>
+				<a class="btn btn-primary" href="{% url "base:botzinhos-create" %}?group={{group.pk}}">Novo Botzinho</a>
+			</div>
+			<div class="btn-group">
+				{% url "base:botzinhos-group-action" group.pk "off" as action_url %}
+				{% action_button action_url "Turn OFF" "btn-dark" %}
+				{% url "base:botzinhos-group-action" group.pk "on" as action_url %}
+				{% action_button action_url "Turn ON" "btn-primary" %}
+				{% url "base:botzinhos-group-action" group.pk "liquidate" as action_url %}
+				{% action_button action_url "LIQUIDATE (FORCE SELL and Turn OFF)" "btn-danger" %}
+			</div>
+			<div class="ul">
+				{% include "base/_jumping_form.html" with view="base:botzinhos-group-action" obj=group %}
+			</div>
 		</div>
+
 	</div>
 
 	{% include "base/trades_section.html" with summary=summary trades=trades page_obj=page_obj %}

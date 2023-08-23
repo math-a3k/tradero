@@ -3,7 +3,7 @@
 <li id="botzinho-{{ bot.id }}" class="list-group-item list-group-item-action">
     <div class="d-flex w-100 justify-content-between">
       	<h5 class="mb-1">
-      		#{{ bot.id|stringformat:"03d" }}: <a href="{% url "base:botzinhos-detail" bot.pk %}">{{ bot.name }}</a> |
+      		<span class="text-muted">#{{ bot.id|stringformat:"03d" }}</span> <a href="{% url "base:botzinhos-detail" bot.pk %}">{{ bot.name }}</a> |
       		{% with bot.get_status_display as status %}
       			{% if status == "Selling" %}
       				<span class="text-danger">{{ status }}</span>
@@ -13,14 +13,14 @@
       			    <span class="text-muted">{{ status }}</span>
       			{% endif %}
       		{% endwith %}
-      		<a href="https://www.binance.com/en/trade/{{ bot.symbol.base_asset}}_{{ bot.symbol.quote_asset }}?_from=markets&theme=dark&type=spot" target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action">
+      		<a href="https://www.binance.com/en/trade/{{ bot.symbol.base_asset}}_{{ bot.symbol.quote_asset }}?_from=markets&theme=dark&type=spot" target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action bg-light bg-gradient text-center" style="">
       			{{ bot.symbol.base_asset }}/{{ bot.symbol.quote_asset }}
       		</a>
       	</h5>
       	<small class="text-muted text-end">
-      		<span class="badge bg-success rounded-pill"><a class="text-warning" href="{% url "base:botzinhos-group-detail" bot.group.pk %}">{{ bot.group.name|default:"(Sem Nome)" }}</a></span>
+      		<span class="badge bg-success rounded-pill"><a class="text-white" href="{% url "base:botzinhos-group-detail" bot.group.pk %}">{{ bot.group.name|default:"(Sem Nome)" }}</a></span>
       		{% if bot.is_dummy %}
-      		<span class="badge bg-danger rounded-pill">DUMMY</span>
+      		<span class="badge bg-info rounded-pill">DUMMY</span>
 	      	{% endif %}
 	      	{% if bot.is_jumpy %}
       		<span class="badge bg-primary rounded-pill">Jumpy</span>

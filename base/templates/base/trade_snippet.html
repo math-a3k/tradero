@@ -3,7 +3,7 @@
 <li id="trade-{{ trade.id }}" class="list-group-item list-group-item-action">
     <div class="d-flex w-100 justify-content-between">
       	<h5 class="mb-1">
-      		#{{ trade.id|stringformat:"05d" }}: {{ trade.symbol.base_asset }}/{{ trade.symbol.quote_asset }} |
+      		<span class="text-muted">#{{ trade.id|stringformat:"03d" }}</span> {{ trade.symbol.base_asset }}/{{ trade.symbol.quote_asset }} |
       		{% if trade.is_complete %}
       			<span class="{% if trade.variation_quote_asset > 0 %}text-success{% else %}text-danger{% endif %}">{{ trade.variation_quote_asset|floatformat:4 }} {{ trade.symbol.quote_asset }} ({{trade.variation|floatformat:3 }}%)</span>
       		{% elif trade.timestamp_cancelled %}
@@ -13,9 +13,9 @@
       		{% endif %}
       	</h5>
       	<small class="text-muted text-end" >
-      		{% if trade.is_dummy %}<span class="badge bg-danger rounded-pill">DUMMY</span>{% endif %}
+      		{% if trade.is_dummy %}<span class="badge bg-info rounded-pill">DUMMY</span>{% endif %}
       		<a href="{% url "base:botzinhos-detail" trade.bot.pk %}">#{{ trade.bot.pk|stringformat:"03d" }}: {{trade.bot.name }}</a>
-      		<br>{{ trade.strategy|upper }}({{ trade.strategy_params }})
+      		<br>{{ trade.strategy|upper }}({{ trade.strategy_params|default:"defaults" }})
       	</small>
     </div>
 	<div class="float-end">

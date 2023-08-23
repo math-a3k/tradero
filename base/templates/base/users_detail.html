@@ -13,20 +13,19 @@
 		<p><strong>Correio Electrónico</strong>: {{ user.email }}</p>
 		<p><strong>Nome</strong>: {{ user.first_name }}</p>
 		<p><strong>Sobrenome</strong>: {{ user.last_name }}</p>
-		<p><strong>Chave do API</strong>: {{ user.api_key }}</p>
-		<p><strong>Segredo do Chave do API</strong>: {{ user.api_secret }}</p>
+		<p><strong>Chave do API</strong>: {% if user.api_key %}************{% else %}-{% endif %}</p>
+		<p><strong>Segredo do Chave do API</strong>: {% if user.api_secret %}************{% else %}-{% endif %}</p>
 
-		<h4>Actions</h4>
-		<ul>
-			<li>
-				<a class="btn btn-warning" href="{% url "base:users-update" %}">Update</a>
-			</li>
-			<li>
+		<div class="container">
+			<h4 class="m-2">Actions</h4>
+
+			<div class="btn-group">
+				<a class="btn btn-warning" href="{% url "base:users-update" %}">Atualizar</a>
 				<a class="btn btn-danger" href="{% url "base:logout" %}">Sair</a>
-			</li>
-		</ul>
-	</div>
+			</div>
+		</div>
 
 	{% include "base/trades_section.html" with summary=summary trades=trades page_obj=page_obj %}
 
+	</div>
 {% endblock content %}

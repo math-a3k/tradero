@@ -68,6 +68,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         page_obj = paginator.get_page(page_number)
         #
         context["page_obj"] = page_obj
+        context["page_element"] = "#trades-list"
         context["time_interval"] = settings.TIME_INTERVAL_BOTS
         context["summary"] = summary
         return context
@@ -123,6 +124,7 @@ class BotzinhosDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
         page_obj = paginator.get_page(page_number)
         #
         context["page_obj"] = page_obj
+        context["page_element"] = "#trades-list"
         context["time_interval"] = settings.TIME_INTERVAL_BOTS
         context["summary"] = summary
         context["form_jumping"] = JumpingForm()
@@ -276,7 +278,7 @@ class BotzinhosGroupDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        bots = TraderoBot.objects.filter(group=self.object)
+        bots = TraderoBot.objects.filter(group=self.object).order_by("name")
         trades = TradeHistory.objects.filter(
             bot__group=self.object, is_complete=True
         ).order_by("-timestamp_selling")
@@ -287,6 +289,7 @@ class BotzinhosGroupDetailView(OwnerMixin, LoginRequiredMixin, DetailView):
         page_obj = paginator.get_page(page_number)
         #
         context["page_obj"] = page_obj
+        context["page_element"] = "#trades-list"
         context["time_interval"] = settings.TIME_INTERVAL_BOTS
         context["bots"] = bots
         context["summary"] = summary
