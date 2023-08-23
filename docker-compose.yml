@@ -38,6 +38,22 @@ services:
     links:
        - db:db
        - redis:redis
+  worker:
+    hostname: worker
+    build:
+      context: .
+      dockerfile: ./dockerfiles/Dockerfile-worker
+    env_file:
+      - ./dockerfiles/.env_file
+    volumes:
+      - static:/vol/tradero/static
+    depends_on:
+      - db
+      - redis
+      - instance
+    links:
+       - db:db
+       - redis:redis
 
 volumes:
   static:

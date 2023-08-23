@@ -8,7 +8,22 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tradero.settings")
 
 app = Celery("tradero", include=["base.tasks"])
 
+app.conf.task_routes = {
+    "base.tasks.retrieve_and_update_symbol": {"queue": "symbols"},
+    "base.tasks.update_all_indicators_job": {"queue": "symbols"},
+    "base.tasks.update_all_bots_job": {"queue": "bots"},
+}
+
 app.conf.beat_schedule = {
+    # Executes every day.
+    "update-symbols-and-indicators": {
+        "task": "base.tasks.update_all_indicators_job",
+        "schedule": crontab(
+            hour=23,
+            minute=57,
+        ),
+        "kwargs": {"load_symbols": True, "all_symbols": True},
+    },
     # Executes every 5 mins.
     "update-indicators-every-5-mins": {
         "task": "base.tasks.update_all_indicators_job",
