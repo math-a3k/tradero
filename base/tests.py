@@ -272,7 +272,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
-                "fund_quote_asset": Decimal("20"),
+                "fund_quote_asset_initial": Decimal("20"),
             },
             follow=True,
         )
@@ -289,7 +289,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
-                "fund_quote_asset": Decimal("20"),
+                "fund_quote_asset_initial": Decimal("20"),
                 "jumpy_whitelist": "s1busd,s8978ygbusd",
             },
             follow=True,
@@ -307,7 +307,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
-                "fund_quote_asset": Decimal("20"),
+                "fund_quote_asset_initial": Decimal("20"),
                 "jumpy_blacklist": "sghkgjhvbusd",
             },
             follow=True,
@@ -325,7 +325,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
-                "fund_quote_asset": Decimal("20"),
+                "fund_quote_asset_initial": Decimal("20"),
                 "jumpy_whitelist": "s1busd",
                 "jumpy_blacklist": "s1busd",
             },
@@ -349,7 +349,7 @@ class TestViews(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn(
-            b"Either &#x27;Fund (Quote Asset)&#x27;",
+            b"This field is required.",
             response.content,
         )
         response = self.client.post(
@@ -360,7 +360,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3,abc123",
-                "fund_quote_asset": Decimal("20"),
+                "fund_quote_asset_initial": Decimal("20"),
             },
             follow=True,
         )
@@ -377,7 +377,7 @@ class TestViews(TestCase):
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3,abc123=1",
-                "fund_quote_asset": Decimal("20"),
+                "fund_quote_asset_initial": Decimal("20"),
             },
             follow=True,
         )
@@ -691,6 +691,7 @@ class TestAdmin(TestCase):
             symbol=cls.s1,
             user=cls.superuser,
             group=cls.group1,
+            fund_quote_asset_initial=Decimal("20"),
         )
         cls.bot1.save()
         cls.bot1.on()
@@ -698,6 +699,7 @@ class TestAdmin(TestCase):
             symbol=cls.s1,
             user=cls.superuser,
             group=cls.group1,
+            fund_quote_asset_initial=Decimal("20"),
         )
         cls.bot2.save()
         super().setUpClass()
@@ -959,7 +961,11 @@ class TestConsumers(TestCase):
             user=cls.user, name="Test Group 1"
         )
         cls.bot = TraderoBot(
-            user=cls.user, symbol=cls.s1, name="BTZN", group=cls.group1
+            user=cls.user,
+            symbol=cls.s1,
+            name="BTZN",
+            group=cls.group1,
+            fund_quote_asset_initial=Decimal("20"),
         )
         cls.bot.save()
         cls.channel_layer = get_channel_layer()

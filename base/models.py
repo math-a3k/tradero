@@ -1487,13 +1487,9 @@ class TraderoBotGroup(models.Model):
     @property
     def valuation_initial(self):
         valuations = [
-            bot.fund_quote_asset_exec
-            or bot.fund_quote_asset
-            or bot.fund_quote_asset_initial
+            bot.fund_quote_asset_initial
             for bot in self.bots.all()
-            if bot.fund_quote_asset_exec
-            or bot.fund_quote_asset
-            or bot.fund_quote_asset_initial
+            if bot.fund_quote_asset_initial
         ]
         return sum(valuations)
 
@@ -1595,8 +1591,6 @@ class TraderoBot(models.Model):
         max_digits=40,
         decimal_places=8,
         validators=[MinValueValidator(Decimal(15))],
-        blank=True,
-        null=True,
     )
     price_buying = models.DecimalField(
         "Buying Price the Base Asset",
@@ -2021,16 +2015,6 @@ class TraderoBot(models.Model):
                 raise ValidationError(
                     {"jumpy_blacklist": "Unrecognized Symbols."}
                 )
-        # Check either fund_quote_asset or fund_quote_asset_initial are present
-        if not (self.fund_quote_asset or self.fund_quote_asset_initial):
-            raise ValidationError(
-                {
-                    "fund_quote_asset_initial": (
-                        "Either 'Fund (Quote Asset)' or "
-                        "'Initial Fund (Quote Asset)' is required"
-                    )
-                }
-            )
         # Check vailidity of strategy params
         try:
             strategy = self.get_strategy()
