@@ -11,7 +11,7 @@ Welcome to tradero's documentation!
 
 Self-funding means generating the means independently to cover a budget in order to opt by the value it produces rather than out of economic necessity (financial freedom).
 
-It tracks Symbols in an `Exchange`_ with a time resolution, calculates indicators, presents them in an useful way and provides automatization through trading bots so the user can perform trading more effectively.
+It tracks Symbols in an `Exchange`_ with a time resolution, calculates indicators, presents them in a useful way and provides automatization through trading bots so the user can perform trading more effectively.
 
 The application is available at https://tradero.dev
 

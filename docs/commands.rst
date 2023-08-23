@@ -4,7 +4,7 @@
 Commands
 ========
 
-The following Django commands - meant to be ran as ``python manage.py command_name [--argument [arg_val]]`` in the virtual environment - are bundled:
+The following Django commands - meant to be run as ``python manage.py command_name [--argument [arg_val]]`` in the virtual environment - are bundled:
 
 
 .. _load_symbols:
@@ -21,7 +21,7 @@ Loads symbols from Binance.
 ``warm_and_ready``
 ==================
 
-Cleans current data, gets fresh one and updates models.
+Cleans current data, gets fresh ones, and updates models.
 
 .. autoclass:: base.management.commands.warm_and_ready.Command
 
@@ -30,7 +30,7 @@ Cleans current data, gets fresh one and updates models.
 ``ws_klines``
 =============
 
-Starts the websocket client for data retrieval (ws polling).
+Starts the WebSocket client for data retrieval (ws polling).
 
 .. autoclass:: base.management.commands.ws_klines.Command
 
@@ -39,7 +39,7 @@ Starts the websocket client for data retrieval (ws polling).
 ``calibrate_all_models``
 =========================
 
-Callibrates the parameters of all Symbols' Prediction models. This a computational expensive call.
+[UNDER DEVELOPMENT] Calibrates the parameters of all Symbols' Prediction models. This a computationally expensive call.
 
 .. autoclass:: base.management.commands.calibrate_all_models.Command
 
@@ -48,6 +48,6 @@ Callibrates the parameters of all Symbols' Prediction models. This a computation
 ``calibrate_all_windows``
 =========================
 
-Callibrates the window size of all Symbols' Prediction models. This a computational expensive call.
+Calibrates the window size of all Symbols' Prediction models. This a computationally expensive call.
 
 .. autoclass:: base.management.commands.calibrate_all_windows.Command
