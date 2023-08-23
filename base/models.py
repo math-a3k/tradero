@@ -169,8 +169,7 @@ class Symbol(models.Model):
     _outliers_model_class = None
     _last_td = None
     _serializer_class = None
-
-    client = Spot()
+    _client = None
 
     symbol = models.CharField("Symbol", max_length=20)
     status = models.CharField("Status", max_length=20)
@@ -288,6 +287,13 @@ class Symbol(models.Model):
         symbols = cls.objects.all()
         for s in symbols:
             s.load_data()
+
+    @classmethod
+    def get_client(cls):
+        if not cls._client:
+            cls._client = Spot()
+            cls._client.session.mount("https://", HTTPAdapter(pool_maxsize=36))
+        return cls._client
 
     def load_data(self, start_time=None, end_time=None):
         Kline.load_klines(self, start_time=start_time, end_time=end_time)
@@ -435,7 +441,9 @@ class Symbol(models.Model):
         # Early bot notification if available
         if bot_early_notification:  # pragma: no cover
             if getattr(self, "bots_prefetched", []):
-                price = self.client.ticker_price(symbol=self.symbol)["price"]
+                price = self.get_client().ticker_price(symbol=self.symbol)[
+                    "price"
+                ]
                 # Re-fetch to avoid errors
                 for bot in self.bots.enabled():
                     bot.price_current = Decimal(price)
@@ -618,6 +626,42 @@ class Symbol(models.Model):
             symbol.training_data.all().delete()
             symbol.klines.all().delete()
             logger.warning(f"{symbol}: RESET")
+
+    @classmethod
+    def load_symbols(cls):
+        cache_key = settings.SYMBOLS_UPDATE_ALL_INDICATORS_KEY
+        if not cache.get(cache_key, False) or "pytest" in sys.modules:
+            cache.set(cache_key, True, 2400)
+            client = cls.get_client()
+            ei = client.exchange_info()
+            symbols_processed, symbols_created = 0, 0
+            for symbol in ei["symbols"]:
+                if symbol["symbol"].endswith(settings.QUOTE_ASSET):
+                    s, c = cls.objects.update_or_create(
+                        symbol=symbol["symbol"],
+                        defaults={
+                            "status": symbol["status"],
+                            "base_asset": symbol["baseAsset"],
+                            "quote_asset": symbol["quoteAsset"],
+                            "info": symbol,
+                        },
+                    )
+                    symbols_processed += 1
+                    if c:
+                        symbols_created += 1
+            message = (
+                f"Successfully processed {symbols_processed} symbols "
+                f"({symbols_created} created)"
+            )
+
+            cache.set(cache_key, False)
+        else:  # pragma: no cover
+            message = (
+                "Other process updating all indicators is running, please "
+                "wait."
+            )
+        logger.warning(message)
+        return message
 
 
 class Kline(models.Model):
