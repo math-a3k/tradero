@@ -9,7 +9,7 @@ Code repository: https://github.com/math-a3k/covid-ht
 Requirements
 ============
 
-* A working `Python`_ 3.7 or newer (3.11 recommended) installation so you can issue succesfully its version:
+* A working `Python`_ 3.7 or newer (3.11 recommended) installation so you can issue successfully its version:
 
 .. code-block:: shell
 
@@ -21,7 +21,7 @@ Requirements
 
     > python -m pip install pipenv
 
-* A working `git`_ installation so you can so you can issue succesfully its version:
+* A working `git`_ installation so you can issue successfully its version:
 
 .. code-block:: shell
 

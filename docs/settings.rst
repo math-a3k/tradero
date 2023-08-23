@@ -10,7 +10,7 @@ Settings
 
 Here's a list of settings specific to ``tradero``, for Django settings refer `here <https://docs.djangoproject.com/en/dev/ref/settings/>`_.
 
-All can be set with environmental variables with the ``TRADERO_`` preffix (i.e. ``TRADERO_QUOTE_ASSET`` for :setting:`QUOTE_ASSET`).
+All can be set with environmental variables with the ``TRADERO_`` prefix (i.e. ``TRADERO_QUOTE_ASSET`` for :setting:`QUOTE_ASSET`).
 
 .. setting:: QUOTE_ASSET
 
@@ -28,7 +28,7 @@ The Quote Asset for the Symbols to be retrieved.
 
 Default: ``5``
 
-The Time Resoulution *in minutes*  to be used for the data, models and indicators.
+The Time Resolution *in minutes*  to be used for the data, models, and indicators.
 
 .. setting::SYNC_EXECUTION
 
@@ -37,7 +37,7 @@ The Time Resoulution *in minutes*  to be used for the data, models and indicator
 
 Default: ``False``
 
-Syncronous Execution of Threads (No Threads). Meant only to be used when running tests.
+Synchronous Execution of Threads (No Threads). Meant only to be used when running tests.
 
 .. setting:: EXECUTOR_THREADS
 
@@ -65,7 +65,7 @@ Amount of Symbols to be tracked once they have been ranked by model score and fi
 
 Default: ``1``
 
-Number of periods of data to be retrieved by the ``warm_and_ready`` command. Each period corrrespond to 1000 time intervals (i.e. 2 periods with a time interval of 5 correspond to the data of the last 10000 minutes - 2000 klines of 5 minutes).
+Number of periods of data to be retrieved by the ``warm_and_ready`` command. Each period corrresponds to 1000 time intervals (i.e. 2 periods with a time interval of 5 correspond to the data of the last 10000 minutes - 2000 k-lines of 5 minutes).
 
 .. setting:: MARKET_SIZE_THRESHOLD
 
@@ -74,7 +74,7 @@ Number of periods of data to be retrieved by the ``warm_and_ready`` command. Eac
 
 Default: ``180000``
 
-Minimun Last 24h Volume of Quote Asset of a Symbol. Symbols below this threshold will not be tracked and listed to the User.
+Minimum Last 24h Volume of Quote Asset of a Symbol. Symbols below this threshold will not be tracked and listed to the User.
 
 .. setting:: MODEL_SCORE_THRESHOLD
 
@@ -92,7 +92,7 @@ Minimum model score of a Symbol. Symbols below this threshold will not be tracke
 
 Default: ``1000``
 
-Amount of Klines and Training Data Time Intervals (observations) to be left for each Symbol after updating indicators. Controls how much data is fed to the Prediction Model. A value of ``1500`` will fed the Prediction Model with at most the last 1500 Training Data and "clean" the older.
+Amount of Klines and Training Data Time Intervals (observations) to be left for each Symbol after updating indicators. Controls how much data is fed to the Prediction Model. A value of ``1500`` will feed the Prediction Model with at most the last 1500 Training Data and "clean" the older ones.
 
 
 .. setting:: PREDICTION_MODEL_CLASS

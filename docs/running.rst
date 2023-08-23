@@ -13,7 +13,7 @@ The easiest way of running an instance is by using `Docker`_:
 
     > docker-compose up
 
-The instance should be available at http://localhost in your machine.
+The instance should be available at http://localhost on your machine.
 
 You may create a superuser with:
 
@@ -26,7 +26,7 @@ Please refer to its documentation for information on installing it on your syste
 Regular
 =======
 
-``tradero`` is a "regular" `Django`_ application (``tradero.settings``) which requires a `Postgres`_ database server and a `Redis`_ server properly configured to run.
+``tradero`` is a "regular" `Django`_ application (``tradero.settings``) that requires a `Postgres`_ database server and a `Redis`_ server properly configured to run.
 
 Activate the project's virtual environment:
 
@@ -45,8 +45,8 @@ Run the migrations and optionally create a superuser:
 
 .. code-block:: shell
 
-    > pytthon manage.py migrate
-    > pytthon manage.py createsuperuser  # optional
+    > python manage.py migrate
+    > python manage.py createsuperuser  # optional
 
 After all the previous are set, review ``tradero/settings.py`` and the instance can be executed with:
 
