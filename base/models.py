@@ -1476,22 +1476,22 @@ class TraderoBotGroup(models.Model):
         return True
 
     @property
-    def current_valuation(self):
+    def valuation_current(self):
         valuations = [
-            bot.current_valuation
+            bot.valuation_current
             for bot in self.bots.all()
-            if bot.current_valuation
+            if bot.valuation_current
         ]
         return sum(valuations)
 
     @property
-    def initial_valuation(self):
+    def valuation_initial(self):
         valuations = [
-            bot.executed_quote_asset
+            bot.fund_quote_asset_exec
             or bot.fund_quote_asset
             or bot.fund_quote_asset_initial
             for bot in self.bots.all()
-            if bot.executed_quote_asset
+            if bot.fund_quote_asset_exec
             or bot.fund_quote_asset
             or bot.fund_quote_asset_initial
         ]
@@ -1668,7 +1668,7 @@ class TraderoBot(models.Model):
         async_to_sync(self.push_to_ws)()
 
     @property
-    def current_valuation(self):
+    def valuation_current(self):
         if self.status == self.Status.INACTIVE:
             if self.receipt_buying:
                 return self.fund_base_asset * self.price_current
@@ -1680,7 +1680,7 @@ class TraderoBot(models.Model):
             return self.fund_quote_asset or self.fund_quote_asset_initial
 
     @property
-    def executed_quote_asset(self):
+    def fund_quote_asset_exec(self):
         if self.receipt_buying:
             return Decimal(self.receipt_buying["cummulativeQuoteQty"])
         return None
