@@ -1,6 +1,6 @@
-<div class="container">
+<div class="container mt-2">
 
-    <h4>Trades</h4>
+    <h4 class="m-2">Trades</h4>
 
     {% include "base/trade_summary.html" with summary=summary %}
 
@@ -10,7 +10,7 @@
 	{% endfor %}
 	</div>
 
-    <div class="container">
+    <div class="container" style="margin-top: -1px;">
         {% include "base/_paginator.html" with page_obj=page_obj %}
     </div>
 

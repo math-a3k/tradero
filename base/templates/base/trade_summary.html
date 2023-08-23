@@ -2,6 +2,6 @@
 
 <p><strong>Checkpoint</strong>: {{ summary.checkpoint|date|default:"-" }}</p>
 
-{% include "base/trade_summary_snippet.html" with s=summary.real table_name="REAL" %}
+{% include "base/trade_summary_snippet.html" with s=summary.real table_name="REAL" table_class="table-success" %}
 
-{% include "base/trade_summary_snippet.html" with s=summary.dummy table_name="DUMMY" %}
+{% include "base/trade_summary_snippet.html" with s=summary.dummy table_name="DUMMY" table_class="table-info" %}

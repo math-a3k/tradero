@@ -2,6 +2,20 @@
 
 {% load bootstrap5 mathfilters symbols %}
 
+{% block bootstrap5_extra_head %}
+<style type="text/css">
+.bot-detail {
+	margin-top: -1px;
+	border-width-top: 0px;
+	border:1px solid rgba(0,0,0,.125);
+}
+
+.bot-detail .list-group-item {
+	border: 0;
+}
+</style>
+{% endblock bootstrap5_extra_head %}
+
 {% block title %}
 	Botzinhos (小bots)
 {% endblock title %}
@@ -17,58 +31,71 @@
 		{% groups_breadcrumbs request.user %}
 
 		<div id="bots-list" class="list-group pt-2">
+
 			{% bot_render_html_snippet bot=bot %}
+
+			<div class="bot-detail" style="">
+				<ul class="list-group mt-0" style="border-width: 0px !important; ">
+					{% if bot.jumpy_whitelist or bot.jumpy_blacklist %}
+					<li>
+						<strong>Jumpy lists</strong>: {{ bot.jumpy_whitelist|default:"-" }} (White) | {{ bot.jumpy_blacklist|default:"-" }} (Black)
+					</li>
+					{% endif %}
+					<li class="list-group-item">
+						<strong>Fund (Quote Assett) Initial</strong>: {{ bot.fund_quote_asset_initial|floatformat:4|default:"-" }} {{ bot.symbol.quote_asset }}
+					</li>
+					<li class="list-group-item">
+						<strong>Fund (Quote Assett)</strong>: {{ bot.fund_quote_asset|floatformat:4|default:"-" }} {{ bot.symbol.quote_asset }}
+					</li>
+					<li class="list-group-item">
+						<strong>Fund (Quote Assett) Executed</strong>: {{ bot.fund_quote_asset_exec|floatformat:4|default:"-" }} {{ bot.symbol.quote_asset }}
+					</li>
+					<li class="list-group-item">
+						<strong>Fund (Base Assett)</strong>: {{ bot.fund_base_asset|floatformat:4|default:"-" }} {{ bot.symbol.base_asset }}
+					</li>
+					{% if bot.price_buying %}
+					<li class="list-group-item">
+						<strong>Price Buying (NET)</strong>: {{ bot.price_buying|floatformat:6|default:"-" }} | <strong>Current Market Price</strong>: {{ bot.price_current|floatformat:6|default:"-" }}
+						{% with bot.price_current|div:bot.price_buying|sub:1|mul:100 as var_pc %}
+							(<span class="{% if var_pc > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_pc|floatformat:4 }}%</span>)
+						{% endwith %}
+					</li>
+					{% else %}
+					<li class="list-group-item">
+						<strong>Current Market Price</strong>: {{ bot.price_current|floatformat:6|default:"-" }} {{ bot.symbol.quote_asset }}
+					</li>
+					{% endif %}
+					<li class="list-group-item">
+						<strong>Current Market Valuation</strong>: {{ bot.valuation_current|floatformat:4 }} {{ bot.symbol.quote_asset }}
+					</li>
+					{% if bot.timestamp_start %}
+					<li class="list-group-item">
+						<strong>Timestamp - Start</strong>: {{ bot.timestamp_start }} ({{ bot.timestamp_start|timesince }} ago)
+					</li>
+					{% endif %}
+					{% if bot.timestamp_buying %}
+					<li class="list-group-item">
+						<strong>Timestamp - Buying</strong>: {{ bot.timestamp_buying }} ({{ bot.timestamp_buying|timesince }} ago)
+					</li>
+					{% endif %}
+					{% if bot.receipt_buying %}
+					<li class="list-group-item" style="border-top: 1px solid rgba(0,0,0,.125);">
+						<strong>Receipt - Buying</strong>: <pre>{{ bot.receipt_buying }}</pre>
+					</li>
+					{% endif %}
+				</ul>
+			</div>
+
 		</div>
 
-		<p></p>
-		<p><strong>Group</strong>: <a href="{% url "base:botzinhos-group-detail" bot.group.pk %}">{{ bot.group|default:"-" }}</a></p>
-		{% if bot.jumpy_whitelist or bot.jumpy_blacklist %}
-		<p><strong>Jumpy lists</strong>: {{ bot.jumpy_whitelist|default:"-" }} (White) | {{ bot.jumpy_blacklist|default:"-" }} (Black)</p>
-		{% endif %}
+		<div class="container">
+			<h4 class="m-2">Actions</h4>
 
-		{% if bot.fund_quote_asset %}
-		<p><strong>Fund (Quote Assett)</strong>: {{ bot.fund_quote_asset|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
-		{% endif %}
-		{% if bot.fund_quote_asset_initial %}
-		<p><strong>Fund (Quote Assett) Initial</strong>: {{ bot.fund_quote_asset_initial|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
-		{% endif %}
-		{% if bot.executed_quote_asset %}
-		<p><strong>Executed Fund (Quote Assett)</strong>: {{ bot.executed_quote_asset|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
-		{% endif %}
-		{% if bot.fund_base_asset %}
-		<p><strong>Fund (Base Assett)</strong>: {{ bot.fund_base_asset }} {{ bot.symbol.base_asset }}</p>
-		{% endif %}
-		{% if bot.price_buying %}
-		<p><strong>Price Buying (NET)</strong>: {{ bot.price_buying }} | <strong>Current Market Price</strong>: {{ bot.price_current }}
-		{% with bot.price_current|div:bot.price_buying|sub:1|mul:100 as var_pc %}
-			(<span class="{% if var_pc > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_pc|floatformat:4 }}%</span>)
-		{% endwith %}
-		</p>
-		{% else %}
-		<p>
-			<strong>Current Market Price</strong>: {{ bot.price_current }}
-		</p>
-		{% endif %}
-		<p><strong>Current Market Valuation</strong>: {{ bot.valuation_current|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
-		{% if bot.timestamp_start %}
-		<p><strong>Timestamp - Start</strong>: {{ bot.timestamp_start }} ({{ bot.timestamp_start|timesince }} ago)</p>
-		{% endif %}
-		{% if bot.timestamp_buying %}
-		<p><strong>Timestamp - Buying</strong>: {{ bot.timestamp_buying }} ({{ bot.timestamp_buying|timesince }} ago)</p>
-		{% endif %}
-		{% if bot.receipt_buying %}
-		<p><strong>Receipt - Buying</strong>: <pre>{{ bot.receipt_buying }}</pre></p>
-		{% endif %}
-
-		<h4>Actions</h4>
-		<ul>
-			<li>
+			<div class="btn-group">
 				<a class="btn btn-warning" href="{% url "base:botzinhos-logs" bot.pk %}">View Logs</a>
-			</li>
-			<li>
 				<a class="btn btn-warning" href="{% url "base:botzinhos-update" bot.pk %}">Update</a>
-			</li>
-			<li>
+			</div>
+			<div class="btn-group">
 				{% if not bot.price_buying %}
 				{% url "base:botzinhos-action" bot.pk "buy" as action_url %}
 				{% action_button action_url "Force BUY" "btn-success" %}
@@ -76,13 +103,6 @@
 				{% url "base:botzinhos-action" bot.pk "sell" as action_url %}
 				{% action_button action_url "Force SELL" "btn-danger" %}
 				{% endif %}
-			</li>
-			{% if not bot.price_buying %}
-			<li>
-				{% include "base/_jumping_form.html" with view="base:botzinhos-action" obj=bot %}
-			</li>
-			{% endif %}
-			<li>
 				{% if bot.status > bot.Status.INACTIVE %}
 				{% url "base:botzinhos-action" bot.pk "off" as action_url %}
 				{% action_button action_url "Turn OFF" "btn-dark" %}
@@ -90,16 +110,21 @@
 				{% url "base:botzinhos-action" bot.pk "on" as action_url %}
 				{% action_button action_url "Turn ON" "btn-primary" %}
 				{% endif %}
-			</li>
-			<li>
+			</div>
+			<div class="btn-group">
 				{% url "base:botzinhos-action" bot.pk "reset" as action_url %}
-				{% action_button action_url "RESET" "btn-danger" %}
-			</li>
-		</ul>
-
-	</div>
+				{% action_button action_url "RESET" "btn-secondary" %}
+			</div>
+			<div class="ul">
+				{% if not bot.price_buying %}
+				{% include "base/_jumping_form.html" with view="base:botzinhos-action" obj=bot %}
+				{% endif %}
+			</div>
+		</div>
 
 	{% include "base/trades_section.html" with summary=summary trades=trades page_obj=page_obj %}
+
+	</div>
 
 {% endblock content %}
 

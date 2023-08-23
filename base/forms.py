@@ -111,6 +111,12 @@ class TraderoBotGroupEditForm(TraderoBotGroupForm):
                 self.fields[field] = forms.fields.NullBooleanField(
                     label=self.fields[field].label
                 )
+                self.fields[field].widget.choices = [
+                    (None, "(Selecionar)"),
+                    (True, "Sim"),
+                    (False, "Não"),
+                ]
+                self.fields[field].required = False
 
     def clean(self):
         pass
