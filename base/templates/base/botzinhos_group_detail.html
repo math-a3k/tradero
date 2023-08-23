@@ -26,11 +26,11 @@
 			{% endfor %}
 		</div>
 
-		{% if group.current_valuation and group.initial_valuation %}
+		{% if group.valuation_current and group.valuation_initial %}
 		<div class="container mt-2 mb-0">
-			<p><strong>Valuation</strong>: {{group.current_valuation|floatformat:3 }} {{ quote_asset }} [{% with group.current_valuation|div:group.initial_valuation|sub:1|mul:100 as var_val %}
+			<p><strong>Valuation</strong>: {{group.valuation_current|floatformat:3 }} {{ quote_asset }} [{% with group.valuation_current|div:group.valuation_initial|sub:1|mul:100 as var_val %}
 			<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:3 }}%</span>]
-		{% endwith %} <span class="text-muted">(Current)</span> | {{group.initial_valuation|floatformat:3 }} {{ quote_asset }} <span class="text-muted">(Initial)</span></p>
+		{% endwith %} <span class="text-muted">(Current)</span> | {{group.valuation_initial|floatformat:3 }} {{ quote_asset }} <span class="text-muted">(Initial)</span></p>
 		</div>
 		{% endif %}
 

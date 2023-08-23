@@ -49,7 +49,7 @@
 			<strong>Current Market Price</strong>: {{ bot.price_current }}
 		</p>
 		{% endif %}
-		<p><strong>Current Market Valuation</strong>: {{ bot.current_valuation|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
+		<p><strong>Current Market Valuation</strong>: {{ bot.valuation_current|floatformat:4 }} {{ bot.symbol.quote_asset }}</p>
 		{% if bot.timestamp_start %}
 		<p><strong>Timestamp - Start</strong>: {{ bot.timestamp_start }} ({{ bot.timestamp_start|timesince }} ago)</p>
 		{% endif %}
