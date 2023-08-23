@@ -13,7 +13,7 @@ django-bootstrap-v5 = "*"
 requests = "*"
 defusedxml = "*"
 requests-mock = "*"
-djangorestframework = {git = "https://github.com/encode/django-rest-framework"}
+djangorestframework = {git = "https://github.com/encode/django-rest-framework.git"}
 binance-connector = "*"
 django-nested-admin = "*"
 pandas = "*"
@@ -35,15 +35,15 @@ twisted = {extras = ["http2", "tls"], version = "*"}
 drf-spectacular = "*"
 asgiref = "*"
 asyncio = "*"
-django-ai = {editable = true, ref = "tradero", git = "https://github.com/math-a3k/django-ai"}
 celery = {extras = ["redis"], version = "*"}
 django-celery-results = "*"
-django-celery-beat = {git = "https://github.com/celery/django-celery-beat"}
+django-celery-beat = {git = "https://github.com/celery/django-celery-beat.git"}
 python-crontab = "*"
 pytest-celery = "*"
 django-axes = {version = "*", extras = ["ipware"]}
 django-clearcache = "*"
 django-ratelimit = "*"
+django-ai = {ref = "tradero", git = "https://github.com/math-a3k/django-ai.git"}
 
 [dev-packages]
 pre-commit = "*"
