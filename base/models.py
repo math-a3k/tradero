@@ -289,7 +289,7 @@ class Symbol(models.Model):
             s.load_data()
 
     @classmethod
-    def get_client(cls):
+    def get_client(cls):  # pragma: no cover
         if not cls._client:
             cls._client = Spot()
             cls._client.session.mount("https://", HTTPAdapter(pool_maxsize=36))
