@@ -1669,4 +1669,4 @@ class TestTasks(BotTestCase):
             # Symbol.update_all_indicators()
             task = tasks.update_all_indicators_job.delay()
             result = task.get()
-            self.assertIn("2", result)
+            self.assertIn("3", result)
