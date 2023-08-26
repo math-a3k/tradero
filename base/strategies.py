@@ -139,10 +139,7 @@ class ACMadness(TradingStrategy):
         )
 
     def evaluate_sell(self):
-        selling_threshold = Decimal(self.bot.price_buying) * Decimal(
-            1 + (self.microgain / 100)
-        )
-        if self.bot.price_current > selling_threshold:
+        if self.bot.price_current > self.get_min_selling_threshold():
             if self.keep_going:  # and self.cg:
                 should_buy, message = self.evaluate_buy()
                 if should_buy:
@@ -154,7 +151,7 @@ class ACMadness(TradingStrategy):
         return (
             False,
             f"Current price ({self.bot.price_current:.8f}) is below threshold "
-            f"({selling_threshold:.8f})",
+            f"({self.get_min_selling_threshold():.8f})",
         )
 
     def evaluate_jump(self):
@@ -195,6 +192,13 @@ class ACMadness(TradingStrategy):
             return self.ac * self.bot.symbol.model_score
         else:
             return self.ac
+
+    def get_min_selling_threshold(self):
+        return (
+            self.bot.fund_quote_asset_exec
+            * (1 + self.microgain / 100)
+            / self.bot.fund_base_asset_executable
+        )
 
 
 class CatchTheWave(TradingStrategy):
@@ -329,7 +333,11 @@ class CatchTheWave(TradingStrategy):
         return all([p * 100 > -self.maxima_tol for p in line])
 
     def get_min_selling_threshold(self):
-        return self.bot.price_buying * (1 + self.sell_safeguard / 100)
+        return (
+            self.bot.fund_quote_asset_exec
+            * (1 + self.sell_safeguard / 100)
+            / self.bot.fund_base_asset_executable
+        )
 
     def local_memory_update(self):
         if self.use_matrix_time_res and self.time_safeguard:

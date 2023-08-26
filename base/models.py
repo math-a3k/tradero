@@ -267,6 +267,10 @@ class Symbol(models.Model):
     def __str__(self):
         return self.symbol
 
+    @property
+    def step_size(self):
+        return Decimal(self.info["filters"][1]["stepSize"])
+
     @classmethod
     def load_all_data(
         cls, start_time=None, end_time=None, threads=settings.EXECUTOR_THREADS
@@ -1721,6 +1725,15 @@ class TraderoBot(models.Model):
     def fund_quote_asset_exec(self):
         if self.receipt_buying:
             return Decimal(self.receipt_buying["cummulativeQuoteQty"])
+        return None
+
+    @property
+    def fund_base_asset_executable(self):
+        # Executable valuated
+        if self.fund_base_asset:
+            return (
+                self.fund_base_asset // self.symbol.step_size
+            ) * self.symbol.step_size
         return None
 
     def get_client(self, reinit=False):  # pragma: no cover
