@@ -1393,6 +1393,32 @@ class TestTraderoBots(BotTestCase):
         bot3 = TraderoBot(symbol=self.s1, status=TraderoBot.Status.BUYING)
         self.assertEqual(bot3.get_local_memory(), {})
 
+    def test_valuation(self):
+        self.bot2.reset()
+        self.assertEqual(self.bot2.fund_base_asset_executable, None)
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            self.bot2.price_current = self.bot2.get_current_price()
+            self.bot2.buy()
+            self.assertEqual(
+                self.bot2.fund_base_asset_executable, Decimal("19.9000")
+            )
+            self.bot2.sell()
+            with mock.patch(
+                "base.models.TraderoClient.ticker_price"
+            ) as bot_log_trade_mock:
+                bot_log_trade_mock.side_effect = Exception("New Exception")
+                self.bot2.buy()
+                self.assertIn(
+                    "New Exception", self.bot2.others["last_logs"][-1]
+                )
+                self.assertEqual(
+                    self.bot2.valuation_current, Decimal("19.8801")
+                )
+
 
 class TestStrategies(BotTestCase):
     def test_acmadness(self):
