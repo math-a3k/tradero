@@ -288,7 +288,7 @@ TIME_INTERVAL_BOTS = env.int("TRADERO_TIME_INTERVAL_BOTS", 1)
 SYNC_EXECUTION = env.bool("TRADERO_SYNC_EXECUTION", False)
 
 # Threads to be used in ThreadPoolExecutor
-EXECUTOR_THREADS = env.str("TRADERO_EXECUTOR_THREADS", None)
+EXECUTOR_THREADS = env.int("TRADERO_EXECUTOR_THREADS", None)
 
 # Symbols quantity to track
 SYMBOLS_QUANTITY = env.int("TRADERO_SYMBOLS_QUANTITY", cpu_count() * 4)
