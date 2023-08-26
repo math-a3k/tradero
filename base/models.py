@@ -1712,7 +1712,11 @@ class TraderoBot(models.Model):
     @property
     def valuation_current(self):
         if self.status == self.Status.INACTIVE:
-            if self.receipt_buying:
+            if (
+                self.receipt_buying
+                and self.fund_base_asset
+                and self.price_current
+            ):
                 return self.fund_base_asset * self.price_current
             else:
                 return self.fund_quote_asset or self.fund_quote_asset_initial
