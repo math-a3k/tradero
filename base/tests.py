@@ -1463,9 +1463,8 @@ class TestStrategies(BotTestCase):
             self.s1.save()
             self.bot1.symbol = self.s1
             self.bot1.status = self.bot1.Status.SELLING
-            self.bot1.price_buying = Decimal("0.5")
-            self.bot1.price_current = Decimal("1")
-            self.bot1.fund_base_asset = Decimal("10")
+            self.bot1.fund_base_asset = Decimal("20")
+            self.bot1.price_current = Decimal("1.5")
             self.bot1.decide()
             self.assertIn("Kept goin'", self.bot1.others["last_logs"][-1])
             self.s1.others["stp"]["next_n_sum"] = 0
