@@ -1293,13 +1293,29 @@ class TestTraderoBots(BotTestCase):
             ) as bot_log_trade_mock:
                 bot_log_trade_mock.side_effect = Exception("New Exception")
                 self.bot1.buy()
+                self.assertIn("Bought", self.bot1.others["last_logs"][-4])
                 self.assertIn(
-                    "New Exception", self.bot1.others["last_logs"][-1]
+                    "New Exception", self.bot1.others["last_logs"][-3]
                 )
+                self.assertIn(
+                    "Problems encountered", self.bot1.others["last_logs"][-2]
+                )
+                self.assertIn("OFF", self.bot1.others["last_logs"][-1])
                 self.bot1.buy()
                 self.assertIn(
-                    "Already bought", self.bot1.others["last_logs"][-1]
+                    "already done",
+                    self.bot1.logs.all().order_by("-id")[3].message,
                 )
+                self.assertIn(
+                    "New Exception", self.bot1.others["last_logs"][-3]
+                )
+                self.assertIn(
+                    "Problems encountered", self.bot1.others["last_logs"][-2]
+                )
+                self.assertIn("OFF", self.bot1.others["last_logs"][-1])
+            self.bot1.buy()
+            self.assertIn("already done", self.bot1.others["last_logs"][-2])
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
             # Test already sold
             with mock.patch(
                 "base.models.TraderoBot.log_trade"
@@ -1307,13 +1323,27 @@ class TestTraderoBots(BotTestCase):
                 bot_log_trade_mock.side_effect = Exception("New Exception")
                 self.bot1.sell()
                 self.assertIn(
-                    "New Exception", self.bot1.others["last_logs"][-1]
+                    "New Exception", self.bot1.others["last_logs"][-3]
                 )
+                self.assertIn(
+                    "Problems encountered", self.bot1.others["last_logs"][-2]
+                )
+                self.assertIn("OFF", self.bot1.others["last_logs"][-1])
                 self.bot1.sell()
                 self.assertIn(
-                    "Already sold", self.bot1.others["last_logs"][-1]
+                    "already done",
+                    self.bot1.logs.all().order_by("-id")[3].message,
                 )
-
+                self.assertIn(
+                    "New Exception", self.bot1.others["last_logs"][-3]
+                )
+                self.assertIn(
+                    "Problems encountered", self.bot1.others["last_logs"][-2]
+                )
+                self.assertIn("OFF", self.bot1.others["last_logs"][-1])
+            self.bot1.sell()
+            self.assertIn("already done", self.bot1.others["last_logs"][-2])
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
             # Test reset
             self.bot1.reset()
             self.assertIn("RESET", self.bot1.others["last_logs"][-1])
@@ -1354,7 +1384,7 @@ class TestTraderoBots(BotTestCase):
             self.s1.save()
             self.bot1.symbol = self.s2
             self.bot1.decide()
-            self.assertIn("Jump", self.bot1.others["last_logs"][-2])
+            self.assertIn("Jump", self.bot1.others["last_logs"][-3])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
             self.assertIn("S1BUSD", self.bot1.others["last_logs"][-1])
             self.bot1.sell()
@@ -1479,7 +1509,7 @@ class TestStrategies(BotTestCase):
             self.s2.others["outliers"]["o1"] = False
             self.s2.save()
             self.bot1.decide()
-            self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-3])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
             self.bot1.strategy_params = (
                 "microgain=0.3,ac_adjusted=0,keep_going=1"
@@ -1534,7 +1564,7 @@ class TestStrategies(BotTestCase):
             self.s2.others["scg"]["line_s_var"] = [1, 1, 2]
             self.s2.save()
             self.bot1.decide()
-            self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-3])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
             self.bot1.sell()
             self.s2.others["scg"]["current_good"] = False
@@ -1567,7 +1597,7 @@ class TestStrategies(BotTestCase):
             self.bot1.jumpy_whitelist = None
             self.bot1.jumpy_blacklist = None
             self.bot1.decide()
-            self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-3])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
             #
             self.bot1.strategy_params = "use_local_memory=1"
@@ -1615,7 +1645,7 @@ class TestStrategies(BotTestCase):
             self.s2.others["scg"]["current_good"] = True
             self.s2.save()
             self.bot1.decide()
-            self.assertIn("Jumped", self.bot1.others["last_logs"][-2])
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-3])
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
             self.assertEqual(self.bot1.has_local_memory(), False)
             #

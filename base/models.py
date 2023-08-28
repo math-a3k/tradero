@@ -14,7 +14,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -1797,94 +1797,128 @@ class TraderoBot(models.Model):
         return True
 
     def buy(self):
+        client = self.get_client()
         if not self.receipt_buying:
-            try:
-                client = self.get_client()
-                amount = self.fund_quote_asset or self.fund_quote_asset_initial
-                (
-                    success,
-                    price,
-                    quantity,
-                    receipt,
-                    message,
-                ) = client.tradero_buy(
-                    self.symbol,
-                    amount,
-                    dummy=self.is_dummy,
+            amount = self.fund_quote_asset or self.fund_quote_asset_initial
+            success, receipt, message = client.tradero_buy(
+                self.symbol,
+                amount,
+                dummy=self.is_dummy,
+            )
+            if success:
+                self.receipt_buying = receipt
+                self.log(
+                    self.Action.BUY,
+                    message="Buying Transaction done sucessfully",
                 )
-                if success:
-                    self.receipt_buying = receipt
-                    self.save()
-                    self.timestamp_buying = timezone.now()
-                    if not self.timestamp_start:  # pragma: no cover
-                        self.timestamp_start = self.timestamp_buying
-                    self.price_buying = price
-                    self.fund_base_asset = quantity
-                    self.log(self.Action.BUY)
-                    self.log_trade()
-                    self.fund_quote_asset = (
-                        None  # Unexecuted FQA is not logged when Buying
-                    )
-                    if self.status != self.Status.INACTIVE:
-                        self.status = self.Status.SELLING
-                    self.save()
-                    return True
-            except Exception as e:
-                message = str(e)
+                self.save()
+            else:
+                self.log(self.Action.ERROR, message=message)
+                self.save()
+                return False
         else:
-            message = "Already bought, reset the bot if the problem persists"
-        self.log(self.Action.ERROR, message=message)
-        self.save()
-        return False
+            self.log(
+                self.Action.BUY,
+                message="Buying Transaction already done, resuming from receipt",
+            )
+            self.save()
+        try:
+            with transaction.atomic():
+                r = client.parse_receipt(self.receipt_buying)
+                self.timestamp_buying = timezone.now()
+                if not self.timestamp_start:  # pragma: no cover
+                    self.timestamp_start = self.timestamp_buying
+                self.price_buying = r["price_net"]
+                self.fund_base_asset = r["quantity_rec"]
+                self.log(self.Action.BUY)
+                self.log_trade()
+                # Set new state
+                self.fund_quote_asset = (
+                    None  # Unexecuted FQA is not logged when Buying
+                )
+                if self.status != self.Status.INACTIVE:
+                    self.status = self.Status.SELLING
+                self.save()
+                return True
+        except Exception as e:
+            message = str(e)
+            self.log(self.Action.ERROR, message=message)
+            self.log(
+                self.Action.ERROR,
+                message=(
+                    "Problems encountered, turning the bot off, "
+                    "please check the logs and either reset or adjust manually"
+                ),
+            )
+            self.off()
+            self.save()
+            return False
 
     def sell(self):
+        client = self.get_client()
         if not self.receipt_selling:
-            try:
-                client = self.get_client()
-                (
-                    success,
-                    price,
-                    quantity,
-                    receipt,
-                    message,
-                ) = client.tradero_sell(
-                    self.symbol,
-                    self.fund_base_asset,
-                    dummy=self.is_dummy,
+            success, receipt, message = client.tradero_sell(
+                self.symbol,
+                self.fund_base_asset,
+                dummy=self.is_dummy,
+            )
+            if success:
+                self.receipt_selling = receipt
+                self.save()
+                self.log(
+                    self.Action.SELL,
+                    message="Selling Transaction done sucessfully",
                 )
-                if success:
-                    self.receipt_selling = receipt
-                    self.save()
-                    self.price_selling = price
-                    self.fund_quote_asset = quantity
-                    self.timestamp_selling = timezone.now()
-                    self.log(self.Action.SELL)
-                    self.log_trade()
-                    # Reset state
-                    self.fund_base_asset = self.fund_base_asset - Decimal(
-                        self.receipt_selling["executedQty"]
-                    )
-                    if not self.should_reinvest:
-                        self.fund_quote_asset = self.fund_quote_asset_initial
-                    self.timestamp_selling, self.timestamp_buying = None, None
-                    self.receipt_selling, self.receipt_buying = None, None
-                    self.price_selling, self.price_buying = None, None
-                    if self.status != self.Status.INACTIVE:
-                        self.status = self.Status.BUYING
-                    if self.should_stop:
-                        self.status = self.Status.INACTIVE
-                        self.timestamp_start = None
-                    else:
-                        self.timestamp_start = timezone.now()
-                    self.save()
-                    return True
-            except Exception as e:
-                message = str(e)
+                self.save()
+            else:
+                self.log(self.Action.ERROR, message=message)
+                self.save()
+                return False
         else:
-            message = "Already sold, reset the bot if the problem persists"
-        self.log(self.Action.ERROR, message=message)
-        self.save()
-        return False
+            self.log(
+                self.Action.SELL,
+                message="Selling Transaction already done, resuming from receipt",
+            )
+            self.save()
+        try:
+            with transaction.atomic():
+                r = client.parse_receipt(self.receipt_selling)
+                self.price_selling = r["price_net"]
+                self.fund_quote_asset = r["quantity_rec"]
+                self.timestamp_selling = timezone.now()
+                self.log(self.Action.SELL)
+                self.log_trade()
+                # Set new state
+                self.fund_base_asset = (
+                    self.fund_base_asset - r["quantity_exec"]
+                )
+                if not self.should_reinvest:
+                    self.fund_quote_asset = self.fund_quote_asset_initial
+                self.timestamp_selling, self.timestamp_buying = None, None
+                self.receipt_selling, self.receipt_buying = None, None
+                self.price_selling, self.price_buying = None, None
+                if self.status != self.Status.INACTIVE:
+                    self.status = self.Status.BUYING
+                if self.should_stop:
+                    self.status = self.Status.INACTIVE
+                    self.timestamp_start = None
+                else:
+                    self.timestamp_start = timezone.now()
+                self.save()
+                return True
+        except Exception as e:
+            message = str(e)
+            self.log(self.Action.ERROR, message=message)
+            self.log(
+                self.Action.ERROR,
+                message=(
+                    "Problems encountered, turning the bot off, "
+                    "please check and either reset or adjust manually"
+                ),
+            )
+            self.off()
+            self.save()
+            return False
 
     def jump(self, to_symbol):
         current_symbol = self.symbol
@@ -1969,14 +2003,14 @@ class TraderoBot(models.Model):
             price_current=self.price_current,
             message=message,
         )
-        if action == self.Action.BUY:
+        if action == self.Action.BUY and not message:
             log.message = (
                 f"Bought {self.fund_base_asset:.3f} of {self.symbol} at "
                 f"{self.price_buying:.6f} ("
                 f"{self.fund_base_asset * self.price_buying:.6f} "
                 f"{self.symbol.quote_asset})"
             )
-        if action == self.Action.SELL:
+        if action == self.Action.SELL and not message:
             log.price_selling = self.price_selling
             log.variation = (self.price_selling / self.price_buying - 1) * 100
             log.message = (
