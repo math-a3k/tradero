@@ -2024,7 +2024,6 @@ class TraderoBot(models.Model):
 
     def log_trade(self, cancelled=False):
         trade_history, _ = self.trades.update_or_create(
-            bot=self,
             user=self.user,
             timestamp_start=self.timestamp_start,
             defaults={
@@ -2418,6 +2417,12 @@ class TradeHistory(models.Model):
         verbose_name_plural = "Trades History"
         indexes = [
             models.Index(fields=["-timestamp_selling"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "bot", "timestamp_start"],
+                name="unique_user_bot_timestamp_start",
+            )
         ]
 
     objects = TradeHistoryManager()
