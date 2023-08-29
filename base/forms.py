@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.db.models import Model
 
 from .models import Symbol, TraderoBot, TraderoBotGroup, User
@@ -36,11 +37,15 @@ class TraderoBotForm(forms.ModelForm):
             "should_stop",
         ]
 
-    def __init__(self, *args, for_group=False, **kwargs):
+    def __init__(self, *args, for_group=False, for_group_edit=False, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         if for_group:
             self.fields.pop("group")
+            if for_group_edit:
+                self.fields.pop("symbol")
+                for field in self.fields:
+                    self.fields[field].required = False
         else:
             self.fields["group"].queryset = TraderoBotGroup.objects.filter(
                 user=user
@@ -68,7 +73,7 @@ class TraderoBotGroupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["add_edit_bots"].label = "Add Botzinhos"
-        bot_form_fields = TraderoBotForm(for_group=True).fields
+        bot_form_fields = self.get_bot_form().fields
         for field in bot_form_fields:
             new_field = f"{self.prefix_bot_data}{field}"
             self.fields[new_field] = bot_form_fields[field]
@@ -95,7 +100,11 @@ class TraderoBotGroupForm(forms.ModelForm):
             k[len(self.prefix_bot_data) :]: v
             for k, v in data_dict.items()
             if k.startswith(self.prefix_bot_data)
+            and data_dict[k] not in self.fields[k].empty_values
         }
+
+    def get_bot_form(self):
+        return TraderoBotForm(for_group=True)
 
 
 class TraderoBotGroupEditForm(TraderoBotGroupForm):
@@ -119,7 +128,31 @@ class TraderoBotGroupEditForm(TraderoBotGroupForm):
                 self.fields[field].required = False
 
     def clean(self):
-        pass
+        cleaned_data = super(TraderoBotGroupForm, self).clean()
+        if cleaned_data["add_edit_bots"]:
+            bot_data = self.get_bot_data(cleaned_data)
+            bots = self.instance.bots.all()
+            for bot in bots:
+                for field in bot_data:
+                    setattr(bot, field, bot_data[field])
+                try:
+                    bot.full_clean()
+                except ValidationError as ve:
+                    self.add_error(
+                        None,
+                        "The following fields produce erros with at least one "
+                        "bot of the group:",
+                    )
+                    for field, message in ve.message_dict.items():
+                        self.add_error(
+                            f"{self.prefix_bot_data}{field}", message
+                        )
+
+                    break
+        return cleaned_data
+
+    def get_bot_form(self):
+        return TraderoBotForm(for_group=True, for_group_edit=True)
 
 
 class UserForm(forms.ModelForm):

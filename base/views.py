@@ -311,7 +311,7 @@ class BotzinhosGroupCreateView(LoginRequiredMixin, CreateView):
             bot_kwargs.update(
                 {"user": self.request.user, "group": self.object}
             )
-            bot_name = bot_kwargs["name"]
+            bot_name = bot_kwargs.get("name", None)
             for i in range(form.cleaned_data["bots_quantity"]):
                 if bot_name:
                     bot_kwargs.update({"name": f"{bot_name}-{i+1:03d}"})
@@ -335,13 +335,7 @@ class BotzinhosGroupUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
                 if bot_name:
                     bot.name = f"{bot_name}-{index + 1:03d}"
                 for field in bot_data:
-                    if (
-                        bot_data[field]
-                        not in form.fields[
-                            f"{form.prefix_bot_data}{field}"
-                        ].empty_values
-                    ):
-                        setattr(bot, field, bot_data[field])
+                    setattr(bot, field, bot_data[field])
                 bot.save()
         return super().form_valid(form)
 
