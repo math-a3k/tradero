@@ -515,7 +515,6 @@ class TestViews(TestCase):
             TraderoBot.objects.filter(name__startswith="Group 1").count(),
             3,
         )
-        # import ipdb; ipdb.set_trace()
         response = self.client.post(
             url,
             {
@@ -530,6 +529,19 @@ class TestViews(TestCase):
                 name__startswith="Group 1", fund_quote_asset_initial=25
             ).count(),
             3,
+        )
+        response = self.client.post(
+            url,
+            {
+                "add_edit_bots": True,
+                "bot_fund_quote_asset_initial": 5,
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"The following fields produce erros",
+            response.content,
         )
 
     def test_botzinhos_actions(self):

@@ -2116,7 +2116,8 @@ class TraderoBot(models.Model):
             raise ValidationError(
                 {
                     "strategy_params": (
-                        "Unrecognized parameters or format for the strategy"
+                        "Unrecognized parameters or format for the strategy "
+                        "- or missing symbol for the bot"
                     )
                 }
             )
