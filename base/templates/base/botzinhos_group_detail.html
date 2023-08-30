@@ -31,8 +31,8 @@
 		{% groups_breadcrumbs request.user %}
 
 		<div class="container bg-warning bg-gradient">
+			<span class="badge bg-light rounded-pill float-end mt-2"><a class="text-muted" href="#group-summary">SUMMARY</a></span>
 			<h4 class="mt-1 mb-0 p-2">GROUP: {{ group.name|default:"(Sem Nome)" }}</h4>
-
 
 		<div class="form-check form-check-inline">
 			  <label class="form-check-label">SORT BY &rarr;</label>
@@ -79,16 +79,11 @@
 			{% bot_render_html_snippet bot=bot %}
 			{% endfor %}
 		</div>
-		<div class="bot-detail" style="">
-			<ul class="list-group mt-0" style="border-width: 0px !important; ">
-				{% if group.valuation_current and group.valuation_initial %}
-				<li class="list-group-item">
-					<strong>Group Valuation</strong>: {{group.valuation_current|floatformat:3 }} {{ quote_asset }} [{% with group.valuation_current|div:group.valuation_initial|sub:1|mul:100 as var_val %}
-					<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:3 }}%</span>]
-				{% endwith %} <span class="text-muted">(Current)</span> | {{group.valuation_initial|floatformat:3 }} {{ quote_asset }} <span class="text-muted">(Initial)</span>
-				</li>
-				{% endif %}
-			</ul>
+		<div id="group-summary">
+			<p class="list-group-item bg-warning bg-gradient m-0 fw-bolder" style="border-top-width: 0px !important;">SUMMARY
+			<span class="badge bg-light rounded-pill float-end"><a class="text-muted" href="#top">(Back to Top)</a></span>
+			</p>
+			{% include "base/_group_summary.html" with group=group %}
 		</div>
 
 		<div class="container">

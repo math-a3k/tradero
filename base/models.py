@@ -1541,6 +1541,20 @@ class TraderoBotGroup(models.Model):
         ]
         return sum(valuations)
 
+    @property
+    def bot_status(self):
+        bots = self.bots.all()  # prefetched
+        status = {
+            "BUYING": 0,
+            "SELLING": 0,
+            "INACTIVE": 0,
+            "TOTAL": 0,
+        }
+        for bot in bots:
+            status[bot.get_status_display().upper()] += 1
+            status["TOTAL"] += 1
+        return status
+
 
 class TraderoBotManager(models.Manager):
     def enabled(self):
