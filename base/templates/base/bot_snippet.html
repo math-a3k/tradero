@@ -32,11 +32,24 @@
       		<span class="badge bg-primary rounded-pill">Stop After Selling</span>
 	      	{% endif %}
       		<br>{{ bot.strategy|upper }}({{ bot.strategy_params|default:"defaults" }})
+      		{% if bot.status == bot.Status.SELLING %}
+      		<br>FQAE: {{ bot.fund_quote_asset_exec|floatformat:2|default:"-" }} {{ bot.symbol.quote_asset }} | CV: {{ bot.valuation_current|floatformat:2 }} {{ bot.symbol.quote_asset }}
+      		{% with bot.valuation_current|div:bot.fund_quote_asset_exec|sub:1|mul:100 as var_val %}
+				[<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:2 }}%</span>]
+			{% endwith %}
+			 | TS: {{ bot.time_selling|timedelta|default:"-" }}
+      		{% else %}
+      		<br>FQA: {{ bot.fund_quote_asset|floatformat:2|default:"-" }} {{ bot.symbol.quote_asset }} | FQAI: {{ bot.fund_quote_asset_initial|floatformat:2|default:"-" }} {{ bot.symbol.quote_asset }}
+      		{% with bot.fund_quote_asset|div:bot.fund_quote_asset_initial|sub:1|mul:100 as var_val %}
+				[<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:2 }}%</span>]
+			{% endwith %}
+      		 | TB: {{ bot.time_buying|timedelta|default:"-" }}
+      		{% endif %}
       	</small>
     </div>
 
     <p class="mb-1">
-		{% for log in bot.others.last_logs %}
+		{% for log in bot.others.last_logs|slice:"-3:" %}
 			{{ log }} {% if not forloop.last %} <br />{% endif %}
 		{% endfor %}
     </p>
