@@ -32,25 +32,63 @@
 
 		<div class="container bg-warning bg-gradient">
 			<h4 class="mt-1 mb-0 p-2">GROUP: {{ group.name|default:"(Sem Nome)" }}</h4>
+
+
+		<div class="form-check form-check-inline">
+			  <label class="form-check-label">SORT BY &rarr;</label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="name" onchange="sort_bots()" checked="checked">
+			  <label class="form-check-label">
+			    Name
+			  </label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="symbol" onchange="sort_bots()">
+			  <label class="form-check-label">
+			    Symbol
+			  </label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="status" onchange="sort_bots()">
+			  <label class="form-check-label">
+			    Status
+			  </label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="variation" onchange="sort_bots()">
+			  <label class="form-check-label">
+			    Variation
+			  </label>
+		</div>
+
+		<div class="form-check form-check-inline">
+			  <input class="form-check-input" type="radio" name="sort-by" value="time" onchange="sort_bots()">
+			  <label class="form-check-label">
+			    Time
+			  </label>
+		</div>
 		</div>
 
 		<div id="bots-list" class="list-group">
 			{% for bot in bots %}
 			{% bot_render_html_snippet bot=bot %}
 			{% endfor %}
-
-			<div class="bot-detail" style="">
-				<ul class="list-group mt-0" style="border-width: 0px !important; ">
-					{% if group.valuation_current and group.valuation_initial %}
-					<li class="list-group-item">
-						<strong>Group Valuation</strong>: {{group.valuation_current|floatformat:3 }} {{ quote_asset }} [{% with group.valuation_current|div:group.valuation_initial|sub:1|mul:100 as var_val %}
-						<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:3 }}%</span>]
-					{% endwith %} <span class="text-muted">(Current)</span> | {{group.valuation_initial|floatformat:3 }} {{ quote_asset }} <span class="text-muted">(Initial)</span>
-					</li>
-					{% endif %}
-				</ul>
-			</div>
-
+		</div>
+		<div class="bot-detail" style="">
+			<ul class="list-group mt-0" style="border-width: 0px !important; ">
+				{% if group.valuation_current and group.valuation_initial %}
+				<li class="list-group-item">
+					<strong>Group Valuation</strong>: {{group.valuation_current|floatformat:3 }} {{ quote_asset }} [{% with group.valuation_current|div:group.valuation_initial|sub:1|mul:100 as var_val %}
+					<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:3 }}%</span>]
+				{% endwith %} <span class="text-muted">(Current)</span> | {{group.valuation_initial|floatformat:3 }} {{ quote_asset }} <span class="text-muted">(Initial)</span>
+				</li>
+				{% endif %}
+			</ul>
 		</div>
 
 		<div class="container">
@@ -101,12 +139,72 @@
             	if (bot_element) {
             		bot_element.outerHTML = data.text;
             	}
+            sort_bots();
             }
         };
 
         botsSocket.onclose = function(e) {
             console.error('Bots socket closed unexpectedly');
         };
+
+        var get_value_funs = {
+			"name": function get_name_value(list_item) {
+					text = list_item.getElementsByClassName("name-value")[0].textContent
+					return text
+					},
+			"symbol": function get_symbol_value(list_item) {
+					text = list_item.getElementsByClassName("symbol-value")[0].textContent
+					return text
+					},
+			"status": function get_status_value(list_item) {
+					text = list_item.getElementsByClassName("status-value")[0].textContent
+					return text
+				},
+			"variation": function get_variation_value(list_item) {
+					text = list_item.getElementsByClassName("variation-value")[0].textContent
+					return new Number(text.substring(0, text.length - 1))
+				},
+			"time": function get_time_value(list_item) {
+					text = list_item.getElementsByClassName("variation-value")[0].textContent
+					return text
+				}
+		}
+
+		function get_value_function() {
+			var sort_by = document.querySelector('input[name="sort-by"]:checked').value;
+			return get_value_funs[sort_by]
+		}
+
+        function sort_bots() {
+        	var bots_list = document.getElementById('bots-list');
+			var items = bots_list.childNodes;
+			var itemsArr = [];
+			var items_to_remove = [];
+			for (var i in items) {
+			    if (items[i].nodeType == 1) { // get rid of the whitespace text nodes
+				    if (!items[i].textContent.includes("S1"))
+				    { // get rid of bots with testing symbols
+				        itemsArr.push(items[i]);
+				    } else {
+				    	items_to_remove.push(items[i]);
+				    }
+			    }
+			}
+			for (var i in items_to_remove) {
+		    	items_to_remove[i].remove();
+			}
+			sort_fun = get_value_function()
+			itemsArr.sort(function(a, b) {
+			  // Sorts in ascending order
+			  return sort_fun(a) == sort_fun(b)
+			          ? 0
+			          : (sort_fun(a) > sort_fun(b) ? 1 : -1);
+			});
+
+			for (i = 0; i < itemsArr.length; ++i) {
+			  bots_list.appendChild(itemsArr[i]);
+			}
+        }
 
         function currentTime() {
 		  let date = new Date();
