@@ -3,17 +3,17 @@
 <li id="botzinho-{{ bot.id }}" class="list-group-item list-group-item-action">
     <div class="d-flex w-100 justify-content-between">
       	<h5 class="mb-1">
-      		<span class="text-muted">#{{ bot.id|stringformat:"03d" }}</span> <a href="{% url "base:botzinhos-detail" bot.pk %}">{{ bot.name }}</a> |
+      		<span class="text-muted">#{{ bot.id|stringformat:"03d" }}</span> <a href="{% url "base:botzinhos-detail" bot.pk %}" class="name-value">{{ bot.name }}</a> |
       		{% with bot.get_status_display as status %}
       			{% if status == "Selling" %}
-      				<span class="text-danger">{{ status }}</span>
+      				<span class="text-danger status-value">{{ status }}</span>
       			{% elif status == "Buying" %}
-      			    <span class="text-success">{{ status }}</span>
+      			    <span class="text-success status-value">{{ status }}</span>
       			{% elif status == "Inactive" %}
-      			    <span class="text-muted">{{ status }}</span>
+      			    <span class="text-muted status-value">{{ status }}</span>
       			{% endif %}
       		{% endwith %}
-      		<a href="https://www.binance.com/en/trade/{{ bot.symbol.base_asset}}_{{ bot.symbol.quote_asset }}?_from=markets&theme=dark&type=spot" target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action bg-light bg-gradient text-center" style="">
+      		<a href="https://www.binance.com/en/trade/{{ bot.symbol.base_asset}}_{{ bot.symbol.quote_asset }}?_from=markets&theme=dark&type=spot" target="_blank" rel="noopener noreferrer" class="list-group-item list-group-item-action bg-light bg-gradient text-center symbol-value" style="">
       			{{ bot.symbol.base_asset }}/{{ bot.symbol.quote_asset }}
       		</a>
       	</h5>
@@ -35,15 +35,15 @@
       		{% if bot.status == bot.Status.SELLING %}
       		<br>FQAE: {{ bot.fund_quote_asset_exec|floatformat:2|default:"-" }} {{ bot.symbol.quote_asset }} | CV: {{ bot.valuation_current|floatformat:2 }} {{ bot.symbol.quote_asset }}
       		{% with bot.valuation_current|div:bot.fund_quote_asset_exec|sub:1|mul:100 as var_val %}
-				[<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:2 }}%</span>]
+				[<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %} variation-value">{{ var_val|floatformat:2 }}%</span>]
 			{% endwith %}
-			 | TS: {{ bot.time_selling|timedelta|default:"-" }}
+			 | TS: <span class="time-value">{{ bot.time_selling|timedelta|default:"-" }}</span>
       		{% else %}
       		<br>FQA: {{ bot.fund_quote_asset|floatformat:2|default:"-" }} {{ bot.symbol.quote_asset }} | FQAI: {{ bot.fund_quote_asset_initial|floatformat:2|default:"-" }} {{ bot.symbol.quote_asset }}
       		{% with bot.fund_quote_asset|div:bot.fund_quote_asset_initial|sub:1|mul:100 as var_val %}
-				[<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:2 }}%</span>]
+				[<span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %} variation-value">{{ var_val|floatformat:2 }}%</span>]
 			{% endwith %}
-      		 | TB: {{ bot.time_buying|timedelta|default:"-" }}
+      		 | TB: <span class="time-value">{{ bot.time_buying|timedelta|default:"-" }}</span>
       		{% endif %}
       	</small>
     </div>
