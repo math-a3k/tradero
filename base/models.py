@@ -1711,17 +1711,8 @@ class TraderoBot(models.Model):
 
     @property
     def valuation_current(self):
-        if self.status == self.Status.INACTIVE:
-            if (
-                self.receipt_buying
-                and self.fund_base_asset
-                and self.price_current
-            ):
-                return self.fund_base_asset * self.price_current
-            else:
-                return self.fund_quote_asset or self.fund_quote_asset_initial
-        elif self.status == self.Status.SELLING:
-            return self.fund_base_asset * self.price_current
+        if self.receipt_buying and self.fund_base_asset and self.price_current:
+            return self.fund_base_asset * Decimal(self.price_current)
         else:
             return self.fund_quote_asset or self.fund_quote_asset_initial
 
@@ -1738,6 +1729,18 @@ class TraderoBot(models.Model):
             return (
                 self.fund_base_asset // self.symbol.step_size
             ) * self.symbol.step_size
+        return None
+
+    @property
+    def time_selling(self):  # pragma: no cover
+        if self.timestamp_buying:
+            return timezone.now() - self.timestamp_buying
+        return None
+
+    @property
+    def time_buying(self):
+        if self.timestamp_start and not self.timestamp_buying:
+            return timezone.now() - self.timestamp_start
         return None
 
     def get_client(self, reinit=False):  # pragma: no cover

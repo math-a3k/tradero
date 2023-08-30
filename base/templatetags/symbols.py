@@ -55,10 +55,10 @@ def timedelta(value):
     if not value:  # pragma: no cover
         return ""
     secs = value.total_seconds()
-    hours, rem = int(secs // 3600), int(secs % 3600)
+    days, rem = int(secs // (3600 * 24)), int(secs % (3600 * 24))
+    hours, rem = int(rem // 3600), int(rem % 3600)
     mins, rem = int(rem // 60), int(rem % 60)
-    secs = rem
-    return f"{hours:02d}:{mins:02d}:{secs:02d}"
+    return f"{days} days, {hours:02d}:{mins:02d} hs"
 
 
 @register.filter("get", is_safe=True)
