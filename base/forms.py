@@ -17,10 +17,17 @@ class TraderoBotForm(forms.ModelForm):
         choices=[(None, "(Selecionar)")]
         + [(k, v.__name__) for k, v in get_strategies().items()]
     )
+    bots_quantity = forms.IntegerField(
+        label="# of Botzinhos",
+        initial=1,
+        required=False,
+        help_text="Create several Botzinhos using this as a template",
+    )
 
     class Meta:
         model = TraderoBot
         fields = [
+            "bots_quantity",
             "group",
             "name",
             "is_dummy",
@@ -39,9 +46,13 @@ class TraderoBotForm(forms.ModelForm):
 
     def __init__(self, *args, for_group=False, for_group_edit=False, **kwargs):
         user = kwargs.pop("user", None)
+        for_edit = kwargs.pop("for_edit", None)
         super().__init__(*args, **kwargs)
+        if for_edit:
+            self.fields.pop("bots_quantity")
         if for_group:
             self.fields.pop("group")
+            self.fields.pop("bots_quantity")
             if for_group_edit:
                 self.fields.pop("symbol")
                 for field in self.fields:
@@ -49,7 +60,7 @@ class TraderoBotForm(forms.ModelForm):
         else:
             self.fields["group"].queryset = TraderoBotGroup.objects.filter(
                 user=user
-            )
+            ).order_by("name")
 
 
 class TraderoBotGroupForm(forms.ModelForm):

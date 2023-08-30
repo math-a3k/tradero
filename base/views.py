@@ -6,9 +6,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.views.generic import (
     CreateView,
     DetailView,
+    FormView,
     ListView,
     RedirectView,
     TemplateView,
@@ -152,7 +154,7 @@ class BotzinhosLogsView(OwnerMixin, LoginRequiredMixin, DetailView):
         return context
 
 
-class BotzinhosCreateView(LoginRequiredMixin, CreateView):
+class BotzinhosCreateView(LoginRequiredMixin, FormView):
     model = TraderoBot
     form_class = TraderoBotForm
     template_name = "base/botzinhos_form.html"
@@ -165,13 +167,27 @@ class BotzinhosCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def form_valid(self, form):
-        form.instance.user = self.request.user
+        bot_kwargs = form.cleaned_data
+        bot_kwargs.update({"user": self.request.user})
+        bot_name = bot_kwargs.pop("name", None)
+        bots_quantity = bot_kwargs.pop("bots_quantity", 1)
+        for i in range(bots_quantity):
+            if bot_name:
+                bot_kwargs.update({"name": f"{bot_name}-{i+1:03d}"})
+            bot = TraderoBot(**bot_kwargs)
+            bot.save()
+        self.group = bot_kwargs.pop("group")
         return super().form_valid(form)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs.update(user=self.request.user)
         return kwargs
+
+    def get_success_url(self):
+        return reverse(
+            "base:botzinhos-group-detail", kwargs={"pk": self.group.pk}
+        )
 
 
 class BotzinhosUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
@@ -181,7 +197,7 @@ class BotzinhosUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs.update(user=self.request.user)
+        kwargs.update(user=self.request.user, for_edit=True)
         return kwargs
 
 

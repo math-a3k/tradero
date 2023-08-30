@@ -8,7 +8,7 @@
 
 {% block content %}
 	<div class="container">
-		<h3>{% if form.instance.pk %}Atualizar{% else %}Novo{% endif %} Botzinho</h3>
+		<h3>{% if form.instance.pk %}Atualizar{% else %}Novo(s){% endif %} Botzinho(s)</h3>
 		<form method="post">{% csrf_token %}
     		{% bootstrap_form form %}
     		{% buttons %}

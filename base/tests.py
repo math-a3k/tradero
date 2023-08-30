@@ -267,6 +267,7 @@ class TestViews(TestCase):
         response = self.client.post(
             url,
             {
+                "bots_quantity": 1,
                 "name": "testing botzinho",
                 "group": self.group1.pk,
                 "symbol": self.s1.pk,
@@ -278,12 +279,15 @@ class TestViews(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            TraderoBot.objects.filter(name="testing botzinho").count(),
+            TraderoBot.objects.filter(
+                name__startswith="testing botzinho"
+            ).count(),
             1,
         )
         response = self.client.post(
             url,
             {
+                "bots_quantity": 1,
                 "name": "testing botzinho 2",
                 "group": self.group1.pk,
                 "symbol": self.s1.pk,
@@ -302,6 +306,7 @@ class TestViews(TestCase):
         response = self.client.post(
             url,
             {
+                "bots_quantity": 1,
                 "name": "testing botzinho 2",
                 "group": self.group1.pk,
                 "symbol": self.s1.pk,
@@ -320,12 +325,12 @@ class TestViews(TestCase):
         response = self.client.post(
             url,
             {
-                "name": "testing botzinho 2",
+                "bots_quantity": 2,
                 "group": self.group1.pk,
                 "symbol": self.s1.pk,
                 "strategy": "acmadness",
                 "strategy_params": "microgain=0.3",
-                "fund_quote_asset_initial": Decimal("20"),
+                "fund_quote_asset_initial": Decimal("3.1416") * 10,
                 "jumpy_whitelist": "s1busd",
                 "jumpy_blacklist": "s1busd",
             },
@@ -333,12 +338,15 @@ class TestViews(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            TraderoBot.objects.filter(name="testing botzinho 2").count(),
-            1,
+            TraderoBot.objects.filter(
+                fund_quote_asset_initial=Decimal("3.1416") * 10
+            ).count(),
+            2,
         )
         response = self.client.post(
             url,
             {
+                "bots_quantity": 1,
                 "name": "testing botzinho 2",
                 "group": self.group1.pk,
                 "symbol": self.s1.pk,
@@ -355,6 +363,7 @@ class TestViews(TestCase):
         response = self.client.post(
             url,
             {
+                "bots_quantity": 1,
                 "name": "testing botzinho 2",
                 "group": self.group1.pk,
                 "symbol": self.s1.pk,
@@ -372,6 +381,7 @@ class TestViews(TestCase):
         response = self.client.post(
             url,
             {
+                "bots_quantity": 1,
                 "name": "testing botzinho 2",
                 "group": self.group1.pk,
                 "symbol": self.s1.pk,
