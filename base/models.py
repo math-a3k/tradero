@@ -1705,7 +1705,10 @@ class TraderoBot(models.Model):
     objects = TraderoBotManager()
 
     def __str__(self):
-        return f"BOT #{self.id}: {self.symbol.symbol} | {self.get_status_display()}"
+        return (
+            f"[{self.id:03d}] {self.name}: {self.symbol.symbol} | "
+            f"{self.get_status_display()}"
+        )
 
     def get_absolute_url(self):
         return reverse("base:botzinhos-detail", kwargs={"pk": self.pk})

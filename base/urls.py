@@ -91,6 +91,11 @@ urlpatterns = [
         name="botzinhos-group-update",
     ),
     path(
+        "Botzinhos/Grupo/<pk>/Mover",
+        default_rate_limit(base_views.BotzinhosGroupMoveView.as_view()),
+        name="botzinhos-group-move",
+    ),
+    path(
         "Botzinhos/Grupo/<pk>/Acção/<path:action>",
         default_rate_limit(base_views.BotzinhosGroupActionView.as_view()),
         name="botzinhos-group-action",

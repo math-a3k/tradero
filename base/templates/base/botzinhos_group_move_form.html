@@ -1,0 +1,50 @@
+{% extends "base/base.html" %}
+
+{% load bootstrap5 symbols %}
+
+{% block title %}
+	Botzinhos (小bots)
+{% endblock title %}
+
+{% block content %}
+	<div class="container">
+		<h6 class="text-center">
+			<span id="date"></span> |
+			<strong id="clock" class="text-primary"></strong>
+			<strong>UTC</strong> - Time Interval: <span class="text-primary fw-bolder">| {{ time_interval }}m |</span>
+		</h6>
+
+		{% groups_breadcrumbs request.user %}
+
+		<h4 class="mt-2">Mover Botzinhos do Grupo {{ object.name }}</h4>
+		<form method="post">{% csrf_token %}
+    		{% bootstrap_form form  %}
+    		{% buttons %}
+    		<button type="submit" class="btn btn-primary">Enviar</button>
+  			{% endbuttons %}
+		</form>
+	</div>
+{% endblock content %}
+
+{% block bootstrap5_extra_script %}
+    <script>
+        function currentTime() {
+		  let date = new Date();
+		  let hh = date.getUTCHours();
+		  let mm = date.getUTCMinutes();
+		  let ss = date.getUTCSeconds();
+
+		   hh = (hh < 10) ? "0" + hh : hh;
+		   mm = (mm < 10) ? "0" + mm : mm;
+		   ss = (ss < 10) ? "0" + ss : ss;
+
+		   let time = hh + ":" + mm + ":" + ss;
+
+		  document.getElementById("clock").innerText = time;
+		  document.getElementById("date").innerText = date.toLocaleDateString("en-US", {year: 'numeric', month: 'long', day: 'numeric' });
+		  let t = setTimeout(function(){ currentTime() }, 1000);
+		}
+
+		currentTime();
+    </script>
+{% endblock %}
