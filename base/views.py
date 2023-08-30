@@ -62,6 +62,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
             "-timestamp_selling"
         )
         summary = TradeHistory.summary_for_object(self.object)
+        groups = self.object.botgroups.all().order_by("name")
         #
         paginator = Paginator(trades, 10)
         page_number = self.request.GET.get("page", 1)
@@ -71,6 +72,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         context["page_element"] = "#trades-list"
         context["time_interval"] = settings.TIME_INTERVAL_BOTS
         context["summary"] = summary
+        context["groups"] = groups
         return context
 
     def get_object(self, queryset=None):
