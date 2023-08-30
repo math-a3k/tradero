@@ -1,0 +1,16 @@
+{% load mathfilters %}
+
+<ul class="list-group mt-0" style="border-width: 0px !important; ">
+  <li class="list-group-item">
+    {% with group.bot_status as status %}
+    <strong>Botzinhos</strong>: <span class="text-success">{{status.BUYING }} BUYING</span> | <span class="text-danger">{{ status.SELLING }} SELLING</span> | <span class="text-muted">{{ status.INACTIVE }} INACTIVE</span> | <span class="fw-bolder">{{ status.TOTAL }} TOTAL</span>
+    {% endwith %}
+  </li>
+  {% if group.valuation_current and group.valuation_initial %}
+  <li class="list-group-item">
+    <strong>Group Valuation</strong>: {{group.valuation_current|floatformat:3 }} {{ quote_asset }} [{% with group.valuation_current|div:group.valuation_initial|sub:1|mul:100 as var_val %}
+    <span class="{% if var_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ var_val|floatformat:3 }}%</span>]
+  {% endwith %} <span class="text-muted">(Current)</span> | {{group.valuation_initial|floatformat:3 }} {{ quote_asset }} <span class="text-muted">(Initial)</span>
+  </li>
+  {% endif %}
+</ul>
