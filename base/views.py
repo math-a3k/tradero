@@ -22,6 +22,7 @@ from .forms import (
     TraderoBotForm,
     TraderoBotGroupEditForm,
     TraderoBotGroupForm,
+    TraderoBotGroupMoveForm,
     UserForm,
 )
 from .models import Symbol, TradeHistory, TraderoBot, TraderoBotGroup, User
@@ -356,6 +357,32 @@ class BotzinhosGroupUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
                     setattr(bot, field, bot_data[field])
                 bot.save()
         return super().form_valid(form)
+
+
+class BotzinhosGroupMoveView(OwnerMixin, LoginRequiredMixin, UpdateView):
+    model = TraderoBotGroup
+    form_class = TraderoBotGroupMoveForm
+    template_name = "base/botzinhos_group_move_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["time_interval"] = settings.TIME_INTERVAL_BOTS
+        context["group"] = self.object
+        return context
+
+    def form_valid(self, form):
+        bots = form.cleaned_data["bots"]
+        to_group = form.cleaned_data["to_group"]
+        TraderoBot.objects.filter(id__in=[b.id for b in bots]).update(
+            group=to_group
+        )
+        self.group = to_group
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse(
+            "base:botzinhos-group-detail", kwargs={"pk": self.group.pk}
+        )
 
 
 class BotzinhosGroupActionView(ActionView):

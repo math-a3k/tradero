@@ -3,6 +3,8 @@ from decimal import Decimal
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Model
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from .models import Symbol, TraderoBot, TraderoBotGroup, User
 from .strategies import get_strategies
@@ -164,6 +166,49 @@ class TraderoBotGroupEditForm(TraderoBotGroupForm):
 
     def get_bot_form(self):
         return TraderoBotForm(for_group=True, for_group_edit=True)
+
+
+class BotsModelMultipleChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):  # pragma: no cover
+        if obj.status == obj.Status.SELLING:
+            status_class = "text-danger"
+        elif obj.status == obj.Status.BUYING:
+            status_class = "text-success"
+        else:
+            status_class = "text-muted"
+        return mark_safe(
+            f"<span class='text-muted'>#{obj.id:03d}</span> "
+            f"<a href='{ reverse('base:botzinhos-detail', args=[obj.pk]) }' "
+            f"class='name-value'>{ obj.name }</a>: { obj.symbol.base_asset }"
+            f"/{ obj.symbol.quote_asset } | <span class='{ status_class }'>"
+            f"{ obj.get_status_display() }</span>"
+        )
+
+
+class TraderoBotGroupMoveForm(forms.ModelForm):
+    to_group = forms.ModelChoiceField(
+        label="To Group", queryset=None, empty_label="(Selecionar)"
+    )
+    bots = BotsModelMultipleChoiceField(
+        queryset=None,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    class Meta:
+        model = TraderoBotGroup
+        fields = [
+            "to_group",
+            "bots",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["to_group"].queryset = TraderoBotGroup.objects.filter(
+            user=self.instance.user
+        ).order_by("name")
+        self.fields["bots"].queryset = TraderoBot.objects.filter(
+            group=self.instance
+        ).order_by("name")
 
 
 class UserForm(forms.ModelForm):

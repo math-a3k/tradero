@@ -155,7 +155,7 @@ class TestViews(TestCase):
             user=cls.user1, name="Test Group 1"
         )
         cls.group2, _ = TraderoBotGroup.objects.get_or_create(
-            user=cls.user2, name="Test Group 2"
+            user=cls.user1, name="Test Group 2"
         )
         cls.bot1 = TraderoBot(
             group=cls.group1,
@@ -687,6 +687,29 @@ class TestViews(TestCase):
             )
             self.assertEqual(response.status_code, 200)
             self.assertIn(b"SUCCESS at", response.content)
+
+    def test_botzinhos_group_move(self):
+        self.client.force_login(self.user1)
+        url = reverse(
+            "base:botzinhos-group-move",
+            kwargs={"pk": self.group1.pk},
+        )
+        response = self.client.get(
+            url,
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            url,
+            {
+                "to_group": self.group2.pk,
+                "bots": [self.bot3.pk],
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.bot3.refresh_from_db()
+        self.assertEqual(self.bot3.group, self.group2)
 
 
 class TestAdmin(TestCase):
