@@ -1740,10 +1740,8 @@ class TestTasks(BotTestCase):
             )
             task = tasks.update_all_bots_job.delay()
             result = task.get()
-            active_bots = TraderoBot.objects.filter(
-                status__gt=TraderoBot.Status.INACTIVE
-            ).count()
-            self.assertIn(str(active_bots), result)
+            groups = TraderoBotGroup.objects.all().count()
+            self.assertIn(str(groups), result)
 
     def test_update_all_symbols(self):
         with requests_mock.Mocker() as m:
