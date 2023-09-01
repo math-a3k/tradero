@@ -37,7 +37,7 @@
 			<div class="bot-detail" style="">
 				<ul class="list-group mt-0" style="border-width: 0px !important; ">
 					{% if bot.jumpy_whitelist or bot.jumpy_blacklist %}
-					<li>
+					<li class="list-group-item">
 						<strong>Jumpy lists</strong>: {{ bot.jumpy_whitelist|default:"-" }} (White) | {{ bot.jumpy_blacklist|default:"-" }} (Black)
 					</li>
 					{% endif %}
