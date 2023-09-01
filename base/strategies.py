@@ -125,7 +125,7 @@ class ACMadness(TradingStrategy):
         ):
             return (
                 False,
-                f"Symbol's Variation Range above threshold "
+                f"VR24h above threshold "
                 f"({self.bot.symbol.variation_range_24h:.3f} > "
                 f"{self.vr24h_max:.3f}) - waiting for next turn...",
             )
@@ -150,8 +150,8 @@ class ACMadness(TradingStrategy):
             return True, None
         return (
             False,
-            f"Current price ({self.bot.price_current:.8f}) is below threshold "
-            f"({self.get_min_selling_threshold():.8f})",
+            f"Current price ({self.bot.price_current:.6f}) is below threshold "
+            f"({self.get_min_selling_threshold():.6f})",
         )
 
     def evaluate_jump(self):
@@ -249,7 +249,7 @@ class CatchTheWave(TradingStrategy):
         ):
             return (
                 False,
-                f"Symbol's Variation Range below threshold "
+                f"VR24h below threshold "
                 f"({self.bot.symbol.variation_range_24h:.3f} < "
                 f"{self.vr24h_min:.3f}) - waiting for next turn...",
             )
@@ -268,8 +268,8 @@ class CatchTheWave(TradingStrategy):
             return True, None
         return (
             False,
-            f"Current price ({self.bot.price_current:.8f}) is below min. "
-            f"selling threshold ({self.get_min_selling_threshold():.8f})",
+            f"Current price ({self.bot.price_current:.6f}) is below min. "
+            f"selling threshold ({self.get_min_selling_threshold():.6f})",
         )
 
     def evaluate_jump(self):
