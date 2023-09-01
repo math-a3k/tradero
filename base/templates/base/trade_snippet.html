@@ -5,7 +5,7 @@
       	<h5 class="mb-1">
       		<span class="text-muted">#{{ trade.id|stringformat:"03d" }}</span> {{ trade.symbol.base_asset }}/{{ trade.symbol.quote_asset }} |
       		{% if trade.is_complete %}
-      			<span class="{% if trade.variation_quote_asset > 0 %}text-success{% else %}text-danger{% endif %}">{{ trade.variation_quote_asset|floatformat:4 }} {{ trade.symbol.quote_asset }} ({{trade.variation|floatformat:3 }}%)</span>
+      			<span class="{% if trade.gain_quote_asset > 0 %}text-success{% else %}text-danger{% endif %}">{{ trade.gain_quote_asset|floatformat:4 }} {{ trade.symbol.quote_asset }}</span> <span class="{% if trade.variation_quote_asset > 0 %}text-success{% else %}text-danger{% endif %}">({{ trade.variation_quote_asset|floatformat:2 }}%)</span>
       		{% elif trade.timestamp_cancelled %}
       		Cancelled
       		{% else %}
@@ -13,6 +13,7 @@
       		{% endif %}
       	</h5>
       	<small class="text-muted text-end" >
+      		<span class="badge bg-success rounded-pill"><a class="text-white" href="{% url "base:botzinhos-group-detail" trade.bot.group.pk %}">{{ trade.bot.group.name|default:"(Sem Nome)" }}</a></span>
       		{% if trade.is_dummy %}<span class="badge bg-info rounded-pill">DUMMY</span>{% endif %}
       		<a href="{% url "base:botzinhos-detail" trade.bot.pk %}">#{{ trade.bot.pk|stringformat:"03d" }}: {{trade.bot.name }}</a>
       		<br>{{ trade.strategy|upper }}({{ trade.strategy_params|default:"defaults" }})
@@ -24,7 +25,7 @@
  		</button>
 	</div>
     <p>
-    	<strong>Quote Asset Fund</strong>: {{ trade.fund_quote_asset_exec|floatformat:4|default:"-"}} {{trade.symbol.quote_asset }} <span class="text-muted">(Executed)</span> | {{ trade.fund_quote_asset_return|floatformat:4|default:"-"}} {{trade.symbol.quote_asset }} <span class="text-muted">(Returned)</span><br>
+    	<strong>Quote Asset Fund</strong>: {{ trade.fund_quote_asset_exec|floatformat:4|default:"-"}} {{trade.symbol.quote_asset }} <span class="text-muted">(Executed)</span> | {{ trade.fund_quote_asset_return|floatformat:4|default:"-"}} {{trade.symbol.quote_asset }} <span class="text-muted">(Returned)</span> [ <span class="{% if trade.variation_quote_asset > 0 %}text-success{% else %}text-danger{% endif %}">{{ trade.variation_quote_asset|floatformat:2|default:"-" }}%</span> <span class="text-muted">(Var)</span> <span class="{% if trade.variation_price > 0 %}text-success{% else %}text-danger{% endif %}">{{trade.variation_price|floatformat:2|default:"-" }}% </span> <span class="text-muted">(Price Var)</span> ] <br>
     	<strong>Base Asset Fund</strong>: {{ trade.fund_base_asset|floatformat:4|default:"-"}} {{trade.symbol.base_asset }} [ {{ trade.fund_base_asset_exec|floatformat:4|default:"-"}} <span class="text-muted">(Executed)</span> | {{ trade.fund_base_asset_unexec|floatformat:4|default:"-" }} <span class="text-muted">(Unexecuted)</span> ]<br>
 		<strong>Commissions</strong>: {{ trade.commission_buying|floatformat:8|default:"-"}} {{trade.commission_buying_asset|default:"" }} <span class="text-muted">(Buying)</span> | {{ trade.commission_selling|floatformat:8|default:"-"}} {{trade.commission_selling_asset|default:"" }} <span class="text-muted">(Selling)</span><br>
     	<strong>Timestamps</strong>: {{ trade.timestamp_start }} <span class="text-muted">(Start)</span> | {{ trade.timestamp_buying|default:"-" }} <span class="text-muted">(Buying)</span> | {{ trade.timestamp_selling|default:"-" }} <span class="text-muted">(Selling)</span> {% if trade.timestamp_cancelled %} | {{ trade.timestamp_cancelled }} <span class="text-muted">(Cancelled)</span>{% endif %}<br>
