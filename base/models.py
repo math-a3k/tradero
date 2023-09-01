@@ -2247,12 +2247,9 @@ class TraderoBotLog(models.Model):
 
     def __str__(self):
         return (
-            f"{self.bot} {'[[DUMMY]]' if self.is_dummy else ''}| "
-            f"{self.timestamp} | [{self.get_action_display()}] "
-            f"FBA: {self.fund_base_asset}, "
-            f"FQA: {self.fund_quote_asset}, PB(N): {self.price_buying}, "
-            f"PC(M): {self.price_current}, PS(N): {self.price_selling}, "
-            f"VAR: {self.variation} || {self.message}"
+            f"{self.bot} {'[[DUMMY]]' if self.is_dummy else ''} | "
+            f"[{self.get_action_display()}] | {self.timestamp} "
+            f"|| {self.message}"
         )
 
     def save(self, *args, **kwargs):

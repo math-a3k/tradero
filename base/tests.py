@@ -1521,7 +1521,7 @@ class TestStrategies(BotTestCase):
             self.s1.others["outliers"]["o1"] = False
             self.s1.variation_range_24h = 11
             self.bot1.decide()
-            self.assertIn("Variation Range", self.bot1.others["last_logs"][-1])
+            self.assertIn("VR24h", self.bot1.others["last_logs"][-1])
             self.s1.variation_range_24h = 9
             self.s1.last_variation = Decimal("12")
             self.bot1.strategy_params = "microgain=0.3,max_var_prot=10"
@@ -1720,7 +1720,7 @@ class TestStrategies(BotTestCase):
             self.bot1.symbol.variation_range_24h = 1
             self.bot1.decide()
             self.assertIn(
-                "Variation Range",
+                "VR24h",
                 self.bot1.others["last_logs"][-1],
             )
 
