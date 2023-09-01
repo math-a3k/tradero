@@ -1555,6 +1555,37 @@ class TraderoBotGroup(models.Model):
             status["TOTAL"] += 1
         return status
 
+    def update_bots(self):
+        cache_key = f"{settings.BOTS_UPDATE_GROUP_KEY}_{self.pk}"
+        if not cache.get(cache_key, False) or "pytest" in sys.modules:
+            cache.set(cache_key, True, 60)
+            client = Spot()
+            bots = self.bots.enabled()
+            if bots:
+                symbols = list(
+                    Symbol.objects.filter(bots__in=bots)
+                    .distinct()
+                    .values_list("symbol", flat=True)
+                )
+                prices = {
+                    t["symbol"]: t["price"]
+                    for t in client.ticker_price(symbols=symbols)
+                }
+                for bot in bots:
+                    bot.price_current = Decimal(prices[bot.symbol.symbol])
+                    bot.decide()
+                message = f"GROUP {self}: {len(bots)} bots updated."
+            else:  # pragma: no cover
+                message = f"GROUP {self}: No bots were found."
+            cache.set(cache_key, False)
+        else:  # pragma: no cover
+            message = (
+                f"GROUP {self}: Other process updating bots for the group "
+                "is running, please wait."
+            )
+        logger.warning(message)
+        return message
+
 
 class TraderoBotManager(models.Manager):
     def enabled(self):
@@ -2152,25 +2183,19 @@ class TraderoBot(models.Model):
                 )
 
     @classmethod
-    def update_all_bots(cls):
-        client = Spot()
-        bots = cls.objects.enabled()
-        if bots:
-            symbols = list(
-                Symbol.objects.filter(bots__in=bots)
-                .distinct()
-                .values_list("symbol", flat=True)
-            )
-            prices = {
-                t["symbol"]: t["price"]
-                for t in client.ticker_price(symbols=symbols)
-            }
-            for bot in bots:
-                bot.price_current = Decimal(prices[bot.symbol.symbol])
-                bot.decide()
-            message = f"{len(bots)} bots updated."
-        else:  # pragma: no cover
-            message = "No bots were found."
+    def update_all_bots(cls, groups=None, threads=settings.EXECUTOR_THREADS):
+        timestamp = timezone.now()
+        groups = groups or TraderoBotGroup.objects.all()
+        with thread_pool_executor(threads) as executor:
+            for group in groups:
+                executor.submit(group.update_bots)
+        # cls.clean_data()
+        logger.warning(f"-> UPDATE ALL BOTS DONE <-")
+        message = (
+            f"---> Elapsed Time: "
+            f"{ (timezone.now() - timestamp).total_seconds() } "
+            f"({len(groups)} Groups) <----"
+        )
         logger.warning(message)
         return message
 

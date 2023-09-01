@@ -293,8 +293,9 @@ EXECUTOR_THREADS = env.int("TRADERO_EXECUTOR_THREADS", None)
 # Symbols quantity to track
 SYMBOLS_QUANTITY = env.int("TRADERO_SYMBOLS_QUANTITY", cpu_count() * 4)
 
-# Cache key used for lock concurrent updates and/or queue overlapping
+# Cache keys used for lock concurrent updates and/or queue overlapping
 SYMBOLS_UPDATE_ALL_INDICATORS_KEY = "symbols_update_all_indicators"
+BOTS_UPDATE_GROUP_KEY = "bots_update_group"
 
 # Periods for the warm_and_ready command
 WARM_UP_PERIODS = env.int("TRADERO_WARM_UP_PERIODS", 0)
