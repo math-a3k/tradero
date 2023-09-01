@@ -27,7 +27,7 @@ from sklearn.model_selection import GridSearchCV
 from .client import TraderoClient
 from .indicators import get_indicators
 from .strategies import get_strategies
-from .utils import datetime_minutes_rounder, get_commission
+from .utils import datetime_minutes_rounder
 
 channel_layer = get_channel_layer()
 logger = logging.getLogger(__name__)
@@ -2270,6 +2270,8 @@ class TradeHistory(models.Model):
     Highly denormalized on purpose
     """
 
+    _client = None
+
     user = models.ForeignKey(
         User,
         verbose_name="User",
@@ -2403,7 +2405,7 @@ class TradeHistory(models.Model):
         "Receipt - Selling", default=dict, blank=True, null=True
     )
     is_complete = models.BooleanField("Is Trade Complete?", default=False)
-    variation = models.DecimalField(
+    variation_price = models.DecimalField(
         "Porcentual Variation between Buying and Selling Price",
         max_digits=40,
         decimal_places=8,
@@ -2412,6 +2414,13 @@ class TradeHistory(models.Model):
     )
     variation_quote_asset = models.DecimalField(
         "Variation of the Quote Asset",
+        max_digits=40,
+        decimal_places=8,
+        blank=True,
+        null=True,
+    )
+    gain_quote_asset = models.DecimalField(
+        "Gain of Quote Asset",
         max_digits=40,
         decimal_places=8,
         blank=True,
@@ -2470,46 +2479,37 @@ class TradeHistory(models.Model):
                 self.timestamp_selling - self.timestamp_buying
             )
             self.duration_total = self.timestamp_selling - self.timestamp_start
-        if self.price_buying and self.price_selling:
-            self.variation = (self.price_selling / self.price_buying - 1) * 100
         if self.receipt_buying:
-            self.fund_quote_asset_exec = Decimal(
-                self.receipt_buying["cummulativeQuoteQty"]
-            )
-            (
-                self.commission_buying,
-                self.commission_buying_asset,
-            ) = get_commission(self.receipt_buying)
-            self.fund_base_asset = Decimal(
-                self.receipt_buying["executedQty"]
-            ) - (
-                self.commission_buying
-                if self.commission_buying_asset != "BNB"
-                else 0
-            )
+            rb = self.get_client().parse_receipt(self.receipt_buying)
+            self.fund_quote_asset_exec = rb["quantity_exec"]
+            self.commission_buying = rb["commission"]
+            self.commission_buying_asset = rb["commission_asset"]
+            self.fund_base_asset = rb["quantity_rec"]
         if self.receipt_buying and self.receipt_selling:
             self.is_complete = True
-            self.fund_base_asset_exec = Decimal(
-                self.receipt_selling["executedQty"]
+            rs = self.get_client().parse_receipt(self.receipt_selling)
+            self.fund_base_asset_exec = rs["quantity_exec"]
+            self.fund_base_asset_unexec = (
+                self.fund_base_asset - self.fund_base_asset_exec
             )
-            self.fund_base_asset_unexec = self.fund_base_asset - Decimal(
-                self.fund_base_asset_exec
-            )
-            (
-                self.commission_selling,
-                self.commission_selling_asset,
-            ) = get_commission(self.receipt_selling)
-            self.fund_quote_asset_return = Decimal(
-                self.receipt_selling["cummulativeQuoteQty"]
-            ) - (
-                self.commission_selling
-                if self.commission_selling_asset != "BNB"
-                else 0
-            )
-            self.variation_quote_asset = (
+            self.commission_selling = rs["commission"]
+            self.commission_selling_asset = rs["commission_asset"]
+            self.fund_quote_asset_return = rs["quantity_rec"]
+            self.gain_quote_asset = (
                 self.fund_quote_asset_return - self.fund_quote_asset_exec
             )
+            self.variation_quote_asset = (
+                self.fund_quote_asset_return / self.fund_quote_asset_exec - 1
+            ) * 100
+            self.variation_price = (
+                rs["price_net"] / rb["price_net"] - 1
+            ) * 100
         super().save(*args, **kwargs)
+
+    def get_client(self, reinit=False):  # pragma: no cover
+        if not self._client or reinit:
+            self._client = self.user.get_client()
+        return self._client
 
     @classmethod
     def summary(cls, trades_qs, checkpoint=None):
@@ -2525,10 +2525,8 @@ class TradeHistory(models.Model):
             if t:
                 t_qs = t_qs.filter(timestamp_selling__gte=t)
             result["rows"][label] = t_qs.aggregate(
-                variation_quote_asset_total=models.Sum(
-                    "variation_quote_asset"
-                ),
-                variation_average=models.Avg("variation"),
+                gain_quote_asset_total=models.Sum("gain_quote_asset"),
+                variation_average=models.Avg("variation_quote_asset"),
                 trades_quantity=models.Count("pk"),
             )
         result["meta"] = {
@@ -2540,12 +2538,12 @@ class TradeHistory(models.Model):
                     "alltime": "All-Time",
                 },
                 "cols": {
-                    "variation_quote_asset_total": "Total Gains (QA)",
+                    "gain_quote_asset_total": "Total Gains (QA)",
                     "variation_average": "Avg. % Var",
                     "trades_quantity": "#Trades",
                 },
                 "formats": {
-                    "variation_quote_asset_total": ".4f",
+                    "gain_quote_asset_total": ".4f",
                     "variation_average": ".3f",
                     "trades_quantity": "i",
                 },

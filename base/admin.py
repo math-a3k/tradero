@@ -320,8 +320,9 @@ class TradeHistoryAdmin(admin.ModelAdmin):
         "bot",
         "is_dummy",
         "is_complete",
-        "variation",
+        "variation_price",
         "variation_quote_asset",
+        "gain_quote_asset",
         "duration_total",
     )
     list_filter = (
