@@ -62,6 +62,15 @@ class TradingStrategy:
             group=self.bot.group,
         ).values_list("symbol", flat=True)
 
+    def apply_jumpy_lists(self, symbols):
+        symbols_blacklist = self.bot.get_jumpy_blacklist()
+        symbols_whitelist = self.bot.get_jumpy_whitelist()
+        if symbols_whitelist:
+            symbols = [s for s in symbols if s.symbol in symbols_whitelist]
+        if symbols_blacklist:
+            symbols = [s for s in symbols if s.symbol not in symbols_blacklist]
+        return symbols
+
 
 class ACMadness(TradingStrategy):
     """
@@ -162,8 +171,7 @@ class ACMadness(TradingStrategy):
         symbols = sorted(
             symbols, key=lambda s: s.others["stp"]["next_n_sum"], reverse=True
         )
-        symbols_blacklist = self.bot.get_jumpy_blacklist()
-        symbols_whitelist = self.bot.get_jumpy_whitelist()
+        symbols = self.apply_jumpy_lists(symbols)
         for symbol in symbols:
             symbol_ac = Decimal(symbol.others["stp"]["next_n_sum"])
             symbol_ac = (
@@ -174,13 +182,7 @@ class ACMadness(TradingStrategy):
             if (
                 symbol_ac > self.ac_threshold
                 and symbol.pk not in symbols_with_siblings
-                and symbol.symbol not in symbols_blacklist
             ):
-                if (
-                    symbols_whitelist
-                    and symbol.symbol not in symbols_whitelist
-                ):
-                    continue
                 if self.outlier_protection:
                     if symbol.others["outliers"]["o1"]:
                         continue
@@ -281,26 +283,12 @@ class CatchTheWave(TradingStrategy):
             key = lambda s: s.others["scg"]["seo_index"]
         else:
             key = lambda s: s.others["scg"]["scg_index"]
-        symbols = sorted(
-            symbols,
-            key=key,
-            reverse=True,
-        )
-        symbols_blacklist = self.bot.get_jumpy_blacklist()
-        symbols_whitelist = self.bot.get_jumpy_whitelist()
+        symbols = sorted(symbols, key=key, reverse=True)
+        symbols = self.apply_jumpy_lists(symbols)
         for symbol in symbols:
             strat_in_symbol = self.bot.get_strategy(symbol)
             should_buy, _ = strat_in_symbol.evaluate_buy()
-            if (
-                should_buy
-                and symbol.pk not in symbols_with_siblings
-                and symbol.symbol not in symbols_blacklist
-            ):
-                if (
-                    symbols_whitelist
-                    and symbol.symbol not in symbols_whitelist
-                ):
-                    continue
+            if should_buy and symbol.pk not in symbols_with_siblings:
                 return True, symbol
         return False, None
 
