@@ -4,6 +4,7 @@ from decimal import Decimal
 import requests
 from binance.spot import Spot
 from django.conf import settings
+from django.utils import timezone
 
 from .utils import get_commission
 
@@ -132,6 +133,10 @@ class TraderoClient(Spot):  # pragma: no cover
                     {  # receipt
                         "orderId": "DUMMY",
                         "side": side,
+                        "symbol": symbol.symbol,
+                        "transactTime": round(
+                            timezone.now().timestamp() * 1000
+                        ),
                         "executedQty": str(exc_qty),
                         "cummulativeQuoteQty": str(cum_exc_qty),
                         "fills": [
@@ -216,6 +221,10 @@ class TraderoClient(Spot):  # pragma: no cover
             quantity_rec = cum_exc_qty - commission_e  # Net price
             price = quantity_rec / exc_qty
         r = {
+            "symbol": receipt["symbol"],
+            "timestamp": timezone.datetime.fromtimestamp(
+                receipt["transactTime"] // 1000
+            ),
             "quantity_exec": quantity_exec.quantize(Decimal("." + "0" * 8)),
             "quantity_rec": quantity_rec.quantize(Decimal("." + "0" * 8)),
             # Net price (except when comm in BNB)
