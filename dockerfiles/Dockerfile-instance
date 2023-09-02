@@ -1,9 +1,9 @@
 FROM python:3.11
 
-# RUN pacman -Syu python python-setuptools python-pipenv supervisor git postgresql-libs --noconfirm && yes | pacman -Scc
-
 RUN useradd -mU tradero && \
-    mkdir -p /vol/tradero/{media,static,db,log} && \
+    mkdir -p /vol/tradero/media && \
+    mkdir -p /vol/tradero/static && \
+    mkdir -p /vol/tradero/log && \
     chown -R tradero:tradero /vol/tradero && \
     chmod -R 755 /vol/tradero && \
     python -m pip install pipenv
@@ -19,8 +19,7 @@ COPY dockerfiles/django_tasks.sh .
 COPY dockerfiles/supervisor.conf .
 COPY dockerfiles/.env_file tradero/.env
 COPY Pipfile Pipfile.lock pytest.ini pyproject.toml .coveragerc manage.py .
-# For development
-# COPY ./django-ai django-ai
+COPY dockerfiles/instance_entrypoint.sh .
 RUN chown -R tradero:tradero /home/tradero
 RUN chmod a+x /home/tradero/django_tasks.sh
 RUN mkdir /run/daphne && chown -R tradero:tradero /run/daphne
@@ -34,6 +33,4 @@ RUN pipenv install
 # Meantime fix
 RUN pipenv run pip install -e git+https://github.com/math-a3k/django-ai.git@tradero#egg=django_ai
 
-USER root
-
-CMD ["supervisord", "-c", "./supervisor.conf", "--nodaemon"]
+CMD ["/bin/bash", "./instance_entrypoint.sh"]
