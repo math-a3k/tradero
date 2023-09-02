@@ -101,6 +101,8 @@
 				{% action_button action_url "Turn ON" "btn-primary" %}
 				{% url "base:botzinhos-group-action" group.pk "liquidate" as action_url %}
 				{% action_button action_url "LIQUIDATE (FORCE SELL and Turn OFF)" "btn-danger" %}
+				{% url "base:botzinhos-group-action" group.pk "reset_soft" as action_url %}
+				{% action_button action_url "RESET (SOFT)" "btn-warning" %}
 			</div>
 			<div class="ul">
 				{% include "base/_jumping_form.html" with view="base:botzinhos-group-action" obj=group %}

@@ -1523,6 +1523,11 @@ class TraderoBotGroup(models.Model):
                 bot.jump(to_symbol)
         return True
 
+    def reset_soft(self):
+        for bot in self.bots.all():
+            bot.reset_soft()
+        return True
+
     @property
     def valuation_current(self):
         valuations = [
@@ -1828,7 +1833,7 @@ class TraderoBot(models.Model):
         self.save()
         return True
 
-    def reset(self):
+    def reset_hard(self):
         self.log_trade(cancelled=True)
         self.status = self.Status.INACTIVE
         self.receipt_buying, self.receipt_selling = None, None
@@ -1843,8 +1848,50 @@ class TraderoBot(models.Model):
             None,
             None,
         )
-        self.log(self.Action.RESET, "RESET")
+        self.log(self.Action.RESET, "RESET - HARD")
         self.save()
+        return True
+
+    def reset_soft(self):
+        self.log_trade(cancelled=True)
+        if self.receipt_buying:
+            rb = self.get_client().parse_receipt(self.receipt_buying)
+            self.symbol = Symbol.objects.get(symbol=rb["symbol"])
+            # Reset
+            self.timestamp_buying = rb["timestamp"]
+            self.price_buying = rb["price_net"]
+            self.price_current = self.get_current_price()
+            self.fund_base_asset = rb["quantity_rec"]
+            self.fund_quote_asset = None
+        if self.receipt_selling:
+            rs = self.get_client().parse_receipt(self.receipt_selling)
+            if rs["symbol"] != self.symbol.symbol:
+                self.log(
+                    self.Action.ERROR,
+                    "ERROR - Hard reset or manual intervention required",
+                )
+                self.off()
+                return False
+        self.log(self.Action.RESET, "RESET - SOFT")
+        if self.receipt_buying and not self.receipt_selling:
+            self.buy()  # Resume from receipt
+        elif self.receipt_buying and self.receipt_selling:
+            self.sell()  # Resume from receipt
+        else:
+            self.fund_base_asset = None
+            self.price_buying, self.price_selling, self.price_current = (
+                None,
+                None,
+                None,
+            )
+            self.timestamp_buying, self.timestamp_selling = (
+                None,
+                None,
+            )
+            if not self.timestamp_start:
+                self.timestamp_start = timezone.now()
+            self.save()
+        self.on()
         return True
 
     def buy(self):
@@ -1876,7 +1923,7 @@ class TraderoBot(models.Model):
         try:
             with transaction.atomic():
                 r = client.parse_receipt(self.receipt_buying)
-                self.timestamp_buying = timezone.now()
+                self.timestamp_buying = r["timestamp"]
                 if not self.timestamp_start:  # pragma: no cover
                     self.timestamp_start = self.timestamp_buying
                 self.price_buying = r["price_net"]
@@ -1936,7 +1983,7 @@ class TraderoBot(models.Model):
                 r = client.parse_receipt(self.receipt_selling)
                 self.price_selling = r["price_net"]
                 self.fund_quote_asset = r["quantity_rec"]
-                self.timestamp_selling = timezone.now()
+                self.timestamp_selling = r["timestamp"]
                 self.log(self.Action.SELL)
                 self.log_trade()
                 # Set new state

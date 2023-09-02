@@ -281,7 +281,8 @@ class BotzinhosActionView(ActionView):
         "sell": {"params": None},
         "on": {"params": None},
         "off": {"params": None},
-        "reset": {"params": None},
+        "reset_hard": {"params": None},
+        "reset_soft": {"params": None},
         "jump": {"params": {"to_symbol": {"type": "Model", "class": Symbol}}},
     }
 
@@ -395,6 +396,7 @@ class BotzinhosGroupActionView(ActionView):
         "off": {"params": None},
         "liquidate": {"params": None},
         "jump": {"params": {"to_symbol": {"type": "Model", "class": Symbol}}},
+        "reset_soft": {"params": None},
     }
 
     def get_object(self):
