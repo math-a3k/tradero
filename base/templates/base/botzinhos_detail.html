@@ -112,8 +112,10 @@
 				{% endif %}
 			</div>
 			<div class="btn-group">
-				{% url "base:botzinhos-action" bot.pk "reset" as action_url %}
-				{% action_button action_url "RESET" "btn-secondary" %}
+				{% url "base:botzinhos-action" bot.pk "reset_soft" as action_url %}
+				{% action_button action_url "RESET (SOFT)" "btn-warning" %}
+				{% url "base:botzinhos-action" bot.pk "reset_hard" as action_url %}
+				{% action_button action_url "RESET (HARD)" "btn-danger" %}
 			</div>
 			<div class="ul">
 				{% if not bot.price_buying %}

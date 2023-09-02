@@ -687,6 +687,26 @@ class TestViews(TestCase):
             )
             self.assertEqual(response.status_code, 200)
             self.assertIn(b"SUCCESS at", response.content)
+        url = reverse(
+            "base:botzinhos-group-action",
+            kwargs={
+                "pk": self.group1.pk,
+                "action": "reset_soft",
+            },
+        )
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            response = self.client.post(url, follow=True)
+            self.assertEqual(response.status_code, 200)
+        self.bot1.refresh_from_db()
+        self.bot2.refresh_from_db()
+        self.bot3.refresh_from_db()
+        self.assertEqual(self.bot1.status, TraderoBot.Status.BUYING)
+        self.assertEqual(self.bot2.status, TraderoBot.Status.SELLING)
+        self.assertEqual(self.bot3.status, TraderoBot.Status.BUYING)
 
     def test_botzinhos_group_move(self):
         self.client.force_login(self.user1)
@@ -1389,14 +1409,47 @@ class TestTraderoBots(BotTestCase):
             self.bot1.sell()
             self.assertIn("already done", self.bot1.others["last_logs"][-2])
             self.assertIn("Sold", self.bot1.others["last_logs"][-1])
-            # Test reset
-            self.bot1.reset()
-            self.assertIn("RESET", self.bot1.others["last_logs"][-1])
+            # Test hard reset
+            self.bot1.reset_hard()
+            self.assertIn("RESET - HARD", self.bot1.others["last_logs"][-1])
             self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
             self.assertEqual(
                 self.bot1.trades.last().timestamp_cancelled is not None, True
             )
-            # Test jump
+            # Test soft reset
+            self.bot1.buy()
+            self.bot1.symbol = self.s2
+            self.bot1.reset_soft()
+            self.assertIn("RESET - SOFT", self.bot1.others["last_logs"][-4])
+            self.assertEqual(self.bot1.symbol, self.s1)
+            self.assertEqual(self.bot1.status, TraderoBot.Status.SELLING)
+            with mock.patch(
+                "base.models.TraderoBot.log_trade"
+            ) as bot_log_trade_mock:
+                bot_log_trade_mock.side_effect = Exception("New Exception")
+                self.bot1.sell()
+                self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+            self.bot1.reset_soft()
+            self.assertEqual(self.bot1.status, TraderoBot.Status.BUYING)
+            self.bot1.buy()
+            with mock.patch(
+                "base.models.TraderoBot.log_trade"
+            ) as bot_log_trade_mock:
+                bot_log_trade_mock.side_effect = Exception("New Exception")
+                self.bot1.symbol = self.s2
+                self.bot1.sell()
+                self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+            self.bot1.reset_soft()
+            self.assertIn(
+                "ERROR - Hard reset or manual intervention required",
+                self.bot1.others["last_logs"][-2],
+            )
+            self.assertEqual(self.bot1.status, TraderoBot.Status.INACTIVE)
+            self.bot1.reset_hard()
+            self.bot1.reset_soft()
+            self.assertEqual(self.bot1.status, TraderoBot.Status.BUYING)
+            self.bot1.reset_soft()
+            self.assertEqual(self.bot1.status, TraderoBot.Status.BUYING)
             m.get(
                 f"{BINANCE_API_URL}/api/v3/ticker/price",
                 json={"symbol": "S2BUSD", "price": "2.0"},
@@ -1469,7 +1522,7 @@ class TestTraderoBots(BotTestCase):
         self.assertEqual(bot3.get_local_memory(), {})
 
     def test_valuation(self):
-        self.bot2.reset()
+        self.bot2.reset_hard()
         self.assertEqual(self.bot2.fund_base_asset_executable, None)
         with requests_mock.Mocker() as m:
             m.get(
@@ -1646,7 +1699,7 @@ class TestStrategies(BotTestCase):
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
             #
             self.bot1.strategy_params = "use_local_memory=1"
-            self.bot1.reset()
+            self.bot1.reset_hard()
             self.bot1.on()
             self.bot1.symbol = self.s1
             #
