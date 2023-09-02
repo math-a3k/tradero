@@ -2488,21 +2488,9 @@ class TradeHistory(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        if self.timestamp_buying and self.timestamp_start:
-            self.duration_seeking = (
-                self.timestamp_buying - self.timestamp_start
-            )
-        if (
-            self.timestamp_selling
-            and self.timestamp_buying
-            and self.timestamp_start
-        ):
-            self.duration_trade = (
-                self.timestamp_selling - self.timestamp_buying
-            )
-            self.duration_total = self.timestamp_selling - self.timestamp_start
         if self.receipt_buying:
             rb = self.get_client().parse_receipt(self.receipt_buying)
+            self.timestamp_buying = rb["timestamp"]
             self.fund_quote_asset_exec = rb["quantity_exec"]
             self.commission_buying = rb["commission"]
             self.commission_buying_asset = rb["commission_asset"]
@@ -2510,6 +2498,7 @@ class TradeHistory(models.Model):
         if self.receipt_buying and self.receipt_selling:
             self.is_complete = True
             rs = self.get_client().parse_receipt(self.receipt_selling)
+            self.timestamp_selling = rs["timestamp"]
             self.fund_base_asset_exec = rs["quantity_exec"]
             self.fund_base_asset_unexec = (
                 self.fund_base_asset - self.fund_base_asset_exec
@@ -2526,6 +2515,19 @@ class TradeHistory(models.Model):
             self.variation_price = (
                 rs["price_net"] / rb["price_net"] - 1
             ) * 100
+        if self.timestamp_buying and self.timestamp_start:
+            self.duration_seeking = (
+                self.timestamp_buying - self.timestamp_start
+            )
+        if (
+            self.timestamp_selling
+            and self.timestamp_buying
+            and self.timestamp_start
+        ):
+            self.duration_trade = (
+                self.timestamp_selling - self.timestamp_buying
+            )
+            self.duration_total = self.timestamp_selling - self.timestamp_start
         super().save(*args, **kwargs)
 
     def get_client(self, reinit=False):  # pragma: no cover
