@@ -49,6 +49,8 @@ jobs:
 
       - run: pipenv install --dev
 
+      - run: pipenv run pip install -e git+https://github.com/math-a3k/django-ai.git@tradero#egg=django_ai
+
       - name: pre-commit
         uses: pre-commit/action@v3.0.0
 
