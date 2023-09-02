@@ -38,13 +38,31 @@ services:
     links:
        - db:db
        - redis:redis
-  worker:
+  worker-bots:
     hostname: worker
     build:
       context: .
       dockerfile: ./dockerfiles/Dockerfile-worker
     env_file:
       - ./dockerfiles/.env_file
+    command: pipenv run celery -A tradero worker -l INFO -Q bots
+    volumes:
+      - static:/vol/tradero/static
+    depends_on:
+      - db
+      - redis
+      - instance
+    links:
+       - db:db
+       - redis:redis
+  worker-symbols:
+    hostname: worker
+    build:
+      context: .
+      dockerfile: ./dockerfiles/Dockerfile-worker
+    env_file:
+      - ./dockerfiles/.env_file
+    command: pipenv run celery -A tradero worker -l INFO -Q symbols
     volumes:
       - static:/vol/tradero/static
     depends_on:
