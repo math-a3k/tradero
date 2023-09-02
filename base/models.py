@@ -178,7 +178,7 @@ class Symbol(models.Model):
     quote_asset = models.CharField("Quote Asset", max_length=20)
     volume_quote_asset = models.DecimalField(
         "Quote Asset Volume (24h)",
-        max_digits=20,
+        max_digits=40,
         decimal_places=8,
         blank=True,
         null=True,
@@ -681,35 +681,35 @@ class Kline(models.Model):
     time_close = models.DateTimeField("Close Time")
     time_interval = models.CharField("Time Interval", max_length=2)
     price_open = models.DecimalField(
-        "Price Open", max_digits=20, decimal_places=8
+        "Price Open", max_digits=40, decimal_places=8
     )
     price_high = models.DecimalField(
-        "Price High", max_digits=20, decimal_places=8
+        "Price High", max_digits=40, decimal_places=8
     )
     price_low = models.DecimalField(
-        "Price Low", max_digits=20, decimal_places=8
+        "Price Low", max_digits=40, decimal_places=8
     )
     price_close = models.DecimalField(
-        "Price Close", max_digits=20, decimal_places=8
+        "Price Close", max_digits=40, decimal_places=8
     )
-    volume = models.DecimalField("Volume", max_digits=20, decimal_places=8)
+    volume = models.DecimalField("Volume", max_digits=40, decimal_places=8)
     volume_quote_asset = models.DecimalField(
-        "Quote Asset Volume", max_digits=20, decimal_places=8
+        "Quote Asset Volume", max_digits=40, decimal_places=8
     )
     volume_tb_base_asset = models.DecimalField(
-        "Taker buy base asset volume", max_digits=20, decimal_places=8
+        "Taker buy base asset volume", max_digits=40, decimal_places=8
     )
     volume_tb_quote_asset = models.DecimalField(
-        "Taker buy quote asset volume Price", max_digits=20, decimal_places=8
+        "Taker buy quote asset volume Price", max_digits=40, decimal_places=8
     )
     number_of_trades = models.DecimalField(
-        "Number of Trades", max_digits=20, decimal_places=8
+        "Number of Trades", max_digits=40, decimal_places=8
     )
     variation = models.DecimalField(
-        "Variation", max_digits=20, decimal_places=8
+        "Variation", max_digits=40, decimal_places=8
     )
     variation_range = models.DecimalField(
-        "Variation Range", max_digits=20, decimal_places=8
+        "Variation Range", max_digits=40, decimal_places=8
     )
 
     class Meta:
@@ -1002,127 +1002,127 @@ class TrainingData(models.Model):
         decimal_places=8,
     )
     variation = models.DecimalField(
-        "Variation (t)", max_digits=16, decimal_places=8
+        "Variation (t)", max_digits=40, decimal_places=8
     )
     variation_01 = models.DecimalField(
-        "Variation (t-1)", max_digits=20, decimal_places=8
+        "Variation (t-1)", max_digits=40, decimal_places=8
     )
     variation_02 = models.DecimalField(
-        "Variation (t-2)", max_digits=20, decimal_places=8
+        "Variation (t-2)", max_digits=40, decimal_places=8
     )
     variation_03 = models.DecimalField(
-        "Variation (t-3)", max_digits=20, decimal_places=8
+        "Variation (t-3)", max_digits=40, decimal_places=8
     )
     variation_04 = models.DecimalField(
-        "Variation (t-4)", max_digits=20, decimal_places=8
+        "Variation (t-4)", max_digits=40, decimal_places=8
     )
     variation_05 = models.DecimalField(
-        "Variation (t-5)", max_digits=20, decimal_places=8
+        "Variation (t-5)", max_digits=40, decimal_places=8
     )
     variation_06 = models.DecimalField(
-        "Variation (t-6)", max_digits=20, decimal_places=8
+        "Variation (t-6)", max_digits=40, decimal_places=8
     )
     variation_07 = models.DecimalField(
-        "Variation (t-7)", max_digits=20, decimal_places=8
+        "Variation (t-7)", max_digits=40, decimal_places=8
     )
     variation_08 = models.DecimalField(
-        "Variation (t-8)", max_digits=20, decimal_places=8
+        "Variation (t-8)", max_digits=40, decimal_places=8
     )
     variation_09 = models.DecimalField(
-        "Variation (t-9)", max_digits=20, decimal_places=8
+        "Variation (t-9)", max_digits=40, decimal_places=8
     )
     variation_10 = models.DecimalField(
-        "Variation (t-10)", max_digits=20, decimal_places=8
+        "Variation (t-10)", max_digits=40, decimal_places=8
     )
     variation_11 = models.DecimalField(
-        "Variation (t-11)", max_digits=20, decimal_places=8
+        "Variation (t-11)", max_digits=40, decimal_places=8
     )
     variation_12 = models.DecimalField(
-        "Variation (t-12)", max_digits=20, decimal_places=8
+        "Variation (t-12)", max_digits=40, decimal_places=8
     )
     variation_13 = models.DecimalField(
-        "Variation (t-13)", max_digits=20, decimal_places=8
+        "Variation (t-13)", max_digits=40, decimal_places=8
     )
     variation_14 = models.DecimalField(
-        "Variation (t-14)", max_digits=20, decimal_places=8
+        "Variation (t-14)", max_digits=40, decimal_places=8
     )
     variation_15 = models.DecimalField(
-        "Variation (t-15)", max_digits=20, decimal_places=8
+        "Variation (t-15)", max_digits=40, decimal_places=8
     )
     variation_16 = models.DecimalField(
-        "Variation (t-16)", max_digits=20, decimal_places=8
+        "Variation (t-16)", max_digits=40, decimal_places=8
     )
     variation_17 = models.DecimalField(
-        "Variation (t-17)", max_digits=20, decimal_places=8
+        "Variation (t-17)", max_digits=40, decimal_places=8
     )
     variation_18 = models.DecimalField(
-        "Variation (t-18)", max_digits=20, decimal_places=8
+        "Variation (t-18)", max_digits=40, decimal_places=8
     )
     variation_19 = models.DecimalField(
-        "Variation (t-19)", max_digits=20, decimal_places=8
+        "Variation (t-19)", max_digits=40, decimal_places=8
     )
     variation_20 = models.DecimalField(
-        "Variation (t-20)", max_digits=20, decimal_places=8
+        "Variation (t-20)", max_digits=40, decimal_places=8
     )
     variation_range_01 = models.DecimalField(
-        "Variation Range (t-1)", max_digits=20, decimal_places=8
+        "Variation Range (t-1)", max_digits=40, decimal_places=8
     )
     variation_range_02 = models.DecimalField(
-        "Variation Range (t-2)", max_digits=20, decimal_places=8
+        "Variation Range (t-2)", max_digits=40, decimal_places=8
     )
     variation_range_03 = models.DecimalField(
-        "Variation Range (t-3)", max_digits=20, decimal_places=8
+        "Variation Range (t-3)", max_digits=40, decimal_places=8
     )
     variation_range_04 = models.DecimalField(
-        "Variation Range (t-4)", max_digits=20, decimal_places=8
+        "Variation Range (t-4)", max_digits=40, decimal_places=8
     )
     variation_range_05 = models.DecimalField(
-        "Variation Range (t-5)", max_digits=20, decimal_places=8
+        "Variation Range (t-5)", max_digits=40, decimal_places=8
     )
     variation_range_06 = models.DecimalField(
-        "Variation Range (t-6)", max_digits=20, decimal_places=8
+        "Variation Range (t-6)", max_digits=40, decimal_places=8
     )
     variation_range_07 = models.DecimalField(
-        "Variation Range (t-7)", max_digits=20, decimal_places=8
+        "Variation Range (t-7)", max_digits=40, decimal_places=8
     )
     variation_range_08 = models.DecimalField(
-        "Variation Range (t-8)", max_digits=20, decimal_places=8
+        "Variation Range (t-8)", max_digits=40, decimal_places=8
     )
     variation_range_09 = models.DecimalField(
-        "Variation Range (t-9)", max_digits=20, decimal_places=8
+        "Variation Range (t-9)", max_digits=40, decimal_places=8
     )
     variation_range_10 = models.DecimalField(
-        "Variation Range (t-10)", max_digits=20, decimal_places=8
+        "Variation Range (t-10)", max_digits=40, decimal_places=8
     )
     variation_range_11 = models.DecimalField(
-        "Variation Range (t-11)", max_digits=20, decimal_places=8
+        "Variation Range (t-11)", max_digits=40, decimal_places=8
     )
     variation_range_12 = models.DecimalField(
-        "Variation Range (t-12)", max_digits=20, decimal_places=8
+        "Variation Range (t-12)", max_digits=40, decimal_places=8
     )
     variation_range_13 = models.DecimalField(
-        "Variation Range (t-13)", max_digits=20, decimal_places=8
+        "Variation Range (t-13)", max_digits=40, decimal_places=8
     )
     variation_range_14 = models.DecimalField(
-        "Variation Range (t-14)", max_digits=20, decimal_places=8
+        "Variation Range (t-14)", max_digits=40, decimal_places=8
     )
     variation_range_15 = models.DecimalField(
-        "Variation Range (t-15)", max_digits=20, decimal_places=8
+        "Variation Range (t-15)", max_digits=40, decimal_places=8
     )
     variation_range_16 = models.DecimalField(
-        "Variation Range (t-16)", max_digits=20, decimal_places=8
+        "Variation Range (t-16)", max_digits=40, decimal_places=8
     )
     variation_range_17 = models.DecimalField(
-        "Variation Range (t-17)", max_digits=20, decimal_places=8
+        "Variation Range (t-17)", max_digits=40, decimal_places=8
     )
     variation_range_18 = models.DecimalField(
-        "Variation Range (t-18)", max_digits=20, decimal_places=8
+        "Variation Range (t-18)", max_digits=40, decimal_places=8
     )
     variation_range_19 = models.DecimalField(
-        "Variation Range (t-19)", max_digits=20, decimal_places=8
+        "Variation Range (t-19)", max_digits=40, decimal_places=8
     )
     variation_range_20 = models.DecimalField(
-        "Variation Range (t-20)", max_digits=20, decimal_places=8
+        "Variation Range (t-20)", max_digits=40, decimal_places=8
     )
 
     class Meta:
