@@ -38,6 +38,17 @@
 			</div>
 		</div>
 
+		<div class="container">
+			{# <h4 class="m-2">ALL</h4> #}
+
+			<div class="group-summary">
+				<p class="list-group-item bg-success bg-gradient m-0 fw-bolder text-white" style="border-top-width: 0px !important;">
+					ALL
+				</p>
+				{% include "base/_group_summary.html" with group=user %}
+			</div>
+		</div>
+
 	{% include "base/trades_section.html" with summary=summary trades=trades page_obj=page_obj %}
 
 	</div>

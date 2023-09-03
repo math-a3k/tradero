@@ -77,6 +77,18 @@ class User(AbstractUser):
     def trade_summary(self):
         return TradeHistory.summary_for_object(self)
 
+    @property
+    def bot_status(self):
+        return TraderoBot.status_summary(self.bots.all())
+
+    @property
+    def valuation_current(self):
+        return TraderoBot.aggregate_valuation(self.bots.all(), "current")
+
+    @property
+    def valuation_initial(self):
+        return TraderoBot.aggregate_valuation(self.bots.all(), "initial")
+
     def save(self, *args, **kwargs):
         created = True if not self.pk else False
         super().save(*args, **kwargs)
@@ -1530,35 +1542,16 @@ class TraderoBotGroup(models.Model):
 
     @property
     def valuation_current(self):
-        valuations = [
-            bot.valuation_current
-            for bot in self.bots.all()
-            if bot.valuation_current
-        ]
-        return sum(valuations)
+        return TraderoBot.aggregate_valuation(self.bots.all(), "current")
 
     @property
     def valuation_initial(self):
-        valuations = [
-            bot.fund_quote_asset_initial
-            for bot in self.bots.all()
-            if bot.fund_quote_asset_initial
-        ]
-        return sum(valuations)
+        return TraderoBot.aggregate_valuation(self.bots.all(), "initial")
 
     @property
     def bot_status(self):
         bots = self.bots.all()  # prefetched
-        status = {
-            "BUYING": 0,
-            "SELLING": 0,
-            "INACTIVE": 0,
-            "TOTAL": 0,
-        }
-        for bot in bots:
-            status[bot.get_status_display().upper()] += 1
-            status["TOTAL"] += 1
-        return status
+        return TraderoBot.status_summary(bots)
 
     def update_bots(self):
         cache_key = f"{settings.BOTS_UPDATE_GROUP_KEY}_{self.pk}"
@@ -1768,6 +1761,10 @@ class TraderoBot(models.Model):
             return self.fund_base_asset * Decimal(self.price_current)
         else:
             return self.fund_quote_asset or self.fund_quote_asset_initial
+
+    @property
+    def valuation_initial(self):
+        return self.fund_quote_asset_initial
 
     @property
     def fund_quote_asset_exec(self):
@@ -2253,6 +2250,27 @@ class TraderoBot(models.Model):
         )
         logger.warning(message)
         return message
+
+    @classmethod
+    def status_summary(cls, bots_qs):
+        bots = bots_qs.all()
+        status = {
+            "BUYING": 0,
+            "SELLING": 0,
+            "INACTIVE": 0,
+            "TOTAL": 0,
+        }
+        for bot in bots:
+            status[bot.get_status_display().upper()] += 1
+            status["TOTAL"] += 1
+        return status
+
+    @classmethod
+    def aggregate_valuation(cls, bots_qs, type="current"):
+        valuations = [
+            getattr(bot, f"valuation_{type}", 0) for bot in bots_qs.all()
+        ]
+        return sum(valuations)
 
 
 class TraderoBotLog(models.Model):
