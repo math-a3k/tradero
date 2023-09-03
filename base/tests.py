@@ -590,6 +590,8 @@ class TestViews(TestCase):
                 url, {"to_symbol": self.s1.pk}, follow=True
             )
             self.assertEqual(response.status_code, 200)
+            self.bot1.refresh_from_db()
+            self.assertIn("Holding JUMP", self.bot1.others["last_logs"][-1])
             self.assertIn(b"SUCCESS at", response.content)
             with mock.patch(
                 "base.views.BotzinhosActionView.ACTIONS",
