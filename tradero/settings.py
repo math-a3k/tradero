@@ -327,6 +327,9 @@ PREDICTION_MODEL_CLASS = env.str(
 # after updating indicators for a Symbol)
 CLEANING_WINDOW = env.int("TRADERO_CLEANING_WINDOW", 1000)
 
+# Cleaning Window for TraderoBotLog (amount to be left after updating)
+CLEANING_WINDOW_BOTS_LOGS = env.int("TRADERO_CLEANING_WINDOW_BOTS_LOGS", 3600)
+
 # Enable Outliers detection
 OUTLIERS_ENABLED = env.bool("TRADERO_OUTIERS_ENABLED", True)
 
