@@ -2241,7 +2241,7 @@ class TraderoBot(models.Model):
         with thread_pool_executor(threads) as executor:
             for group in groups:
                 executor.submit(group.update_bots)
-        # cls.clean_data()
+        cls.logrotate()
         logger.warning(f"-> UPDATE ALL BOTS DONE <-")
         message = (
             f"---> Elapsed Time: "
@@ -2271,6 +2271,18 @@ class TraderoBot(models.Model):
             getattr(bot, f"valuation_{type}", 0) for bot in bots_qs.all()
         ]
         return sum(valuations)
+
+    @classmethod
+    def logrotate(self):
+        if settings.CLEANING_WINDOW_BOTS_LOGS > 0:
+            date_threshold = timezone.now() - timezone.timedelta(
+                minutes=settings.TIME_INTERVAL_BOTS
+                * settings.CLEANING_WINDOW_BOTS_LOGS
+            )
+            return TraderoBotLog.objects.filter(
+                timestamp__lt=date_threshold
+            ).delete()
+        return False  # pragma: no cover
 
 
 class TraderoBotLog(models.Model):

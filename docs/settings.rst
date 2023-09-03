@@ -95,6 +95,16 @@ Default: ``1000``
 Amount of Klines and Training Data Time Intervals (observations) to be left for each Symbol after updating indicators. Controls how much data is fed to the Prediction Model. A value of ``1500`` will feed the Prediction Model with at most the last 1500 Training Data and "clean" the older ones.
 
 
+.. setting:: CLEANING_WINDOW_BOTS_LOGS
+
+``CLEANING_WINDOW_BOTS_LOGS``
+=============================
+
+Default: ``3600``
+
+Amount of TraderoBot Logsto be left for each bot after updating  (``0`` to disable logrotate).
+
+
 .. setting:: PREDICTION_MODEL_CLASS
 
 ``PREDICTION_MODEL_CLASS``
