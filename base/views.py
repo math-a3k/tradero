@@ -76,6 +76,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         context["time_interval"] = settings.TIME_INTERVAL_BOTS
         context["summary"] = summary
         context["groups"] = groups
+        context["quote_asset"] = settings.QUOTE_ASSET
         return context
 
     def get_object(self, queryset=None):

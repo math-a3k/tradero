@@ -3,7 +3,7 @@
 <ul class="list-group mt-0" style="border-width: 0px !important; ">
   <li class="list-group-item">
     {% with group.bot_status as status %}
-    <strong>Botzinhos</strong>: <span class="text-success">{{status.BUYING }} BUYING</span> | <span class="text-danger">{{ status.SELLING }} SELLING</span> | <span class="text-muted">{{ status.INACTIVE }} INACTIVE</span> | <span class="fw-bolder">{{ status.TOTAL }} TOTAL</span>
+    <strong>Botzinhos</strong>: <span class="text-success"><strong>{{status.BUYING }}</strong> BUYING</span> | <span class="text-danger"><strong>{{ status.SELLING }}</strong> SELLING</span> | <span class="text-muted"><strong>{{ status.INACTIVE }}</strong> INACTIVE</span> | <span class="fw-bolder">{{ status.TOTAL }} TOTAL</span>
     {% endwith %}
   </li>
   {% if group.valuation_current and group.valuation_initial %}
