@@ -4,22 +4,28 @@
   <thead>
     <tr>
     	<th scope="col" class="{{ table_class }}">{{ table_name }}</th>
-    	{% for col_name, desc in s.meta.descriptions.cols.items %}
-		<th scope="col">{{ desc }}</th>
-    	{% endfor %}
+		<th scope="col">Total Gains</th>
+		<th scope="col">Avg. Variation</th>
+		<th scope="col">Avg. Duration</th>
+		<th scope="col">#Trades</th>
     </tr>
   </thead>
   <tbody>
   	{% for row_name, row_vals in s.rows.items %}
   	<tr>
   		<th scope="row">{{ s.meta.descriptions.rows|get:row_name }}</th>
-  		{% for d, row_val in row_vals.items %}
   		<td>
-  			{% with s.meta.descriptions.formats|get:d as f %}
-  			<span class="{% if row_val > 0 %}text-success{% else %}text-danger{% endif %}">{{ row_val|stringformat:f|default:"-" }}</span>
-  			{% endwith %}
+  			<span class="{% if row_vals.gain_quote_asset_total > 0 %}text-success{% else %}text-danger{% endif %}">{{ row_vals.gain_quote_asset_total|floatformat:3|default:"-" }}</span>
   		</td>
-  		{% endfor %}
+  		<td>
+  			<span class="{% if row_vals.variation_average > 0 %}text-success{% else %}text-danger{% endif %}">{{ row_vals.variation_average|floatformat:2|default:"-" }}%</span>
+  		</td>
+  		<td>
+  			{{ row_vals.duration_total_average|timedelta|default:"-" }}
+  		</td>
+  		<td>
+  			<span class="text-success">{{ row_vals.trades_quantity|default:"-" }}</span>
+  		</td>
   	</tr>
   	{% endfor %}
     <tr>

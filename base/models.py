@@ -2624,6 +2624,7 @@ class TradeHistory(models.Model):
             result["rows"][label] = t_qs.aggregate(
                 gain_quote_asset_total=models.Sum("gain_quote_asset"),
                 variation_average=models.Avg("variation_quote_asset"),
+                duration_total_average=models.Avg("duration_total"),
                 trades_quantity=models.Count("pk"),
             )
         result["meta"] = {
@@ -2635,14 +2636,10 @@ class TradeHistory(models.Model):
                     "alltime": "All-Time",
                 },
                 "cols": {
-                    "gain_quote_asset_total": "Total Gains (QA)",
-                    "variation_average": "Avg. % Var",
+                    "gain_quote_asset_total": "Total Gains",
+                    "variation_average": "Avg. Var",
+                    "duration_total_average": "Avg. Duration",
                     "trades_quantity": "#Trades",
-                },
-                "formats": {
-                    "gain_quote_asset_total": ".4f",
-                    "variation_average": ".3f",
-                    "trades_quantity": "i",
                 },
             }
         }
