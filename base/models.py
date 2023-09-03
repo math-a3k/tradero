@@ -2019,6 +2019,13 @@ class TraderoBot(models.Model):
             return False
 
     def jump(self, to_symbol):
+        if self.receipt_buying:
+            self.log(
+                self.Action.HOLD,
+                f"Holding JUMP to {to_symbol} due to already have bought",
+            )
+            self.save()
+            return False
         current_symbol = self.symbol
         fba = self.fund_base_asset
         fba_msg = (
@@ -2035,6 +2042,7 @@ class TraderoBot(models.Model):
             f"Jumped from {current_symbol} to {to_symbol}{fba_msg}",
         )
         self.save()
+        return True
 
     def decide(self):
         strategy = self.get_strategy()
