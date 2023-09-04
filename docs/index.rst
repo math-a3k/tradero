@@ -28,6 +28,7 @@ The application is available at https://tradero.dev
    commands
    settings
    running
+   release_notes
 
 Community
 =========
