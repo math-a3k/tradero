@@ -49,6 +49,15 @@ Default: ``None``
 Amount of Threads to be used when parallelizing code. A way of limiting CPU core usage. It corresponds to the ``max_workers`` parameter of the
 `ThreadPoolExecutor <https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor>`_.
 
+.. setting:: USE_TASKS
+
+``USE_TASKS``
+=============
+
+Default: ``False``
+
+Use tasks instead of threads for scheduling. A task for updating each Symbol or Bot will be submitted to the workers.
+
 .. setting:: SYMBOLS_QUANTITY
 
 ``SYMBOLS_QUANTITY``

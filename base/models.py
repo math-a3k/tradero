@@ -8,6 +8,7 @@ from decimal import Decimal
 import pandas as pd
 from asgiref.sync import async_to_sync
 from binance.spot import Spot
+from celery import chord
 from channels.layers import get_channel_layer
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -520,19 +521,33 @@ class Symbol(models.Model):
         return j
 
     def retrieve_and_update(self, push=False):
-        tds = self.load_data()
-        last_td = tds[0] if tds else None
-        self.update_indicators(push=push, last_td=last_td)
+        cache_key = (
+            f"{settings.SYMBOLS_UPDATE_ALL_INDICATORS_KEY}_{self.symbol}"
+        )
+        if not cache.get(cache_key, False) or "pytest" in sys.modules:
+            cache.set(cache_key, True, 300)
+
+            tds = self.load_data()
+            last_td = tds[0] if tds else None
+            self.update_indicators(push=push, last_td=last_td)
+
+            cache.set(cache_key, False)
+            message = f"{self.symbol}: Retrieved and Updated"
+        else:  # pragma: no cover
+            message = f"Other process updating {self.symbol} is running, please wait."
+        logger.warning(message)
+        return message
 
     @classmethod
-    def clean_data(cls):
-        # TODO: return n records
+    def datarotate(cls):
         date_threshold = timezone.now() - timezone.timedelta(
             minutes=settings.TIME_INTERVAL * settings.CLEANING_WINDOW
         )
-        Kline.objects.filter(time_close__lt=date_threshold).delete()
-        TrainingData.objects.filter(time__lt=date_threshold).delete()
-        logger.warning("-->: Data cleaned for all Symbols")
+        k = Kline.objects.filter(time_close__lt=date_threshold).delete()
+        td = TrainingData.objects.filter(time__lt=date_threshold).delete()
+        message = f"SYMBOLS DATAROTATE: {k[0]} Klines and {td[0]} cleaned "
+        logger.warning(message)
+        return message
 
     @classmethod
     def update_all_indicators(
@@ -542,33 +557,46 @@ class Symbol(models.Model):
         model_score_threshold=settings.MODEL_SCORE_THRESHOLD,
         threads=settings.EXECUTOR_THREADS,
     ):
-        cache_key = settings.SYMBOLS_UPDATE_ALL_INDICATORS_KEY
-        if not cache.get(cache_key, False) or "pytest" in sys.modules:
-            cache.set(cache_key, True, 2400)
-            timestamp = timezone.now()
-            if only_top:
-                symbols = cls.objects.all_top_symbols()
-            else:
-                symbols = cls.objects.available()
+        if only_top:
+            symbols = cls.objects.all_top_symbols()
+        else:
+            symbols = cls.objects.available()
+        if settings.USE_TASKS:
+            from base.tasks import (
+                retrieve_and_update_symbol,
+                symbols_datarotate,
+            )
 
-            with thread_pool_executor(threads) as executor:
-                for symbol in symbols:
-                    executor.submit(symbol.retrieve_and_update, push=push)
-            logger.warning(
-                f"-> UPDATE ALL PREDICTIONS DONE (MST: {model_score_threshold}) <-"
-            )
-            cls.clean_data()
-            message = (
-                f"---> Elapsed Time: "
-                f"{ (timezone.now() - timestamp).total_seconds() } "
-                f"({len(symbols)} Symbols) <----"
-            )
-            cache.set(cache_key, False)
-        else:  # pragma: no cover
-            message = (
-                "Other process updating all indicators is running, please "
-                "wait."
-            )
+            header = [
+                retrieve_and_update_symbol.s(s.pk, push=push) for s in symbols
+            ]
+            callback = symbols_datarotate.si()
+            chord(header, callback).apply_async()
+            message = f"UPDATE ALL SYMBOLS' INDICATORS: {len(header)} Tasks submitted"
+        else:
+            cache_key = settings.SYMBOLS_UPDATE_ALL_INDICATORS_KEY
+            if not cache.get(cache_key, False) or "pytest" in sys.modules:
+                cache.set(cache_key, True, 2400)
+                timestamp = timezone.now()
+
+                with thread_pool_executor(threads) as executor:
+                    for symbol in symbols:
+                        executor.submit(symbol.retrieve_and_update, push=push)
+                logger.warning(
+                    f"-> UPDATE ALL PREDICTIONS DONE (MST: {model_score_threshold}) <-"
+                )
+                cls.datarotate()
+                message = (
+                    f"---> Elapsed Time: "
+                    f"{ (timezone.now() - timestamp).total_seconds() } "
+                    f"({len(symbols)} Symbols) <----"
+                )
+                cache.set(cache_key, False)
+            else:  # pragma: no cover
+                message = (
+                    "Other process updating all indicators is running, please "
+                    "wait."
+                )
         logger.warning(message)
         return message
 
@@ -1572,14 +1600,16 @@ class TraderoBotGroup(models.Model):
                 for bot in bots:
                     bot.price_current = Decimal(prices[bot.symbol.symbol])
                     bot.decide()
-                message = f"GROUP {self}: {len(bots)} bots updated."
+                message = (
+                    f"GROUP [{self.pk}] {self}: {len(bots)} bots updated."
+                )
             else:  # pragma: no cover
-                message = f"GROUP {self}: No bots were found."
+                message = f"GROUP [{self.pk}] {self}: No bots were found."
             cache.set(cache_key, False)
         else:  # pragma: no cover
             message = (
-                f"GROUP {self}: Other process updating bots for the group "
-                "is running, please wait."
+                f"GROUP [{self.pk}] {self}: Other process updating bots for "
+                "the group is running, please wait."
             )
         logger.warning(message)
         return message
@@ -2238,16 +2268,24 @@ class TraderoBot(models.Model):
     def update_all_bots(cls, groups=None, threads=settings.EXECUTOR_THREADS):
         timestamp = timezone.now()
         groups = groups or TraderoBotGroup.objects.all()
-        with thread_pool_executor(threads) as executor:
-            for group in groups:
-                executor.submit(group.update_bots)
-        cls.logrotate()
-        logger.warning(f"-> UPDATE ALL BOTS DONE <-")
-        message = (
-            f"---> Elapsed Time: "
-            f"{ (timezone.now() - timestamp).total_seconds() } "
-            f"({len(groups)} Groups) <----"
-        )
+        if settings.USE_TASKS:
+            from base.tasks import bots_logrotate, update_bots_group_job
+
+            header = [update_bots_group_job.s(group.pk) for group in groups]
+            callback = bots_logrotate.si()
+            chord(header, callback).apply_async()
+            message = "UPDATE ALL BOTS: Tasks submitted"
+        else:
+            with thread_pool_executor(threads) as executor:
+                for group in groups:
+                    executor.submit(group.update_bots)
+            cls.logrotate()
+            logger.warning("-> UPDATE ALL BOTS DONE <-")
+            message = (
+                f"---> Elapsed Time: "
+                f"{ (timezone.now() - timestamp).total_seconds() } "
+                f"({len(groups)} Groups) <----"
+            )
         logger.warning(message)
         return message
 
@@ -2273,15 +2311,18 @@ class TraderoBot(models.Model):
         return sum(valuations)
 
     @classmethod
-    def logrotate(self):
+    def logrotate(cls):
         if settings.CLEANING_WINDOW_BOTS_LOGS > 0:
             date_threshold = timezone.now() - timezone.timedelta(
                 minutes=settings.TIME_INTERVAL_BOTS
                 * settings.CLEANING_WINDOW_BOTS_LOGS
             )
-            return TraderoBotLog.objects.filter(
+            r = TraderoBotLog.objects.filter(
                 timestamp__lt=date_threshold
             ).delete()
+            message = f"BOTS LOGROTATE: {r[0]} logs cleaned "
+            logger.warning(message)
+            return message
         return False  # pragma: no cover
 
 

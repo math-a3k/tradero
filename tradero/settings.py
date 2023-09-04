@@ -259,6 +259,8 @@ CELERY_RESULT_BACKEND = "django-db"
 CELERY_CACHE_BACKEND = "default"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_BROKER_URL = env.str("REDIS_URL", "redis://127.0.0.1:6379/5")
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 DJANGO_CELERY_BEAT_TZ_AWARE = False
 
@@ -289,6 +291,9 @@ SYNC_EXECUTION = env.bool("TRADERO_SYNC_EXECUTION", False)
 
 # Threads to be used in ThreadPoolExecutor
 EXECUTOR_THREADS = env.int("TRADERO_EXECUTOR_THREADS", None)
+
+# Use Tasks intead of Threads for scheduling
+USE_TASKS = env.bool("TRADERO_USE_TASKS", False)
 
 # Symbols quantity to track
 SYMBOLS_QUANTITY = env.int("TRADERO_SYMBOLS_QUANTITY", cpu_count() * 4)
