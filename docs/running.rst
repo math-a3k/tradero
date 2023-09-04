@@ -68,6 +68,21 @@ As a reference, a "bare" Django deployment with all the services needed (non-Doc
 
 It may be more expensive than the electrical bill for running on the hardware you may already own (laptop, desktop), *provided that you ensure the availability*.
 
+
+Running as a SaaS
+=================
+
+Instances are meant to be personal, to keep independence as much as possible.
+
+However, there are valid and good reasons for running it as a Software-as-a-Service, such as reachability, scale economies, and delegation.
+
+Not everyone has the knowledge and/or the hardware to run a personal instance. It may also make sense to distribute the costs of having the infrastructure updated and running, or simply delegate the work to focus on other things.
+
+When running as a SaaS, the admin can set a Checkpoint in time to track the gains for the period and disable the trading of the bots for each user.
+
+This is intended to serve as a basis for an agreement between the involved trusted parts under the "every work should have its retribution" principle.
+
+
 .. _Docker: https://www.docker.com/
 .. _Django: https://www.djangoproject.com/
 .. _Postgres: https://www.postgresql.org/
