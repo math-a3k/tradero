@@ -15,3 +15,5 @@ Memorabilia
   https://www.reddit.com/r/django/comments/15d14qc/trading_bots_in_django/
 
   "If I am to be left alone, I shall face the hedge funds with *MY* chickens and *MY* dolphins" Rodrigo, 2023.
+
+.. image:: artigas.png
