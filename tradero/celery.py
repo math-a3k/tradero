@@ -12,6 +12,8 @@ app.conf.task_routes = {
     "base.tasks.retrieve_and_update_symbol": {"queue": "symbols"},
     "base.tasks.update_all_indicators_job": {"queue": "symbols"},
     "base.tasks.update_all_bots_job": {"queue": "bots"},
+    "base.tasks.update_bots_group_job": {"queue": "bots"},
+    "base.tasks.bots_logrotate": {"queue": "bots"},
 }
 
 app.conf.beat_schedule = {

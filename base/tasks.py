@@ -1,11 +1,12 @@
 from celery import shared_task
 
-from .models import Symbol, TraderoBot
+from .models import Symbol, TraderoBot, TraderoBotGroup
 
 
 @shared_task
-def retrieve_and_update_symbol(symbol):  # pragma: no cover
-    symbol.retrieve_and_update()
+def retrieve_and_update_symbol(symbol_pk, push=False):  # pragma: no cover
+    message = Symbol.objects.get(pk=symbol_pk).retrieve_and_update(push=push)
+    return message
 
 
 @shared_task
@@ -28,3 +29,20 @@ def update_all_indicators_job(
 def update_all_bots_job():  # pragma: no cover
     message = TraderoBot.update_all_bots()
     return message
+
+
+@shared_task
+def update_bots_group_job(group_pk):  # pragma: no cover
+    message = TraderoBotGroup.objects.get(pk=group_pk).update_bots()
+    return message
+
+
+@shared_task
+def bots_logrotate():  # pragma: no cover
+    message = TraderoBot.logrotate()
+    return message
+
+
+@shared_task
+def symbols_datarotate():  # pragma: no cover
+    Symbol.datarotate()

@@ -28,4 +28,4 @@ RUN pipenv install
 # Meantime fix
 RUN pipenv run pip install -e git+https://github.com/math-a3k/django-ai.git@tradero#egg=django_ai
 
-CMD ["pipenv", "run", "celery", "-A", "tradero", "worker", "-l", "INFO", "-Q", "symbols,bots"]
+CMD ["pipenv", "run", "celery", "-A", "tradero", "worker", "-l", "INFO", "-Q", "symbols,bots", "-P", "threads"]

@@ -45,7 +45,7 @@ services:
       dockerfile: ./dockerfiles/Dockerfile-worker
     env_file:
       - ./dockerfiles/.env_file
-    command: pipenv run celery -A tradero worker -l INFO -Q bots
+    command: pipenv run celery -A tradero worker -l INFO -Q bots -P threads
     volumes:
       - static:/vol/tradero/static
     depends_on:
@@ -62,7 +62,7 @@ services:
       dockerfile: ./dockerfiles/Dockerfile-worker
     env_file:
       - ./dockerfiles/.env_file
-    command: pipenv run celery -A tradero worker -l INFO -Q symbols
+    command: pipenv run celery -A tradero worker -l INFO -Q symbols -P threads
     volumes:
       - static:/vol/tradero/static
     depends_on:

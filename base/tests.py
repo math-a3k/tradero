@@ -1823,3 +1823,30 @@ class TestTasks(BotTestCase):
             task = tasks.update_all_indicators_job.delay()
             result = task.get()
             self.assertIn("3", result)
+
+    @override_settings(
+        USE_TASKS=True,
+        PREDICTION_ENABLED=False,
+        INDICATORS=["scg"],
+    )
+    def test_task_scheduling(self):
+        with requests_mock.Mocker() as m:
+            with open("base/fixtures/klines_response_mock.json") as f:
+                content = f.read()
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/klines"
+                    f"&interval={settings.TIME_INTERVAL}m",
+                    text=content,
+                )
+                m.get(
+                    f"{BINANCE_API_URL}/api/v3/ticker/price",
+                    json=[
+                        {"symbol": "S1BUSD", "price": "1.0"},
+                        {"symbol": "S2BUSD", "price": "1.0"},
+                        {"symbol": "S3BUSD", "price": "1.0"},
+                    ],
+                )
+            Symbol.update_all_indicators()
+            TraderoBot.update_all_bots()
+            self.assertLogs("Retrieved and Updated")
+            self.assertLogs("bots updated")
