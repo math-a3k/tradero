@@ -94,7 +94,8 @@ class User(AbstractUser):
         created = True if not self.pk else False
         super().save(*args, **kwargs)
         if created:
-            TraderoBotGroup.objects.create(user=self)
+            TraderoBotGroup.objects.create(user=self, name="Golfinhos")
+            TraderoBotGroup.objects.create(user=self, name="Galinhas")
 
 
 class WSClient(models.Model):
