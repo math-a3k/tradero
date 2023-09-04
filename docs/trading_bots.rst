@@ -92,7 +92,7 @@ Parameters
   Use the bot's local memory (``1`` | ``0``, defaults to ``1``)
 
 ``use_matrix_time_res``
-  Use matrix's time resolution (:settings:`TIME_INTERVAL`) (``1`` | ``0``, defaults to ``0``)
+  Use matrix's time resolution (:setting:`TIME_INTERVAL`) (``1`` | ``0``, defaults to ``0``)
 
 ``vr24h_min``
   Minimum Variation Range (24h) of a Symbol to buy (``Decimal``, defaults to ``3``) if enabled (greater than zero). Meant to keep the bot out of the market when it is moving sideways narrowly.
