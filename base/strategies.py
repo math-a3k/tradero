@@ -117,37 +117,10 @@ class ACMadness(TradingStrategy):
 
     def evaluate_buy(self):
         if self.time_safeguard:
-            return (
-                False,
-                "Time Safeguard - waiting for next turn...",
-            )
-        if (
-            self.outlier_protection
-            and self.bot.symbol.others["outliers"]["o1"]
-        ):
-            return (
-                False,
-                "Outlier Protection - waiting for next turn...",
-            )
-        if (
-            self.max_var_protection > 0
-            and self.bot.symbol.last_variation > self.max_var_protection
-        ):
-            return (
-                False,
-                f"Max Var Protection ({self.bot.symbol.last_variation:.3f} > "
-                f"{self.max_var_protection:.3f}) - waiting for next turn...",
-            )
-        if (
-            self.vr24h_max > 0
-            and self.bot.symbol.variation_range_24h > self.vr24h_max
-        ):
-            return (
-                False,
-                f"VR24h above threshold "
-                f"({self.bot.symbol.variation_range_24h:.3f} > "
-                f"{self.vr24h_max:.3f}) - waiting for next turn...",
-            )
+            return False, "Time Safeguard - waiting for next turn..."
+        should_continue, message = self.buying_protections()
+        if not should_continue:
+            return False, message
         if self.get_ac() > self.ac_threshold:
             return True, None
         return (
@@ -212,6 +185,36 @@ class ACMadness(TradingStrategy):
             / self.bot.fund_base_asset_executable
         )
 
+    def buying_protections(self):
+        if (
+            self.outlier_protection
+            and self.bot.symbol.others["outliers"]["o1"]
+        ):
+            return (
+                False,
+                "Outlier Protection - waiting for next turn...",
+            )
+        if (
+            self.max_var_protection > 0
+            and self.bot.symbol.last_variation > self.max_var_protection
+        ):
+            return (
+                False,
+                f"Max Var Protection ({self.bot.symbol.last_variation:.3f} > "
+                f"{self.max_var_protection:.3f}) - waiting for next turn...",
+            )
+        if (
+            self.vr24h_max > 0
+            and self.bot.symbol.variation_range_24h > self.vr24h_max
+        ):
+            return (
+                False,
+                f"VR24h above threshold "
+                f"({self.bot.symbol.variation_range_24h:.3f} > "
+                f"{self.vr24h_max:.3f}) - waiting for next turn...",
+            )
+        return (True, None)
+
 
 class CatchTheWave(TradingStrategy):
     """
@@ -256,16 +259,9 @@ class CatchTheWave(TradingStrategy):
     def evaluate_buy(self):
         if self.use_matrix_time_res and self.time_safeguard:
             return (False, "Holding - Using matrix's time resolution...")
-        if (
-            self.vr24h_min > 0
-            and self.bot.symbol.variation_range_24h < self.vr24h_min
-        ):
-            return (
-                False,
-                f"VR24h below threshold "
-                f"({self.bot.symbol.variation_range_24h:.3f} < "
-                f"{self.vr24h_min:.3f}) - waiting for next turn...",
-            )
+        should_continue, message = self.buying_protections()
+        if not should_continue:
+            return False, message
         if self.is_on_good_status() and self.is_on_wave_onset():
             return True, None
         return (False, "Symbol is not in good status and ascending...")
@@ -369,3 +365,16 @@ class CatchTheWave(TradingStrategy):
         return self.use_local_memory and self.bot.has_local_memory(
             self.symbol, strategy=self
         )
+
+    def buying_protections(self):
+        if (
+            self.vr24h_min > 0
+            and self.bot.symbol.variation_range_24h < self.vr24h_min
+        ):
+            return (
+                False,
+                f"VR24h below threshold "
+                f"({self.bot.symbol.variation_range_24h:.3f} < "
+                f"{self.vr24h_min:.3f}) - waiting for next turn...",
+            )
+        return (True, None)
