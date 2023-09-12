@@ -14,6 +14,7 @@ app.conf.task_routes = {
     "base.tasks.update_all_bots_job": {"queue": "bots"},
     "base.tasks.update_bots_group_job": {"queue": "bots"},
     "base.tasks.bots_logrotate": {"queue": "bots"},
+    "base.tasks.dummy_user_reset": {"queue": "bots"},
 }
 
 app.conf.beat_schedule = {
@@ -25,6 +26,13 @@ app.conf.beat_schedule = {
             minute=57,
         ),
         "kwargs": {"load_symbols": True, "all_symbols": True},
+    },
+    "dummyy-user-reset": {
+        "task": "base.tasks.update_all_indicators_job",
+        "schedule": crontab(
+            hour=23,
+            minute=57,
+        ),
     },
     # Executes every 5 mins.
     "update-indicators-every-5-mins": {

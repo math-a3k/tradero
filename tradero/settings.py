@@ -323,6 +323,18 @@ BOT_DEFAULT_NAME = "BTZN"
 # Default Bot Quota for Users (0: no quota)
 BOT_USER_QUOTA = env.int("TRADERO_BOT_USER_QUOTA", 0)
 
+# Enables the Dummy User
+DUMMY_USER_ENABLED = env.bool("TRADERO_DUMMY_USER_ENABLED", False)
+
+# Base Asset of the Symbol to be used as a start for the bots
+DUMMY_USER_SYMBOL = env.str("TRADERO_DUMMY_SYMBOL", "KEY")
+
+# Amount of Bots to create for the Dummy User
+DUMMY_USER_BOTS = env.int("TRADERO_DUMMY_BOTS", 50)
+
+# Bot Quota for the Dummy User
+DUMMY_USER_BOT_QUOTA = env.int("TRADERO_DUMMY_BOTS", 100)
+
 # Preediction Model Class
 SERIALIZER_CLASS = env.str(
     "TRADERO_SERIALIZER_CLASS",

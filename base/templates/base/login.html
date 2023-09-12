@@ -7,6 +7,11 @@
 {% endblock title %}
 
 {% block content %}
+	{% if DUMMY_USER_ENABLED %}
+	<div class="alert alert-info fade show" role="alert">
+        Dummy User Available! (dummy:dummy)
+    </div>
+	{% endif %}
 	<div class="container">
 		<form method="post">{% csrf_token %}
     		{% bootstrap_form form %}
