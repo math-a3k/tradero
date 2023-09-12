@@ -15,6 +15,9 @@
 		<p><strong>Sobrenome</strong>: {{ user.last_name }}</p>
 		<p><strong>Chave do API</strong>: {% if user.api_key %}************{% else %}-{% endif %}</p>
 		<p><strong>Segredo do Chave do API</strong>: {% if user.api_secret %}************{% else %}-{% endif %}</p>
+		{% if user.bot_quota > 0 %}
+		<p><strong>Cota do Botzinhos</strong>: {{ user.bot_count }}/{{ user.bot_quota }}</p>
+		{% endif %}
 
 		<div class="container">
 			<h4 class="m-2">Actions</h4>

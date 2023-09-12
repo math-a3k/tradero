@@ -320,6 +320,9 @@ MODEL_SCORE_THRESHOLD = env.float("TRADERO_MODEL_SCORE_THRESHOLD", 0.3)
 
 BOT_DEFAULT_NAME = "BTZN"
 
+# Default Bot Quota for Users (0: no quota)
+BOT_USER_QUOTA = env.int("TRADERO_BOT_USER_QUOTA", 0)
+
 # Preediction Model Class
 SERIALIZER_CLASS = env.str(
     "TRADERO_SERIALIZER_CLASS",

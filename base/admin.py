@@ -51,6 +51,7 @@ class TraderoUserAdmin(UserAdmin):
                     "api_key",
                     "api_secret",
                     "checkpoint",
+                    "bot_quota",
                 )
             },
         ),

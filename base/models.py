@@ -26,6 +26,7 @@ from requests.adapters import HTTPAdapter
 from sklearn.model_selection import GridSearchCV
 
 from .client import TraderoClient
+from .exceptions import BotQuotaExceeded
 from .indicators import get_indicators
 from .strategies import get_strategies
 from .utils import datetime_minutes_rounder
@@ -63,6 +64,11 @@ class User(AbstractUser):
         blank=True,
         null=True,
     )
+    bot_quota = models.PositiveIntegerField(
+        "Bots' Quota",
+        default=settings.BOT_USER_QUOTA,
+        help_text="Maximum Bots for the User (0 for No Quota)",
+    )
     others = models.JSONField("Others", default=dict)
 
     class Meta:
@@ -81,6 +87,10 @@ class User(AbstractUser):
     @property
     def bot_status(self):
         return TraderoBot.status_summary(self.bots.all())
+
+    @property
+    def bot_count(self):
+        return self.bots.all().count()
 
     @property
     def valuation_current(self):
@@ -1774,6 +1784,12 @@ class TraderoBot(models.Model):
         return reverse("base:botzinhos-detail", kwargs={"pk": self.pk})
 
     def save(self, *args, **kwargs):
+        if not self.pk:
+            if (
+                self.user.bot_quota > 0
+                and self.user.bot_count >= self.user.bot_quota
+            ):
+                raise BotQuotaExceeded
         self.others["ws_group_name"] = f"bots_html_{self.user.username}"
         if self.jumpy_whitelist:
             self.jumpy_whitelist = self.jumpy_whitelist.upper()

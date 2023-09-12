@@ -78,7 +78,7 @@ However, there are valid and good reasons for running it as a Software-as-a-Serv
 
 Not everyone has the knowledge and/or the hardware to run a personal instance. It may also make sense to distribute the costs of having the infrastructure updated and running, or simply delegate the work to focus on other things.
 
-When running as a SaaS, the admin can set a Checkpoint in time to track the gains for the period and disable the trading of the bots for each user.
+When running as a SaaS, the admin can set a Checkpoint in time to track the gains for the period and disable the trading of the bots for each user and a :setting:`bot quota<BOT_USER_QUOTA>`.
 
 This is intended to serve as a basis for an agreement between the involved trusted parts under the "every work should have its retribution" principle.
 
