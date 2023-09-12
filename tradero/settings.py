@@ -282,7 +282,7 @@ EXCHANGE_API_URL = env.str(
 )
 
 # Quote Asset to be used
-QUOTE_ASSET = env.str("TRADERO_QUOTE_ASSET", "BUSD")
+QUOTE_ASSET = env.str("TRADERO_QUOTE_ASSET", "USDT")
 
 # Exhange fee per transaction (Buy / Sell) (rate) for DUMMY mode
 EXCHANGE_FEE = Decimal(env.str("TRADERO_EXCHANGE_FEE", "0.001"))
