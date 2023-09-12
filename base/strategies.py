@@ -5,12 +5,16 @@ from decimal import Decimal
 from django.db.models import Q
 from django.utils import timezone
 
+from .indicators import get_indicators
+
+available_indicators = get_indicators()
+
 
 def get_strategies():
     available_strats = {
         i.slug: i
         for j, i in inspect.getmembers(sys.modules[__name__], inspect.isclass)
-        if getattr(i, "slug", None)
+        if getattr(i, "slug", None) and i.is_available()
     }
     return available_strats
 
@@ -18,6 +22,7 @@ def get_strategies():
 class TradingStrategy:
     bot = None
     slug = None
+    requires = []
     params = {}
 
     def evaluate_buy(self):
@@ -28,6 +33,10 @@ class TradingStrategy:
 
     def evaluate_jump(self):
         raise NotImplementedError
+
+    @classmethod
+    def is_available(cls):
+        return all([ind in available_indicators for ind in cls.requires])
 
     @property
     def time_safeguard(self):
@@ -80,6 +89,7 @@ class ACMadness(TradingStrategy):
     """
 
     slug = "acmadness"
+    requires = ["stp"]
     params = {
         "microgain": {"default": "0.3", "type": "decimal"},
         "ac_factor": {"default": "3", "type": "decimal"},
@@ -211,6 +221,7 @@ class CatchTheWave(TradingStrategy):
     """
 
     slug = "catchthewave"
+    requires = ["scg"]
     params = {
         "early_onset": {"default": "0", "type": "bool"},
         "sell_on_maxima": {"default": "1", "type": "bool"},
