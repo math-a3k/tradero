@@ -90,7 +90,9 @@
 			<h4 class="m-2">Group Actions</h4>
 
 			<div class="btn-group">
+				{% if group.are_all_off %}
 				<a class="btn btn-warning" href="{% url "base:botzinhos-group-update" group.pk %}">Atualizar Grupo</a>
+				{% endif %}
 				<a class="btn btn-primary" href="{% url "base:botzinhos-create" %}?group={{group.pk}}">Novo(s) Botzinho(s)</a>
 				<a class="btn btn-warning" href="{% url "base:botzinhos-group-move" group.pk %}">Mover Botzinhos</a>
 			</div>
@@ -101,12 +103,16 @@
 				{% action_button action_url "Turn ON" "btn-primary" %}
 				{% url "base:botzinhos-group-action" group.pk "liquidate" as action_url %}
 				{% action_button action_url "LIQUIDATE (FORCE SELL and Turn OFF)" "btn-danger" %}
+				{% if group.are_all_off %}
 				{% url "base:botzinhos-group-action" group.pk "reset_soft" as action_url %}
 				{% action_button action_url "RESET (SOFT)" "btn-warning" %}
+				{% endif %}
 			</div>
+			{% if group.are_all_off %}
 			<div class="ul">
 				{% include "base/_jumping_form.html" with view="base:botzinhos-group-action" obj=group %}
 			</div>
+			{% endif %}
 		</div>
 
 	</div>

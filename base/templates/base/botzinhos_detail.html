@@ -93,7 +93,9 @@
 
 			<div class="btn-group">
 				<a class="btn btn-warning" href="{% url "base:botzinhos-logs" bot.pk %}">View Logs</a>
+				{% if bot.status == bot.Status.INACTIVE %}
 				<a class="btn btn-warning" href="{% url "base:botzinhos-update" bot.pk %}">Update</a>
+				{% endif %}
 			</div>
 			<div class="btn-group">
 				{% if not bot.price_buying %}
@@ -111,17 +113,19 @@
 				{% action_button action_url "Turn ON" "btn-primary" %}
 				{% endif %}
 			</div>
+			{% if bot.status == bot.Status.INACTIVE %}
 			<div class="btn-group">
 				{% url "base:botzinhos-action" bot.pk "reset_soft" as action_url %}
 				{% action_button action_url "RESET (SOFT)" "btn-warning" %}
 				{% url "base:botzinhos-action" bot.pk "reset_hard" as action_url %}
 				{% action_button action_url "RESET (HARD)" "btn-danger" %}
 			</div>
+			{% endif %}
+			{% if not bot.price_buying and bot.status == bot.Status.INACTIVE %}
 			<div class="ul">
-				{% if not bot.price_buying %}
 				{% include "base/_jumping_form.html" with view="base:botzinhos-action" obj=bot %}
-				{% endif %}
 			</div>
+			{% endif %}
 		</div>
 
 	{% include "base/trades_section.html" with summary=summary trades=trades page_obj=page_obj %}
