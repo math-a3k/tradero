@@ -284,6 +284,33 @@ class TestViews(TestCase):
             ).count(),
             1,
         )
+        self.user1.bot_quota = 1
+        self.user1.save()
+        response = self.client.post(
+            url,
+            {
+                "bots_quantity": 1,
+                "name": "testing botzinho",
+                "group": self.group1.pk,
+                "symbol": self.s1.pk,
+                "strategy": "acmadness",
+                "fund_quote_asset_initial": Decimal("20"),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Bot Quota (1) Exceeded.",
+            response.content,
+        )
+        self.assertEqual(
+            TraderoBot.objects.filter(
+                name__startswith="testing botzinho"
+            ).count(),
+            1,
+        )
+        self.user1.bot_quota = 0
+        self.user1.save()
         response = self.client.post(
             url,
             {
@@ -486,6 +513,31 @@ class TestViews(TestCase):
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            TraderoBot.objects.filter(
+                name__startswith="BT", fund_quote_asset_initial=55
+            ).count(),
+            2,
+        )
+        self.user1.bot_quota = 1
+        self.user1.save()
+        response = self.client.post(
+            url,
+            {
+                "name": "testing group bot create 2",
+                "add_edit_bots": True,
+                "bots_quantity": 2,
+                "bot_strategy": "acmadness",
+                "bot_symbol": self.s1.pk,
+                "bot_fund_quote_asset_initial": 55,
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Bot Quota (1) Exceeded.",
+            response.content,
+        )
         self.assertEqual(
             TraderoBot.objects.filter(
                 name__startswith="BT", fund_quote_asset_initial=55

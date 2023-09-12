@@ -17,6 +17,7 @@ from django.views.generic import (
     UpdateView,
 )
 
+from .exceptions import BotQuotaExceeded
 from .forms import (
     JumpingForm,
     TraderoBotForm,
@@ -177,7 +178,13 @@ class BotzinhosCreateView(LoginRequiredMixin, FormView):
             if bot_name:
                 bot_kwargs.update({"name": f"{bot_name}-{i+1:03d}"})
             bot = TraderoBot(**bot_kwargs)
-            bot.save()
+            try:
+                bot.save()
+            except BotQuotaExceeded:
+                messages.error(
+                    self.request,
+                    f"ERROR: Bot Quota ({bot.user.bot_quota}) Exceeded.",
+                )
         self.group = bot_kwargs.pop("group")
         return super().form_valid(form)
 
@@ -337,7 +344,13 @@ class BotzinhosGroupCreateView(LoginRequiredMixin, CreateView):
                 if bot_name:
                     bot_kwargs.update({"name": f"{bot_name}-{i+1:03d}"})
                 bot = TraderoBot(**bot_kwargs)
-                bot.save()
+                try:
+                    bot.save()
+                except BotQuotaExceeded:
+                    messages.error(
+                        self.request,
+                        f"ERROR: Bot Quota ({bot.user.bot_quota}) Exceeded.",
+                    )
         return super().form_valid(form)
 
 

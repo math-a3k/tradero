@@ -170,3 +170,13 @@ Proportion of Symbol observations (prices) to be considered as atypical by the o
 Default: ``__all__``
 
 Indicators to be enabled (calculated and shown). A string of comma-separated indicators' slugs - i.e. ``macdcg,stp`` - or ``__all__``. For indicator-specific settings, see the indicator's documentation.
+
+
+.. setting:: BOT_USER_QUOTA
+
+``BOT_USER_QUOTA``
+==================
+
+Default: ``0``
+
+Default Bot Quota (Maximum number of Bots) for Users (0 for no quota).
