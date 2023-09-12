@@ -154,7 +154,7 @@ class TraderoBotGroupEditForm(TraderoBotGroupForm):
                     self.add_error(
                         None,
                         "The following fields produce erros with at least one "
-                        "bot of the group:",
+                        "bot ({bot.pk}) of the group:",
                     )
                     for field, message in ve.message_dict.items():
                         self.add_error(
