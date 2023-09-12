@@ -20,6 +20,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.module_loading import import_string
+from django.utils.safestring import mark_safe
 from django_ai.supervised_learning.models import HGBTreeRegressor, OneClassSVC
 from encore.concurrent.futures.synchronous import SynchronousExecutor
 from requests.adapters import HTTPAdapter
@@ -1694,6 +1695,10 @@ class TraderoBot(models.Model):
         max_length=510,
         blank=True,
         null=True,
+        help_text=mark_safe(
+            "(<a href='https://tradero.readthedocs.io/en/latest"
+            "/trading_bots.html' target='_blank'>Strategy docs</a>)"
+        ),
     )
     is_jumpy = models.BooleanField("Jumpy?", default=False)
     jumpy_whitelist = models.CharField(
