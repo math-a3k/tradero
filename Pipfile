@@ -45,6 +45,7 @@ django-clearcache = "*"
 django-ratelimit = "*"
 django-ai = {ref = "tradero", editable = true, git = "https://github.com/math-a3k/django-ai.git"}
 pipenv = "==v2023.7.23"
+pytest-env = "*"
 
 [dev-packages]
 pre-commit = "*"
