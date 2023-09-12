@@ -180,3 +180,43 @@ Indicators to be enabled (calculated and shown). A string of comma-separated ind
 Default: ``0``
 
 Default Bot Quota (Maximum number of Bots) for Users (0 for no quota).
+
+
+.. setting:: DUMMY_USER_ENABLED
+
+``DUMMY_USER_ENABLED``
+======================
+
+Default: ``False``
+
+Enables the Dummy User.
+
+
+.. setting:: DUMMY_USER_SYMBOL
+
+``DUMMY_USER_SYMBOL``
+=====================
+
+Default: ``KEY``
+
+Base Asset of the Symbol to be used at start for Bots.
+
+
+.. setting:: DUMMY_USER_BOTS
+
+``DUMMY_USER_BOTS``
+===================
+
+Default: ``50``
+
+Amount of Bots to create for the Dummy User.
+
+
+.. setting:: DUMMY_USER_BOT_QUOTA
+
+``DUMMY_USER_BOT_QUOTA``
+========================
+
+Default: ``100``
+
+Bot Quota for the Dummy User.

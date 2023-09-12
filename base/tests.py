@@ -988,6 +988,37 @@ class TestCommands(TestCase):
         self.assertLogs("ALL WINDOWS CALIBRATION COMPLETE")
         self.assertIn("Successfully", out.getvalue())
 
+    @pytest.mark.xdist_group("commands")
+    @override_settings(
+        DUMMY_USER_ENABLED=True,
+        DUMMY_USER_SYMBOL="S1",
+        DUMMY_USER_BOTS=2,
+        DUMMY_USER_BOT_QUOTA=3,
+    )
+    def test_dummy_user(self):
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            with open("base/fixtures/klines_response_mock.json") as f:
+                content = f.read()
+                m.get(f"{BINANCE_API_URL}/api/v3/klines", text=content)
+            out = StringIO()
+            call_command("dummy_user", stdout=out)
+            self.assertIn("SUCCESS", out.getvalue())
+            self.assertEqual(User.objects.filter(username="dummy").count(), 1)
+            call_command("dummy_user", reset=False, stdout=out)
+            self.assertIn("SUCCESS", out.getvalue())
+            self.assertEqual(User.objects.filter(username="dummy").count(), 1)
+            call_command("dummy_user", remove=True, stdout=out)
+            self.assertIn("SUCCESS", out.getvalue())
+            self.assertEqual(User.objects.filter(username="dummy").count(), 0)
+            with override_settings(DUMMY_USER_ENABLED=False):
+                call_command("dummy_user", reset=True, stdout=out)
+            self.assertIn("SUCCESS", out.getvalue())
+            self.assertEqual(User.objects.filter(username="dummy").count(), 0)
+
 
 class TestSymbols(TestCase):
     @classmethod

@@ -1,4 +1,5 @@
 from celery import shared_task
+from django.core.management import call_command
 
 from .models import Symbol, TraderoBot, TraderoBotGroup
 
@@ -46,3 +47,8 @@ def bots_logrotate():  # pragma: no cover
 @shared_task
 def symbols_datarotate():  # pragma: no cover
     Symbol.datarotate()
+
+
+@shared_task
+def dummy_user_reset():  # pragma: no cover
+    call_command("dummy_user", reset=True)
