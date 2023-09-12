@@ -3,7 +3,7 @@
 <!-- Responsive navbar-->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="#">tradero</a>
+        <a class="navbar-brand" href="{% if request.user.is_authenticated %}{% url 'base:users-detail' %}{% else %}{% url 'base:home' %}{% endif %}">tradero</a>
         <span style="font-size: small;color: white;font-style: italic; text-decoration: none; a.text-decoration: none;">
             a tool for achieving self-funding via trading
         </span>
