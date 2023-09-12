@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import subprocess
 from decimal import Decimal
 from multiprocessing import cpu_count
 from pathlib import Path
@@ -96,6 +97,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "base.context_processors.add_settings",
             ],
         },
     },
@@ -269,6 +271,11 @@ DJANGO_CELERY_BEAT_TZ_AWARE = False
 # tradero Debug Mode
 TRADERO_DEBUG = env.bool("TRADERO_DEBUG", False)
 
+# Source code url
+SOURCE_URL = env.str(
+    "TRADERO_SOURCE_URL", "https://github.com/math-a3k/tradero"
+)
+
 # Exchange API URL (Binance's)
 EXCHANGE_API_URL = env.str(
     "TRADERO_EXCHANGE_API_URL", "https://api.binance.com"
@@ -360,3 +367,48 @@ STP = 3
 
 # SCG Parameters
 SCG = (7, 25, 99)
+
+try:
+    # https://blog.birdhouse.org/2016/04/22/django_git_template_tag/
+    # Date and hash ID
+    cmd = f'git -C {BASE_DIR} log -1 --pretty=format:"%h | %cd" --date=short'
+    head = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    commit_hash, commit_date = (
+        head.stdout.readline().strip().decode("utf-8").split(" | ")
+    )
+    # Latest tag
+    cmd = (
+        f"git -C {BASE_DIR} describe --tags "
+        f"$(git -C {BASE_DIR} rev-list --tags --max-count=1)"
+    )
+    head = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    latest_tag = head.stdout.readline().strip().decode("utf-8")
+    # Branch
+    cmd = f"git -C {BASE_DIR} branch --show-current"
+    head = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    git_branch = head.stdout.readline().strip().decode("utf-8")
+    git_version = {
+        "commit_hash": commit_hash,
+        "commit_date": commit_date,
+        "branch": git_branch,
+        "latest_tag": latest_tag,
+    }
+except Exception:
+    git_version = {}
+
+GIT_VERSION = git_version
