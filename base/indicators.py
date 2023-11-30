@@ -255,3 +255,55 @@ class STP(Indicator):
 
         self.value = stp
         return self.value
+
+
+class ATR(Indicator):
+    """
+    Average True Rate
+    """
+
+    slug = "atr"
+    template = "base/indicators/_atr.html"
+    js_slug = "atr"
+    js_sorting = "base/indicators/_atr.js"
+
+    def __init__(
+        self,
+        symbol,
+        periods=settings.ATR,
+    ):
+        self.symbol = symbol
+        self.periods = periods
+
+    def get_data(self):
+        return list(
+            reversed(
+                self.symbol.klines.all()
+                .order_by("-time_close")[: self.periods + 1]
+                .values(
+                    "price_high",
+                    "price_low",
+                    "price_close",
+                )
+            )
+        )
+
+    def calculate(self):
+        atr = {"params": self.periods}
+        klines = self.get_data()
+        trs = []
+        for i in range(1, self.periods + 1):
+            tr = max(
+                klines[i]["price_high"], klines[i - 1]["price_close"]
+            ) - min(klines[i]["price_low"], klines[i - 1]["price_close"])
+            trs.append(tr)
+        atrs = [sum(trs) / self.periods]
+        # No need of updating
+        # for i in range(1, self.periods + 1):
+        #     atrs.append((atrs[i - 1] * (i - 1) + trs[i]) / i)
+        # atr["atrs"] = atrs
+        atr["trs"] = [float(tr) for tr in trs]
+        atr["current"] = float(atrs[-1])
+
+        self.value = atr
+        return self.value

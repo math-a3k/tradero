@@ -9,5 +9,4 @@ except Exception:  # pragma: no cover
     # Prevent from failing if Redis is not available (for building in ReadTheDocs)
     pass
 
-
 __all__ = ("celery_app",)

@@ -383,6 +383,9 @@ STP = 3
 # SCG Parameters
 SCG = (7, 25, 99)
 
+# ATR Parameters
+ATR = 14
+
 try:
     # https://blog.birdhouse.org/2016/04/22/django_git_template_tag/
     # Date and hash ID
