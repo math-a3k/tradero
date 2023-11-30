@@ -935,6 +935,7 @@ class TestCommands(TestCase):
             call_command("load_symbols", stdout=out)
             self.assertIn("Successfully processed", out.getvalue())
             self.assertEqual(Symbol.objects.all().count(), 2)
+            call_command("load_symbols", stdout=out)
 
     @pytest.mark.xdist_group("commands")
     @override_settings(
