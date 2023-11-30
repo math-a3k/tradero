@@ -105,6 +105,27 @@ Default: ``(7, 25, 99)``
 
 The *s*, *m*, *l* parameters for the SCG indicator (middle, long, short) tendencies.
 
+
+.. _atr:
+
+ATR Indicator
+-------------
+
+The ATR (*Average True Range*) is a technical analysis volatility indicator originally developed by J. Welles Wilder, Jr. for commodities. The indicator does not provide an indication of price trend, simply the degree of price volatility. The average true range is an N-period smoothed moving average (SMMA) of the true range values. Wilder recommended a 14-period smoothing [2]_.
+
+The *tradero* implentation calculates the current value as a simple average of the last :setting:`ATR` periods each time interval, it does not update or produces a time series with a weighted average from the previouse value.
+
+The parameters used for the ATR indicator can be set via the :setting:`ATR` setting.
+
+.. setting:: ATR
+
+``ATR``
+^^^^^^^
+
+Default: ``14``
+
+The number of periods to be used for the ATR indicator.
+
 Internal Implementation
 =======================
 
@@ -112,3 +133,4 @@ There are two ways of implementing indicators in ``tradero``: into the core or v
 
 .. rubric:: References
 .. [1] .. autoclass:: base.indicators.Indicator
+.. [2] https://en.wikipedia.org/wiki/Average_true_range

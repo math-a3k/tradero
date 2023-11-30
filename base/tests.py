@@ -21,6 +21,7 @@ from base import tasks
 from .consumers import BotHTMLConsumer, SymbolHTMLConsumer, SymbolJSONConsumer
 from .forms import TraderoBotForm
 from .handlers import message_handler
+from .indicators import ATR
 from .models import (
     Kline,
     Symbol,
@@ -1934,3 +1935,128 @@ class TestTasks(BotTestCase):
             TraderoBot.update_all_bots()
             self.assertLogs("Retrieved and Updated")
             self.assertLogs("bots updated")
+
+
+class TestIndicators(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.s1, _ = Symbol.objects.update_or_create(
+            symbol="S1BUSD",
+            status="TRADING",
+            base_asset="S1",
+            quote_asset="BUSD",
+            defaults={
+                "model_score": 0.99,
+                "volume_quote_asset": Decimal(1000000),
+                "variation_range_24h": Decimal(9),
+                "info": {
+                    "filters": [
+                        {},
+                        {"stepSize": "0.10000000", "filterType": "LOT_SIZE"},
+                    ]
+                },
+            },
+        )
+        super().setUpClass()
+
+    @override_settings(
+        INDICATORS=["atr"],
+    )
+    def test_atr(self):
+        atr_data_mock = [
+            # 0
+            {
+                "price_close": 1.3111,
+                "price_high": None,
+                "price_low": None,
+            },
+            # 1
+            {
+                "price_close": 1.3075,
+                "price_high": 1.3140,
+                "price_low": 1.3053,
+            },
+            # 2
+            {
+                "price_close": 1.3078,
+                "price_high": 1.3131,
+                "price_low": 1.3067,
+            },
+            # 3
+            {
+                "price_close": 1.3151,
+                "price_high": 1.3194,
+                "price_low": 1.3071,
+            },
+            # 4
+            {
+                "price_close": 1.3041,
+                "price_high": 1.3176,
+                "price_low": 1.3009,
+            },
+            # 5
+            {
+                "price_close": 1.2935,
+                "price_high": 1.3050,
+                "price_low": 1.2935,
+            },
+            # 6
+            {
+                "price_close": 1.2974,
+                "price_high": 1.2999,
+                "price_low": 1.2941,
+            },
+            # 7
+            {
+                "price_close": 1.2919,
+                "price_high": 1.3029,
+                "price_low": 1.2912,
+            },
+            # 8
+            {
+                "price_close": 1.2884,
+                "price_high": 1.2942,
+                "price_low": 1.2842,
+            },
+            # 9
+            {
+                "price_close": 1.2881,
+                "price_high": 1.2929,
+                "price_low": 1.2846,
+            },
+            # 10
+            {
+                "price_close": 1.2836,
+                "price_high": 1.2889,
+                "price_low": 1.2796,
+            },
+            # 11
+            {
+                "price_close": 1.2881,
+                "price_high": 1.2900,
+                "price_low": 1.2819,
+            },
+            # 12
+            {
+                "price_close": 1.2905,
+                "price_high": 1.2933,
+                "price_low": 1.2840,
+            },
+            # 13
+            {
+                "price_close": 1.2857,
+                "price_high": 1.2997,
+                "price_low": 1.2833,
+            },
+            # 14
+            {
+                "price_close": 1.2932,
+                "price_high": 1.2956,
+                "price_low": 1.2821,
+            },
+            # 15  -   1.2993  1.2904
+        ]
+        with mock.patch.object(ATR, "get_data", return_value=atr_data_mock):
+            atr_indicator = ATR(symbol=self.s1, periods=14)
+            result = atr_indicator.calculate()
+            assert result["current"] == 0.010614285714285703
