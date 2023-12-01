@@ -1,0 +1,16 @@
+<p class="mb-1">
+	<strong>DC({{symbol.others.dc.params.periods}})</strong>:<br>
+
+	Upper: <span class="fw-bold" style="color: #99672d;">
+		{% for u in symbol.others.dc.upper %}
+			{{ u|floatformat:4 }}
+		{% endfor %}</span> <br>
+
+	Lower: <span class="fw-bold" style="color: #9e30a9;">
+	{% for u in symbol.others.dc.lower %}
+		{{ u|floatformat:4 }}
+	{% endfor %}</span> <br>
+
+	Upper Break: <strong><span class="dc-value">{{ symbol.others.dc.upper_break|yesno|upper }}</span></strong>
+	Lower Break: <strong><span class="dc-value">{{ symbol.others.dc.lower_break|yesno|upper }}</span></strong>
+</p>

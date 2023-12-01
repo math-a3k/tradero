@@ -307,3 +307,60 @@ class ATR(Indicator):
 
         self.value = atr
         return self.value
+
+
+class DC(Indicator):
+    """
+    Donchian Channel
+    """
+
+    slug = "dc"
+    template = "base/indicators/_dc.html"
+    js_slug = "dc"
+    js_sorting = "base/indicators/_dc.js"
+
+    def __init__(
+        self,
+        symbol,
+        periods=settings.DC_PERIODS,
+        amount=settings.DC_AMOUNT,
+    ):
+        self.symbol = symbol
+        self.periods = periods
+        self.amount = amount
+
+    def get_data(self):
+        return list(
+            reversed(
+                self.symbol.klines.all()
+                .order_by("-time_close")[: self.periods + self.amount - 1]
+                .values(
+                    "price_high",
+                    "price_low",
+                )
+            )
+        )
+
+    def calculate(self):
+        dc = {
+            "params": {
+                "periods": self.periods,
+                "amount": self.amount,
+            }
+        }
+        klines = self.get_data()
+        upper = [
+            max([k["price_high"] for k in klines[i : self.periods + i]])
+            for i in range(0, self.amount)
+        ]
+        lower = [
+            min([k["price_low"] for k in klines[i : self.periods + i]])
+            for i in range(0, self.amount)
+        ]
+        dc["upper"] = [float(b) for b in upper]
+        dc["lower"] = [float(b) for b in lower]
+        dc["upper_break"] = dc["upper"][-1] > dc["upper"][-2]
+        dc["lower_break"] = dc["lower"][-1] < dc["lower"][-2]
+
+        self.value = dc
+        return self.value
