@@ -126,6 +126,37 @@ Default: ``14``
 
 The number of periods to be used for the ATR indicator.
 
+
+.. _dc:
+
+Donchian Channel
+----------------
+
+The Donchian channel is an indicator used in market trading developed by Richard Donchian. It is formed by taking the highest high and the lowest low of the last n periods. The area between the high and the low is the channel for the period chosen. [3]_.
+
+
+The *tradero* implentation also includes the break of the upper and lower bounds for the current time interval.
+
+.. setting:: DC_PERIODS
+
+``DC_PERIODS``
+^^^^^^^^^^^^^^
+
+Default: ``20``
+
+The number of periods to be used for the Donchian channel.
+
+
+.. setting:: DC_AMOUNT
+
+``DC_AMOUNT``
+^^^^^^^^^^^^^
+
+Default: ``4``
+
+The amount of time intervals (length of the time serie) to be calculated.
+
+
 Internal Implementation
 =======================
 
@@ -134,3 +165,4 @@ There are two ways of implementing indicators in ``tradero``: into the core or v
 .. rubric:: References
 .. [1] .. autoclass:: base.indicators.Indicator
 .. [2] https://en.wikipedia.org/wiki/Average_true_range
+.. [3] https://en.wikipedia.org/wiki/Donchian_channel

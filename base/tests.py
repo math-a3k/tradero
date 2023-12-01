@@ -21,7 +21,7 @@ from base import tasks
 from .consumers import BotHTMLConsumer, SymbolHTMLConsumer, SymbolJSONConsumer
 from .forms import TraderoBotForm
 from .handlers import message_handler
-from .indicators import ATR
+from .indicators import ATR, DC
 from .models import (
     Kline,
     Symbol,
@@ -2060,3 +2060,37 @@ class TestIndicators(TestCase):
             atr_indicator = ATR(symbol=self.s1, periods=14)
             result = atr_indicator.calculate()
             assert result["current"] == 0.010614285714285703
+
+    def test_dc(self):
+        dc_data_mock = [
+            # 0
+            {
+                "price_high": 1.2,
+                "price_low": 1.2,
+            },
+            # 1
+            {
+                "price_high": 1.3140,
+                "price_low": 1.3053,
+            },
+            # 2
+            {
+                "price_high": 1.3131,
+                "price_low": 1.3067,
+            },
+            # 3
+            {
+                "price_high": 1.3194,
+                "price_low": 1.3071,
+            },
+        ]
+        with mock.patch.object(DC, "get_data", return_value=dc_data_mock):
+            dc_indicator = DC(symbol=self.s1, periods=3, amount=2)
+            result = dc_indicator.calculate()
+            assert result == {
+                "params": {"periods": 3, "amount": 2},
+                "upper": [1.314, 1.3194],
+                "lower": [1.2, 1.3053],
+                "upper_break": True,
+                "lower_break": False,
+            }
