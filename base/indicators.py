@@ -168,6 +168,7 @@ class SCG(Indicator):
         ts_l = ts_l[-min_len:].reset_index(drop=True)
         ts_s = ts_s[-min_len:].reset_index(drop=True)
         ts_s_var = ts_s.pct_change().dropna()
+        ts_m_var = ts_m.pct_change().dropna()
         ts_l_var = ts_l.pct_change().dropna()
         ts_diff_ml = ts_m - ts_l
         ts_diff_sm = ts_s - ts_m
@@ -204,6 +205,7 @@ class SCG(Indicator):
             "line_l": ts_l.to_list(),
             "line_s": ts_s.to_list(),
             "line_s_var": ts_s_var.to_list(),
+            "line_m_var": ts_m_var.to_list(),
             "line_l_var": ts_l_var.to_list(),
             "line_diff_ml": ts_diff_ml.to_list(),
             "line_diff_sm": ts_diff_sm.to_list(),
