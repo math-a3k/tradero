@@ -48,6 +48,11 @@ class TradingStrategy:
     def has_local_memory(self, symbol):
         pass
 
+    def local_memory_available(self):
+        return self.use_local_memory and self.bot.has_local_memory(
+            self.symbol, strategy=self
+        )
+
     def get_param(self, param, kwargs):
         param_value = kwargs.get(param, self.params[param]["default"])
         if self.params[param]["type"] == "bool":
@@ -216,6 +221,108 @@ class ACMadness(TradingStrategy):
         return (True, None)
 
 
+class Turtle(TradingStrategy):
+    """
+    Turtle Trading Strategy
+
+    (requires the SCG, ATR and DC indicator)
+    """
+
+    slug = "turtle"
+    requires = ["scg", "atr", "dc"]
+    params = {
+        "use_matrix_time_res": {"default": "0", "type": "bool"},
+        "vr24h_min": {"default": "3", "type": "decimal"},
+    }
+
+    def __init__(self, bot, symbol=None, **kwargs):
+        self.bot = bot
+        self.symbol = symbol or self.bot.symbol
+        self.local_memory = self.bot.get_local_memory(self.symbol)
+        self.scg = self.symbol.others["scg"]
+        self.atr = self.symbol.others["atr"]
+        self.dc = self.symbol.others["dc"]
+        self.m_var = self.scg["line_m_var"]  # Var of the Middle tendency
+        #
+        self.use_local_memory = True
+        self.use_matrix_time_res = self.get_param(
+            "use_matrix_time_res", kwargs
+        )
+        self.vr24h_min = self.get_param("vr24h_min", kwargs)
+
+    def evaluate_buy(self):
+        if self.use_matrix_time_res and self.time_safeguard:
+            return (False, "Holding - Using matrix's time resolution...")
+        should_continue, message = self.buying_protections()
+        if not should_continue:
+            return False, message
+        if self.is_on_good_status() and self.dc["upper_break"]:
+            return True, None
+        return (False, "Symbol is not in good status and with upper break...")
+
+    def evaluate_sell(self):
+        if self.use_matrix_time_res and self.time_safeguard:
+            return (False, "Holding - Using matrix's time resolution")
+        if self.bot.price_current <= self.get_stop_loss_threshold():
+            return True, None
+        if self.dc["lower_break"]:
+            return True, None
+        return (False, "Still on board with the strategy")
+
+    def evaluate_jump(self):
+        if self.use_matrix_time_res and self.time_safeguard:
+            return False, None
+        symbols_with_siblings = self.get_symbols_with_siblings()
+        symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
+        symbols = sorted(
+            symbols, key=lambda s: s.others["dc"]["upper_break"], reverse=True
+        )
+        symbols = self.apply_jumpy_lists(symbols)
+        for symbol in symbols:
+            strat_in_symbol = self.bot.get_strategy(symbol)
+            should_buy, _ = strat_in_symbol.evaluate_buy()
+            if should_buy and symbol.pk not in symbols_with_siblings:
+                return True, symbol
+        return False, None
+
+    def is_on_good_status(self):
+        return self.m_var[-1] > 0
+
+    def get_stop_loss_threshold(self):
+        return self.local_memory.get("stop_loss_threshold", 0)
+
+    def local_memory_update(self):
+        if self.use_matrix_time_res and self.time_safeguard:
+            return
+        lm = self.bot.get_local_memory()
+        if not lm:
+            lm = {"stop_loss_threshold": None}
+        if self.bot.price_buying and not lm["stop_loss_threshold"]:
+            lm["stop_loss_threshold"] = float(self.bot.price_buying) - 2 * (
+                self.symbol.others["atr"]["current"]
+            )
+        self.local_memory = lm
+        self.bot.set_local_memory(self.symbol, lm)
+
+    def has_local_memory(self, symbol=None):
+        symbol = symbol or self.symbol
+        lm = self.bot.get_local_memory(symbol)
+        return lm.get("stop_loss_threshold") is not None
+
+    def buying_protections(self):
+        if (
+            self.vr24h_min > 0
+            and self.bot.symbol.variation_range_24h < self.vr24h_min
+        ):
+            return (
+                False,
+                f"VR24h below threshold "
+                f"({self.bot.symbol.variation_range_24h:.3f} < "
+                f"{self.vr24h_min:.3f}) - waiting for next turn...",
+            )
+        return (True, None)
+
+
 class CatchTheWave(TradingStrategy):
     """
     Catch The Wave Trading Strategy
@@ -360,11 +467,6 @@ class CatchTheWave(TradingStrategy):
         if len(price) > 1:
             return True
         return False
-
-    def local_memory_available(self):
-        return self.use_local_memory and self.bot.has_local_memory(
-            self.symbol, strategy=self
-        )
 
     def buying_protections(self):
         if (

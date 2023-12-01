@@ -1864,6 +1864,73 @@ class TestStrategies(BotTestCase):
                 self.bot1.others["last_logs"][-1],
             )
 
+    def test_turtle(self):
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            self.bot1.symbol = self.s1
+            self.bot1.strategy = "turtle"
+            #
+            self.s1.others["scg"]["line_m_var"] = [1, 1, 1]
+            self.s1.others["atr"]["current"] = 0.1
+            self.s1.others["dc"]["upper_break"] = True
+            self.bot1.on()
+            self.bot1.decide()
+            self.assertIn("Bought", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 0.9
+            self.bot1.decide()
+            self.assertIn("Still on board", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 0.7
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            self.s1.others["dc"]["upper_break"] = False
+            self.bot1.decide()
+            self.assertIn(
+                "not in good status", self.bot1.others["last_logs"][-1]
+            )
+            self.bot1.symbol.last_updated = timezone.now()
+            self.bot1.symbol.variation_range_24h = 1
+            self.bot1.decide()
+            self.assertIn(
+                "VR24h",
+                self.bot1.others["last_logs"][-1],
+            )
+            self.bot1.strategy_params = "use_matrix_time_res=1"
+            #
+            self.s1.others["dc"]["upper_break"] = True
+            self.bot1.symbol.last_updated = (
+                timezone.now() - timezone.timedelta(minutes=2)
+            )
+            self.bot1.price_current = 1.1
+            self.bot1.decide()
+            self.assertIn(
+                "Using matrix's time resolution",
+                self.bot1.others["last_logs"][-1],
+            )
+            #
+            self.bot1.buy()
+            self.bot1.decide()
+            self.assertIn(
+                "Using matrix's time resolution",
+                self.bot1.others["last_logs"][-1],
+            )
+            self.bot1.strategy_params = None
+            self.s1.others["dc"]["lower_break"] = True
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            #
+            self.bot1.symbol.variation_range_24h = 4
+            self.s1.others["dc"]["upper_break"] = False
+            self.s2.others["dc"]["upper_break"] = True
+            self.s2.others["scg"]["line_m_var"] = [1, 1, 1]
+            self.s2.others["atr"]["current"] = 0.1
+            self.s2.save()
+            self.bot1.decide()
+            self.assertIn("Jumped", self.bot1.others["last_logs"][-3])
+            self.assertEqual(self.bot1.has_local_memory(), False)
+
 
 @pytest.mark.usefixtures("celery_session_app")
 @pytest.mark.usefixtures("celery_session_worker")

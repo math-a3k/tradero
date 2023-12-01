@@ -98,8 +98,28 @@ Parameters
   Minimum Variation Range (24h) of a Symbol to buy (``Decimal``, defaults to ``3``) if enabled (greater than zero). Meant to keep the bot out of the market when it is moving sideways narrowly.
 
 
+Turtle
+------
+
+Also known as *little turtle bots*, this strategy [5]_ relies on the :ref:`scg`, ref:`atr`, and ref:`dc` indicators for deciding.
+
+Inspired by this `video <https://www.youtube.com/watch?v=X9edzFqmUyk>`_, this is the implementation of the strategy proposed by Richard Dennis and William Eckhardt in the 1980s, using the `Donchian channel <https://admiralmarkets.com/es/education/articles/forex-indicators/lo-que-todos-deberian-saber-sobre-el-indicador-de-canal-donchian>`_.
+
+Given a Symbol, the bot will buy when it is on "good status" (the middle-term tendency is ascending) and an upper break of the Donchian channel has occurred, while selling when a lower break of the channel occurs or a stop-loss is executed when the price reaches the buying price minus 2 ATRs.
+
+Parameters
+^^^^^^^^^^
+
+``use_matrix_time_res``
+  Use matrix's time resolution (:setting:`TIME_INTERVAL`) (``1`` | ``0``, defaults to ``0``)
+
+``vr24h_min``
+  Minimum Variation Range (24h) of a Symbol to buy (``Decimal``, defaults to ``3``) if enabled (greater than zero). Meant to keep the bot out of the market when it is moving sideways narrowly.
+
+
 .. rubric:: References
 .. [1] .. autoclass:: base.models.TraderoBot
 .. [2] .. autoclass:: base.strategies.TradingStrategy
 .. [3] .. autoclass:: base.strategies.ACMadness
 .. [4] .. autoclass:: base.strategies.CatchTheWave
+.. [5] .. autoclass:: base.strategies.Turtle
