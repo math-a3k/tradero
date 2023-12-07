@@ -210,12 +210,12 @@ class ACMadness(TradingStrategy):
             )
         if (
             self.vr24h_max > 0
-            and self.bot.symbol.variation_range_24h > self.vr24h_max
+            and self.symbol.variation_range_24h > self.vr24h_max
         ):
             return (
                 False,
                 f"VR24h above threshold "
-                f"({self.bot.symbol.variation_range_24h:.3f} > "
+                f"({self.symbol.variation_range_24h:.3f} > "
                 f"{self.vr24h_max:.3f}) - waiting for next turn...",
             )
         return (True, None)
@@ -312,12 +312,12 @@ class Turtle(TradingStrategy):
     def buying_protections(self):
         if (
             self.vr24h_min > 0
-            and self.bot.symbol.variation_range_24h < self.vr24h_min
+            and self.symbol.variation_range_24h < self.vr24h_min
         ):
             return (
                 False,
                 f"VR24h below threshold "
-                f"({self.bot.symbol.variation_range_24h:.3f} < "
+                f"({self.symbol.variation_range_24h:.3f} < "
                 f"{self.vr24h_min:.3f}) - waiting for next turn...",
             )
         return (True, None)
@@ -471,12 +471,12 @@ class CatchTheWave(TradingStrategy):
     def buying_protections(self):
         if (
             self.vr24h_min > 0
-            and self.bot.symbol.variation_range_24h < self.vr24h_min
+            and self.symbol.variation_range_24h < self.vr24h_min
         ):
             return (
                 False,
                 f"VR24h below threshold "
-                f"({self.bot.symbol.variation_range_24h:.3f} < "
+                f"({self.symbol.variation_range_24h:.3f} < "
                 f"{self.vr24h_min:.3f}) - waiting for next turn...",
             )
         return (True, None)
