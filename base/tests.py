@@ -1634,6 +1634,34 @@ class TestTraderoBots(BotTestCase):
                     self.bot2.valuation_current, Decimal("19.8801")
                 )
 
+    def test_vr24h_protection(self):
+        with requests_mock.Mocker() as m:
+            m.get(
+                f"{BINANCE_API_URL}/api/v3/ticker/price",
+                json={"symbol": "S1BUSD", "price": "1.0"},
+            )
+            self.s1.variation_range_24h = 2
+            self.s1.others["scg"]["current_good"] = True
+            self.s1.others["scg"]["line_s_var"] = [1, 1, 1]
+            self.s2.others["scg"]["current_good"] = True
+            self.s2.others["scg"]["line_s_var"] = [1, 1, 1]
+            self.s1.save()
+            self.s2.save()
+            self.bot1.strategy = (
+                "catchthewave"  # Strategy with VR24h protection
+            )
+            self.bot1.is_jumpy = True
+            self.bot1.on()
+            self.bot1.decide()
+            self.assertIn(
+                "Jumped",
+                self.bot1.others["last_logs"][-3],
+            )
+            self.assertIn(
+                "Bought",
+                self.bot1.others["last_logs"][-1],
+            )
+
 
 class TestStrategies(BotTestCase):
     def test_acmadness(self):
