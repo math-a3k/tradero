@@ -40,7 +40,7 @@ class TradingStrategy:
 
     @property
     def time_safeguard(self):
-        return (timezone.now() - self.bot.symbol.last_updated).seconds > 60
+        return (timezone.now() - self.symbol.last_updated).seconds > 60
 
     def local_memory_update(self):
         pass
@@ -108,7 +108,7 @@ class ACMadness(TradingStrategy):
     def __init__(self, bot, symbol=None, **kwargs):
         self.bot = bot
         self.symbol = symbol or self.bot.symbol
-        self.ac = Decimal(self.bot.symbol.others["stp"]["next_n_sum"])
+        self.ac = Decimal(self.symbol.others["stp"]["next_n_sum"])
         #
         self.microgain = self.get_param("microgain", kwargs)
         self.ac_threshold = self.microgain * self.get_param(
@@ -155,7 +155,7 @@ class ACMadness(TradingStrategy):
         if self.time_safeguard:
             return False, None
         symbols_with_siblings = self.get_symbols_with_siblings()
-        symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
+        symbols = self.symbol._meta.concrete_model.objects.top_symbols()
         symbols = sorted(
             symbols, key=lambda s: s.others["stp"]["next_n_sum"], reverse=True
         )
@@ -179,7 +179,7 @@ class ACMadness(TradingStrategy):
 
     def get_ac(self):
         if self.ac_adjusted:
-            return self.ac * self.bot.symbol.model_score
+            return self.ac * self.symbol.model_score
         else:
             return self.ac
 
@@ -191,21 +191,18 @@ class ACMadness(TradingStrategy):
         )
 
     def buying_protections(self):
-        if (
-            self.outlier_protection
-            and self.bot.symbol.others["outliers"]["o1"]
-        ):
+        if self.outlier_protection and self.symbol.others["outliers"]["o1"]:
             return (
                 False,
                 "Outlier Protection - waiting for next turn...",
             )
         if (
             self.max_var_protection > 0
-            and self.bot.symbol.last_variation > self.max_var_protection
+            and self.symbol.last_variation > self.max_var_protection
         ):
             return (
                 False,
-                f"Max Var Protection ({self.bot.symbol.last_variation:.3f} > "
+                f"Max Var Protection ({self.symbol.last_variation:.3f} > "
                 f"{self.max_var_protection:.3f}) - waiting for next turn...",
             )
         if (
@@ -273,7 +270,7 @@ class Turtle(TradingStrategy):
         if self.use_matrix_time_res and self.time_safeguard:
             return False, None
         symbols_with_siblings = self.get_symbols_with_siblings()
-        symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
+        symbols = self.symbol._meta.concrete_model.objects.top_symbols()
         symbols = sorted(
             symbols, key=lambda s: s.others["dc"]["upper_break"], reverse=True
         )
@@ -392,7 +389,7 @@ class CatchTheWave(TradingStrategy):
         if self.use_matrix_time_res and self.time_safeguard:
             return False, None
         symbols_with_siblings = self.get_symbols_with_siblings()
-        symbols = self.bot.symbol._meta.concrete_model.objects.top_symbols()
+        symbols = self.symbol._meta.concrete_model.objects.top_symbols()
         if self.early_onset:
             key = lambda s: s.others["scg"]["seo_index"]
         else:
