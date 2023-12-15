@@ -59,6 +59,8 @@ class TradingStrategy:
             return bool(int(param_value))
         elif self.params[param]["type"] == "decimal":
             return Decimal(param_value)
+        elif self.params[param]["type"] == "text":
+            return param_value
         else:
             return int(param_value)
 
@@ -338,6 +340,8 @@ class CatchTheWave(TradingStrategy):
         "use_local_memory": {"default": "1", "type": "bool"},
         "use_matrix_time_res": {"default": "0", "type": "bool"},
         "vr24h_min": {"default": "3", "type": "decimal"},
+        "stop_loss_threshold": {"default": "15", "type": "decimal"},
+        "stop_loss_unit": {"default": "percent", "type": "text"},
     }
 
     def __init__(self, bot, symbol=None, **kwargs):
@@ -359,6 +363,10 @@ class CatchTheWave(TradingStrategy):
             "use_matrix_time_res", kwargs
         )
         self.vr24h_min = self.get_param("vr24h_min", kwargs)
+        self.stop_loss_threshold = self.get_param(
+            "stop_loss_threshold", kwargs
+        )
+        self.stop_loss_unit = self.get_param("stop_loss_unit", kwargs)
 
     def evaluate_buy(self):
         if self.use_matrix_time_res and self.time_safeguard:
@@ -373,6 +381,8 @@ class CatchTheWave(TradingStrategy):
     def evaluate_sell(self):
         if self.use_matrix_time_res and self.time_safeguard:
             return (False, "Holding - Using matrix's time resolution")
+        if self.bot.price_current <= self.get_stop_loss_threshold():
+            return True, None
         if self.bot.price_current > self.get_min_selling_threshold():
             if self.sell_on_maxima and self.is_local_maxima():
                 return True, None
@@ -438,6 +448,21 @@ class CatchTheWave(TradingStrategy):
             / self.bot.fund_base_asset_executable
         )
 
+    def get_stop_loss_threshold(self):
+        if self.stop_loss_threshold and self.bot.price_buying:
+            unit = float(
+                self.symbol.others["atr"]["current"]
+                if self.stop_loss_unit == "atr"
+                else self.bot.price_buying / 100
+            )
+            threshold = (
+                float(self.bot.price_buying)
+                - float(self.stop_loss_threshold) * unit
+            )
+            return threshold
+        else:
+            return 0
+
     def local_memory_update(self):
         if self.use_matrix_time_res and self.time_safeguard:
             return
@@ -450,10 +475,8 @@ class CatchTheWave(TradingStrategy):
             if len(price) > 1:
                 last_var = (Decimal(price[-1]) / Decimal(price[-2]) - 1) * 100
                 price_var = price_var + [float(last_var)]
-        lm = {
-            "price": price[-100:],
-            "price_var": price_var[-100:],
-        }
+        lm["price"] = price[-100:]
+        lm["price_var"] = price_var[-100:]
         self.local_memory = lm
         self.bot.set_local_memory(self.symbol, lm)
 

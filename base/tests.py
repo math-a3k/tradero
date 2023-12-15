@@ -1752,6 +1752,7 @@ class TestStrategies(BotTestCase):
             #
             self.s1.others["scg"]["current_good"] = True
             self.s1.others["scg"]["line_s_var"] = [1, 1, 1]
+            self.s1.others["atr"]["current"] = 0.1
             self.bot1.on()
             self.bot1.decide()
             self.assertIn("Bought", self.bot1.others["last_logs"][-1])
@@ -1767,7 +1768,32 @@ class TestStrategies(BotTestCase):
             self.bot1.strategy_params = "use_local_memory=0,sell_on_maxima=0"
             self.bot1.decide()
             self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 1
             self.bot1.buy()
+            self.bot1.price_current = 0.98
+            self.bot1.strategy_params = (
+                "stop_loss_threshold=2,stop_loss_unit=percent"
+            )
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            self.bot1.local_memory_reset()
+            self.assertEqual(
+                self.bot1.get_strategy().get_stop_loss_threshold(), 0
+            )
+            self.bot1.price_current = 1
+            self.bot1.buy()
+            self.bot1.price_current = 0.9
+            self.bot1.local_memory_update()
+            self.bot1.strategy_params = (
+                "stop_loss_threshold=2,stop_loss_unit=atr"
+            )
+            self.bot1.decide()
+            self.assertIn("below min", self.bot1.others["last_logs"][-1])
+            self.bot1.price_current = 0.7
+            self.bot1.decide()
+            self.assertIn("Sold", self.bot1.others["last_logs"][-1])
+            self.bot1.buy()
+            self.bot1.price_current = 1.1
             self.bot1.strategy_params = "sell_on_maxima=1"
             self.s1.others["scg"]["line_s_var"] = [1, 1, -0.11]
             self.bot1.decide()

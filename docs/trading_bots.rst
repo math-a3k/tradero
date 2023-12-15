@@ -97,6 +97,12 @@ Parameters
 ``vr24h_min``
   Minimum Variation Range (24h) of a Symbol to buy (``Decimal``, defaults to ``3``) if enabled (greater than zero). Meant to keep the bot out of the market when it is moving sideways narrowly.
 
+``stop_loss_threshold``
+  Stop loss threshold (``Decimal``, defaults to ``10``) if enabled (greater than zero). Meant to take the bot out of the market when the position has failed. I.e. a stop loss threshold of 10 (percent) will make the bot sell if the price drops 10 percent of the buying price.
+
+``stop_loss_unit``
+  Unit to calculte the stop loss threshold (``Text``, defaults to ``percent``). Possible values are ``percent`` and ``atr``.
+
 
 Turtle
 ------
