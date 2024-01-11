@@ -4,12 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
+django = ">=5"
 django-environ = "*"
 pytest-django = "*"
 pytest = "*"
 pytest-cov = "*"
-django-bootstrap-v5 = "*"
 requests = "*"
 defusedxml = "*"
 requests-mock = "*"
@@ -23,7 +22,6 @@ django-mathfilters = "*"
 daphne = "*"
 channels = "*"
 channels-redis = "*"
-django-websocketclient = "*"
 psycopg = {extras = ["binary", "pool"], version = "*"}
 statsmodels = "*"
 supervisor = "*"
@@ -46,6 +44,10 @@ django-ratelimit = "*"
 django-ai = {ref = "tradero", editable = true, git = "https://github.com/math-a3k/django-ai.git"}
 pipenv = "==v2023.7.23"
 pytest-env = "*"
+django-websocketclient = {git = "https://github.com/math-a3k/django-websocketclient"}
+django-bootstrap-v5 = {git = "https://github.com/math-a3k/django-bootstrap-v5"}
+beautifulsoup4 = "*"
+websockets = "*"
 
 [dev-packages]
 pre-commit = "*"
