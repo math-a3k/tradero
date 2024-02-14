@@ -157,6 +157,25 @@ Default: ``4``
 The amount of time intervals (length of the time serie) to be calculated.
 
 
+.. _describe:
+
+Describe
+--------
+
+The Pandas' DataFrame ``describe`` function plus the current quartile of the symbol's price.
+
+
+.. setting:: DESCRIBE_PERIODS
+
+``DESCRIBER_PERIODS``
+^^^^^^^^^^^^^^^^^^^^^
+
+Default: ``None``
+
+The number of periods to be used for the describe indicator (``None`` for using all the information).
+
+
+
 Internal Implementation
 =======================
 

@@ -390,6 +390,9 @@ ATR = 14
 DC_PERIODS = 20
 DC_AMOUNT = 4
 
+# Describe parameters
+DESCRIBE_PERIODS = None
+
 try:
     # https://blog.birdhouse.org/2016/04/22/django_git_template_tag/
     # Date and hash ID

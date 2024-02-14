@@ -21,7 +21,7 @@ from base import tasks
 from .consumers import BotHTMLConsumer, SymbolHTMLConsumer, SymbolJSONConsumer
 from .forms import TraderoBotForm
 from .handlers import message_handler
-from .indicators import ATR, DC
+from .indicators import ATR, DC, Describe
 from .models import (
     Kline,
     Symbol,
@@ -2214,4 +2214,37 @@ class TestIndicators(TestCase):
                 "lower": [1.2, 1.3053],
                 "upper_break": True,
                 "lower_break": False,
+            }
+
+    def test_describe(self):
+        describe_data_mock = [
+            (1,),
+            (2,),
+            (3,),
+            (4,),
+            (5,),
+            (6,),
+            (7,),
+            (8,),
+            (9,),
+            (10,),
+        ]
+        with mock.patch.object(
+            Describe, "get_data", return_value=describe_data_mock
+        ):
+            describe_indicator = Describe(symbol=self.s1)
+            result = describe_indicator.calculate()
+            assert result == {
+                "values": {
+                    "count": 10.0,
+                    "mean": 5.5,
+                    "std": 3.0276503540974917,
+                    "min": 1.0,
+                    "25%": 3.25,
+                    "50%": 5.5,
+                    "75%": 7.75,
+                    "max": 10.0,
+                },
+                "current_quartile": 4,
+                "total_hours": 0.8333333333333334,
             }
