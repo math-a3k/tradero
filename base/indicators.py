@@ -366,3 +366,55 @@ class DC(Indicator):
 
         self.value = dc
         return self.value
+
+
+class Describe(Indicator):
+    """
+    Describr Indicator
+    """
+
+    slug = "describe"
+    template = "base/indicators/_describe.html"
+    js_slug = "describe"
+    js_sorting = "base/indicators/_describe.js"
+
+    def __init__(
+        self,
+        symbol,
+        periods=settings.DESCRIBE_PERIODS,
+    ):
+        self.symbol = symbol
+        self.periods = periods
+
+    def get_data(self):
+        return list(
+            reversed(
+                self.symbol.klines.all()[: self.periods]
+                .order_by("-time_close")
+                .values_list(
+                    "price_close",
+                )
+            )
+        )
+
+    def calculate(self):
+        describe = {}
+        klines = self.get_data()
+        df = pd.DataFrame(klines, dtype="float64")
+        desc = df.describe().to_dict()[0]
+        describe["values"] = desc
+        describe["current_quartile"] = self.get_current_quartile(
+            desc, klines[-1][0]
+        )
+        describe["total_hours"] = desc["count"] * 5 / 60
+        return describe
+
+    def get_current_quartile(self, d, current_value):  # pragma: no cover
+        if d["min"] < current_value <= d["25%"]:
+            return 1
+        if d["25%"] < current_value <= d["50%"]:
+            return 2
+        if d["50%"] < current_value <= d["75%"]:
+            return 3
+        if d["75%"] < current_value <= d["max"]:
+            return 4

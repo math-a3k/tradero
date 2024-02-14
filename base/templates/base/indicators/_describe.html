@@ -1,0 +1,17 @@
+{% load symbols %}
+
+<p class="mb-1">
+	<strong>Describe</strong>:<br>
+	Count: <span class="fw-bold">{{ symbol.others.describe.values.count|floatformat:0 }}</span> (Last {{ symbol.others.describe.total_hours|floatformat:0 }} hours)<br>
+	Mean: <span class="fw-bold">{{ symbol.others.describe.values.mean|floatformat:5 }}</span> |
+	Std: <span class="fw-bold">{{ symbol.others.describe.values.std|floatformat:5 }}</span> |
+	Min: <span class="fw-bold">{{ symbol.others.describe.values.min|floatformat:5 }}</span> |
+	25%: <span class="fw-bold">{{ symbol.others.describe.values|get:"25%"|floatformat:5 }}</span> |
+	50%: <span class="fw-bold">{{ symbol.others.describe.values|get:"50%"|floatformat:5 }}</span> |
+	75%: <span class="fw-bold">{{ symbol.others.describe.values|get:"75%"|floatformat:5 }}</span> |
+	Max: <span class="fw-bold">{{ symbol.others.describe.values.max|floatformat:5 }}</span> <br>
+
+  	Current Quartile: <span class="fw-bold current-quartile" style="color: #9e30a9;">
+		{{ symbol.others.describe.current_quartile }}
+	</span>
+</p>
