@@ -45,9 +45,11 @@ django-ai = {ref = "tradero", editable = true, git = "https://github.com/math-a3
 pipenv = "==v2023.7.23"
 pytest-env = "*"
 django-websocketclient = {git = "https://github.com/math-a3k/django-websocketclient"}
-django-bootstrap-v5 = {git = "https://github.com/math-a3k/django-bootstrap-v5"}
 beautifulsoup4 = "*"
 websockets = "*"
+pip = "*"
+install = "*"
+django-bootstrap-v5 = {git = "https://github.com/math-a3k/django-bootstrap-v5.git"}
 
 [dev-packages]
 pre-commit = "*"
