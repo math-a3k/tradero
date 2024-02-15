@@ -342,6 +342,8 @@ class CatchTheWave(TradingStrategy):
         "vr24h_min": {"default": "3", "type": "decimal"},
         "stop_loss_threshold": {"default": "15", "type": "decimal"},
         "stop_loss_unit": {"default": "percent", "type": "text"},
+        "q_buy": {"default": "0", "type": "int"},
+        "q_sell": {"default": "0", "type": "int"},
     }
 
     def __init__(self, bot, symbol=None, **kwargs):
@@ -367,6 +369,8 @@ class CatchTheWave(TradingStrategy):
             "stop_loss_threshold", kwargs
         )
         self.stop_loss_unit = self.get_param("stop_loss_unit", kwargs)
+        self.q_buy = self.get_param("q_buy", kwargs)
+        self.q_sell = self.get_param("q_sell", kwargs)
 
     def evaluate_buy(self):
         if self.use_matrix_time_res and self.time_safeguard:
@@ -379,6 +383,18 @@ class CatchTheWave(TradingStrategy):
         return (False, "Symbol is not in good status and ascending...")
 
     def evaluate_sell(self):
+        if (
+            self.q_sell > 0
+            and self.symbol.others["describe"]["current_quartile"]
+            and self.symbol.others["describe"]["current_quartile"]
+            < self.q_sell
+        ):
+            return (
+                False,
+                f"Current Quartile below selling min "
+                f"({self.self.symbol.others['describe']['current_quartile']}"
+                f" > {self.q_sell}) - waiting for next turn...",
+            )
         if self.use_matrix_time_res and self.time_safeguard:
             return (False, "Holding - Using matrix's time resolution")
         if self.bot.price_current <= self.get_stop_loss_threshold():
@@ -400,11 +416,15 @@ class CatchTheWave(TradingStrategy):
             return False, None
         symbols_with_siblings = self.get_symbols_with_siblings()
         symbols = self.symbol._meta.concrete_model.objects.top_symbols()
+        sort_reverse = True
         if self.early_onset:
             key = lambda s: s.others["scg"]["seo_index"]
+        elif self.q_buy > 0:
+            key = lambda s: s.others["describe"]["current_quartile"]
+            sort_reverse = False
         else:
             key = lambda s: s.others["scg"]["scg_index"]
-        symbols = sorted(symbols, key=key, reverse=True)
+        symbols = sorted(symbols, key=key, reverse=sort_reverse)
         symbols = self.apply_jumpy_lists(symbols)
         for symbol in symbols:
             strat_in_symbol = self.bot.get_strategy(symbol)
@@ -421,6 +441,8 @@ class CatchTheWave(TradingStrategy):
             return self.scg["early_onset"] and self.not_decreasing(
                 self.l_var[-self.onset_periods :]  # long-term line
             )
+        elif self.q_buy > 0:
+            return self.not_decreasing(self.l_var[-self.onset_periods :])
         return self.scg["current_good"]
 
     def is_local_maxima(self):
@@ -489,6 +511,17 @@ class CatchTheWave(TradingStrategy):
         return False
 
     def buying_protections(self):
+        if (
+            self.q_buy > 0
+            and self.symbol.others["describe"]["current_quartile"]
+            and self.symbol.others["describe"]["current_quartile"] > self.q_buy
+        ):
+            return (
+                False,
+                f"Current Quartile above buying max "
+                f"({self.symbol.others['describe']['current_quartile']}"
+                f" > {self.q_buy}) - waiting for next turn...",
+            )
         if (
             self.vr24h_min > 0
             and self.symbol.variation_range_24h < self.vr24h_min
