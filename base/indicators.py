@@ -410,11 +410,11 @@ class Describe(Indicator):
         return describe
 
     def get_current_quartile(self, d, current_value):  # pragma: no cover
-        if d["min"] < current_value <= d["25%"]:
+        if current_value <= d["25%"]:
             return 1
         if d["25%"] < current_value <= d["50%"]:
             return 2
         if d["50%"] < current_value <= d["75%"]:
             return 3
-        if d["75%"] < current_value <= d["max"]:
+        if d["75%"] < current_value:
             return 4
