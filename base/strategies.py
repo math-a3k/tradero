@@ -392,7 +392,7 @@ class CatchTheWave(TradingStrategy):
             return (
                 False,
                 f"Current Quartile below selling min "
-                f"({self.self.symbol.others['describe']['current_quartile']}"
+                f"({self.symbol.others['describe']['current_quartile']}"
                 f" > {self.q_sell}) - waiting for next turn...",
             )
         if self.use_matrix_time_res and self.time_safeguard:
