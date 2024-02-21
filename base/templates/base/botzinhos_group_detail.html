@@ -106,6 +106,10 @@
 				{% if group.are_all_off %}
 				{% url "base:botzinhos-group-action" group.pk "reset_soft" as action_url %}
 				{% action_button action_url "RESET (SOFT)" "btn-warning" %}
+				{% if request.user.is_superuser %}
+				{% url "base:botzinhos-group-action" group.pk "group_delete" as action_url %}
+				{% action_button action_url "DELETE (!!)" "btn-danger" %}
+				{% endif %}
 				{% endif %}
 			</div>
 			{% if group.are_all_off %}

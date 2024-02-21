@@ -1587,6 +1587,14 @@ class TraderoBotGroup(models.Model):
             bot.reset_soft()
         return True
 
+    def group_delete(self):
+        for bot in self.bots.all():
+            bot.trades.all().delete()
+            bot.logs.all().delete()
+            bot.delete()
+        self.delete()
+        return True
+
     @property
     def valuation_current(self):
         return TraderoBot.aggregate_valuation(self.bots.all(), "current")

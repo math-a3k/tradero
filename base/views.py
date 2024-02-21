@@ -255,6 +255,8 @@ class ActionView(OwnerMixin, LoginRequiredMixin, RedirectView):
         self.pk = kwargs["pk"]
         self.get_object()
         self.run_action()
+        if self.action == "group_delete":
+            return "/Botzinhos"
         return self.request.META.get("HTTP_REFERER", "/")
 
     def get_params_str(self):
@@ -411,6 +413,7 @@ class BotzinhosGroupActionView(ActionView):
         "liquidate": {"params": None},
         "jump": {"params": {"to_symbol": {"type": "Model", "class": Symbol}}},
         "reset_soft": {"params": None},
+        "group_delete": {"params": None},
     }
 
     def get_object(self):
