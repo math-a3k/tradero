@@ -344,6 +344,7 @@ class CatchTheWave(TradingStrategy):
         "stop_loss_unit": {"default": "percent", "type": "text"},
         "q_buy": {"default": "0", "type": "int"},
         "q_sell": {"default": "0", "type": "int"},
+        "tsq": {"default": "0", "type": "int"},
     }
 
     def __init__(self, bot, symbol=None, **kwargs):
@@ -371,6 +372,7 @@ class CatchTheWave(TradingStrategy):
         self.stop_loss_unit = self.get_param("stop_loss_unit", kwargs)
         self.q_buy = self.get_param("q_buy", kwargs)
         self.q_sell = self.get_param("q_sell", kwargs)
+        self.tsq = self.get_param("tsq", kwargs)
 
     def evaluate_buy(self):
         if self.use_matrix_time_res and self.time_safeguard:
@@ -415,7 +417,12 @@ class CatchTheWave(TradingStrategy):
         if self.use_matrix_time_res and self.time_safeguard:
             return False, None
         symbols_with_siblings = self.get_symbols_with_siblings()
-        symbols = self.symbol._meta.concrete_model.objects.top_symbols()
+        if self.tsq > 0:
+            symbols = self.symbol._meta.concrete_model.objects.top_symbols(
+                n=self.tsq
+            )
+        else:
+            symbols = self.symbol._meta.concrete_model.objects.top_symbols()
         sort_reverse = True
         if self.early_onset:
             key = lambda s: s.others["scg"]["seo_index"]
