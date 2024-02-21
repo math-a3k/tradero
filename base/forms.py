@@ -71,6 +71,9 @@ class TraderoBotGroupForm(forms.ModelForm):
     add_edit_bots = forms.BooleanField(
         label="Add / Edit Botzinhos", required=False
     )
+    distribute_bots = forms.BooleanField(
+        label="Distribute Botzinhos over Symbols", required=False
+    )
     bots_quantity = forms.IntegerField(
         label="# of Botzinhos", initial=10, required=False
     )

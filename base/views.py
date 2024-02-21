@@ -342,10 +342,21 @@ class BotzinhosGroupCreateView(LoginRequiredMixin, CreateView):
                 {"user": self.request.user, "group": self.object}
             )
             bot_name = bot_kwargs.get("name", None)
+            bot_distribute = form.cleaned_data.get("distribute_bots", None)
+            if bot_distribute:
+                symbols = Symbol.objects.filter(
+                    status="TRADING",
+                    is_enabled=True,
+                    model_score__gte=settings.MODEL_SCORE_THRESHOLD,
+                    volume_quote_asset__gte=settings.MARKET_SIZE_THRESHOLD,
+                    variation_range_24h__gte=0.4,
+                ).order_by("-model_score")
             for i in range(form.cleaned_data["bots_quantity"]):
                 if bot_name:
                     bot_kwargs.update({"name": f"{bot_name}-{i+1:03d}"})
                 bot = TraderoBot(**bot_kwargs)
+                if bot_distribute:
+                    bot.symbol = symbols[i]
                 try:
                     bot.save()
                 except BotQuotaExceeded:
@@ -367,9 +378,20 @@ class BotzinhosGroupUpdateView(OwnerMixin, LoginRequiredMixin, UpdateView):
         if form.cleaned_data["add_edit_bots"]:
             bot_data = form.get_bot_data(form.cleaned_data)
             bot_name = bot_data.pop("name", None)
+            bot_distribute = form.cleaned_data.get("distribute_bots", None)
+            if bot_distribute:
+                symbols = Symbol.objects.filter(
+                    status="TRADING",
+                    is_enabled=True,
+                    model_score__gte=settings.MODEL_SCORE_THRESHOLD,
+                    volume_quote_asset__gte=settings.MARKET_SIZE_THRESHOLD,
+                    variation_range_24h__gte=0.4,
+                ).order_by("-model_score")
             for index, bot in enumerate(self.object.bots.all()):
                 if bot_name:
                     bot.name = f"{bot_name}-{index + 1:03d}"
+                if bot_distribute:
+                    bot.symbol = symbols[index]
                 for field in bot_data:
                     setattr(bot, field, bot_data[field])
                 bot.save()
