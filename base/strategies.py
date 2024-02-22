@@ -540,3 +540,9 @@ class CatchTheWave(TradingStrategy):
                 f"{self.vr24h_min:.3f}) - waiting for next turn...",
             )
         return (True, None)
+
+    def get_symbols_with_siblings(self):
+        return self.bot.user.bots.filter(
+            status__gte=self.bot.Status.INACTIVE,
+            group=self.bot.group,
+        ).values_list("symbol", flat=True)
