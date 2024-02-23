@@ -36,10 +36,10 @@ jobs:
           - 6379:6379
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pipenv'
@@ -52,7 +52,7 @@ jobs:
       - run: pipenv run pip install -e git+https://github.com/math-a3k/django-ai.git@tradero#egg=django_ai
 
       - name: pre-commit
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
 
       - name: Testing and Coverage
         run: pipenv run pytest -v
