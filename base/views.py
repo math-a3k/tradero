@@ -435,6 +435,7 @@ class BotzinhosGroupActionView(ActionView):
         "liquidate": {"params": None},
         "jump": {"params": {"to_symbol": {"type": "Model", "class": Symbol}}},
         "reset_soft": {"params": None},
+        "reset_hard": {"params": None},
         "group_delete": {"params": None},
     }
 
