@@ -1568,13 +1568,23 @@ class TraderoBotGroup(models.Model):
         return True
 
     def liquidate(self):
-        for bot in self.bots.all():
-            if bot.status == TraderoBot.Status.SELLING:
-                bot.sell()
-                bot.off()
-            elif bot.status == TraderoBot.Status.BUYING:
-                bot.off()
-        return True
+        cache_key = f"{settings.BOTS_UPDATE_GROUP_KEY}_{self.pk}"
+        if not cache.get(cache_key, False) or "pytest" in sys.modules:
+            cache.set(cache_key, True, 60)
+            for bot in self.bots.all():
+                if bot.status == TraderoBot.Status.SELLING:
+                    bot.sell()
+                    bot.off()
+                elif bot.status == TraderoBot.Status.BUYING:
+                    bot.off()
+            return True
+        else:  # pragma: no cover
+            message = (
+                f"GROUP [{self.pk}] {self}: Other process updating bots for "
+                "the group is running, please wait."
+            )
+        logger.warning(message)
+        return message
 
     def jump(self, to_symbol):
         for bot in self.bots.all():
