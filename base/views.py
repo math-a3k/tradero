@@ -1,4 +1,5 @@
 import inspect
+from collections import Counter
 
 from django.conf import settings
 from django.contrib import messages
@@ -37,6 +38,12 @@ class HomeView(TemplateView):
         context["symbols"] = Symbol.objects.top_symbols()
         context["time_interval"] = settings.TIME_INTERVAL
         context["ms_threshold"] = settings.MODEL_SCORE_THRESHOLD
+        context["quartiles"] = Counter(
+            [
+                s.others["describe"]["current_quartile"]
+                for s in context["symbols"]
+            ]
+        )
         return context
 
 

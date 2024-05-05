@@ -49,6 +49,10 @@
 		{% indicators_radio_buttons %}
 
 		<div id="symbols-list" class="list-group">
+			{{ quartiles }}
+		</div>
+
+		<div id="symbols-list" class="list-group">
 		{% for symbol in symbols %}
 			{% symbol_render_html_snippet symbol=symbol %}
 		{% endfor %}
