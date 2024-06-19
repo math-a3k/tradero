@@ -1622,7 +1622,7 @@ class TraderoBotGroup(models.Model):
     def update_bots(self):
         cache_key = f"{settings.BOTS_UPDATE_GROUP_KEY}_{self.pk}"
         if not cache.get(cache_key, False) or "pytest" in sys.modules:
-            cache.set(cache_key, True, 60)
+            cache.set(cache_key, True, 160)
             client = Spot()
             bots = self.bots.enabled()
             if bots:
