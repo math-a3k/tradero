@@ -1570,13 +1570,14 @@ class TraderoBotGroup(models.Model):
     def liquidate(self):
         cache_key = f"{settings.BOTS_UPDATE_GROUP_KEY}_{self.pk}"
         if not cache.get(cache_key, False) or "pytest" in sys.modules:
-            cache.set(cache_key, True, 60)
+            cache.set(cache_key, True, 600)
             for bot in self.bots.all():
                 if bot.status == TraderoBot.Status.SELLING:
                     bot.sell()
                     bot.off()
                 elif bot.status == TraderoBot.Status.BUYING:
                     bot.off()
+            cache.set(cache_key, False)
             return True
         else:  # pragma: no cover
             message = (
