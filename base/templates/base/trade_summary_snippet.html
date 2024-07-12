@@ -13,7 +13,7 @@
   <tbody>
   	{% for row_name, row_vals in s.rows.items %}
   	<tr>
-  		<th scope="row">{{ s.meta.descriptions.rows|get:row_name }}</th>
+      <th scope="row">{{ s.meta.descriptions.rows|get:row_name }}</th>
   		<td>
   			<span class="{% if row_vals.gain_quote_asset_total > 0 %}text-success{% else %}text-danger{% endif %}">{{ row_vals.gain_quote_asset_total|floatformat:3|default:"-" }}</span>
   		</td>

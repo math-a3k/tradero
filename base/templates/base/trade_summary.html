@@ -1,6 +1,7 @@
 {% load mathfilters symbols %}
 
-<p><strong>Checkpoint</strong>: {{ summary.checkpoint|date|default:"-" }}</p>
+<p><strong>Checkpoint User</strong>: {{ obj.checkpoint|date|default:"-" }} - {{ obj.checkpoint|timesince|default:"-" }}</p>
+<p><strong>Checkpoint Admin</strong>: {{ obj.user.checkpoint|date|default:"-" }} - {{ obj.user.checkpoint|timesince|default:"-" }}</p>
 
 {% include "base/trade_summary_snippet.html" with s=summary.real table_name="REAL" table_class="table-success" %}
 

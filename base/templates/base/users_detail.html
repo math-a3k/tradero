@@ -52,7 +52,7 @@
 			</div>
 		</div>
 
-	{% include "base/trades_section.html" with summary=summary trades=trades page_obj=page_obj %}
+	{% include "base/trades_section.html" with summary=summary trades=trades page_obj=page_obj obj=user %}
 
 	</div>
 {% endblock content %}

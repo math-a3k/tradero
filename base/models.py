@@ -1534,6 +1534,9 @@ class TraderoBotGroup(models.Model):
         blank=True,
         null=True,
     )
+    checkpoint = models.DateTimeField(
+        "Checkpoint - User", blank=True, null=True, default=timezone.now
+    )
     others = models.JSONField("Others", default=dict, blank=True)
 
     objects = TraderoBotGroupManager()
@@ -1618,6 +1621,10 @@ class TraderoBotGroup(models.Model):
     def bot_status(self):
         bots = self.bots.all()  # prefetched
         return TraderoBot.status_summary(bots)
+
+    @property
+    def trade_summary(self):
+        return TradeHistory.summary_for_object(self)
 
     def update_bots(self):
         cache_key = f"{settings.BOTS_UPDATE_GROUP_KEY}_{self.pk}"
@@ -2711,12 +2718,17 @@ class TradeHistory(models.Model):
         return self._client
 
     @classmethod
-    def summary(cls, trades_qs, checkpoint=None):
-        result = {"rows": {}}
+    def summary(cls, trades_qs, checkpoint_admin=None, checkpoint_user=None):
+        result = {
+            "rows": {},
+            "checkpoint_admin": checkpoint_admin,
+            "checkpoint_user": checkpoint_user,
+        }
         dates = {
             "24h": timezone.now() - timezone.timedelta(days=1),
             "1w": timezone.now() - timezone.timedelta(days=7),
-            "checkpoint": checkpoint,
+            "checkpoint_user": checkpoint_user or None,
+            "checkpoint_admin": checkpoint_admin or None,
             "alltime": None,
         }
         for label, t in dates.items():
@@ -2734,7 +2746,8 @@ class TradeHistory(models.Model):
                 "rows": {
                     "24h": "Last 24 Hours",
                     "1w": "Last Week",
-                    "checkpoint": "Checkpoint",
+                    "checkpoint_user": "Checkpoint - User",
+                    "checkpoint_admin": "Checkpoint - Admin",
                     "alltime": "All-Time",
                 },
                 "cols": {
@@ -2750,18 +2763,27 @@ class TradeHistory(models.Model):
     @classmethod
     def summary_for_object(cls, obj=None):
         if isinstance(obj, TraderoBot):
+            checkpoint_user = obj.group.checkpoint
+            checkpoint_admin = obj.user.checkpoint
             qs = cls.objects.filter(bot=obj)
-            checkpoint = obj.user.checkpoint
+            checkpoint_admin = obj.user.checkpoint
         elif isinstance(obj, User):
             qs = cls.objects.filter(user=obj)
-            checkpoint = obj.checkpoint
+            checkpoint_admin = obj.checkpoint
+            checkpoint_user = None
         else:  # TraderoBotGroup object
             qs = cls.objects.filter(bot__group=obj)
-            checkpoint = obj.user.checkpoint
+            checkpoint_admin = obj.user.checkpoint
+            checkpoint_user = obj.checkpoint
         result = {
             "object": obj,
-            "cp": checkpoint,
-            "dummy": cls.summary(qs.filter(is_dummy=True), checkpoint),
-            "real": cls.summary(qs.filter(is_dummy=False), checkpoint),
+            "cpa": checkpoint_admin,
+            "cpu": checkpoint_user,
+            "dummy": cls.summary(
+                qs.filter(is_dummy=True), checkpoint_admin, checkpoint_user
+            ),
+            "real": cls.summary(
+                qs.filter(is_dummy=False), checkpoint_admin, checkpoint_user
+            ),
         }
         return result

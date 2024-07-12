@@ -84,6 +84,7 @@ class TraderoBotGroupForm(forms.ModelForm):
             "name",
             "add_edit_bots",
             "bots_quantity",
+            "checkpoint",
         ]
 
     def __init__(self, *args, **kwargs):
