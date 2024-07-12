@@ -2085,7 +2085,6 @@ class TraderoBot(models.Model):
                 else:
                     self.timestamp_start = timezone.now()
                 self.save()
-                self.local_memory_reset()
                 return True
         except Exception as e:
             message = str(e)
