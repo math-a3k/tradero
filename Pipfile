@@ -50,6 +50,8 @@ websockets = "*"
 pip = "*"
 install = "*"
 django-bootstrap-v5 = {git = "https://github.com/math-a3k/django-bootstrap-v5.git"}
+pyarrow = "*"
+numpy = "<2"
 
 [dev-packages]
 pre-commit = "*"
