@@ -27,7 +27,7 @@ class TraderoClient(Spot):  # pragma: no cover
             **kwargs,
         )
         self.session.mount(
-            "https://", requests.adapters.HTTPAdapter(pool_maxsize=36)
+            "https://", requests.adapters.HTTPAdapter(pool_maxsize=100)
         )
 
     def tradero_market_order(
