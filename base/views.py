@@ -74,6 +74,11 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         )
         summary = TradeHistory.summary_for_object(self.object)
         groups = self.object.botgroups.all().order_by("name")
+        users = {}
+        if self.object.is_superuser:
+            for user in User.objects.all():
+                if user != self.object:
+                    users[user] = user.botgroups.all().order_by("name")
         #
         paginator = Paginator(trades, 10)
         page_number = self.request.GET.get("page", 1)
@@ -85,6 +90,7 @@ class UsersDetailView(LoginRequiredMixin, DetailView):
         context["summary"] = summary
         context["groups"] = groups
         context["quote_asset"] = settings.QUOTE_ASSET
+        context["users"] = users
         return context
 
     def get_object(self, queryset=None):
