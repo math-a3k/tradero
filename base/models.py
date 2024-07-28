@@ -1575,7 +1575,7 @@ class TraderoBotGroup(models.Model):
         if not cache.get(cache_key, False) or "pytest" in sys.modules:
             cache.set(cache_key, True, 600)
             for bot in self.bots.all():
-                if bot.status == TraderoBot.Status.SELLING:
+                if bot.receipt_buying:
                     bot.sell()
                     bot.off()
                 elif bot.status == TraderoBot.Status.BUYING:
