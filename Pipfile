@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = ">=5"
+django = "*"
 django-environ = "*"
 pytest-django = "*"
 pytest = "*"
@@ -12,7 +12,7 @@ pytest-cov = "*"
 requests = "*"
 defusedxml = "*"
 requests-mock = "*"
-djangorestframework = {editable = true, git = "https://github.com/encode/django-rest-framework.git"}
+djangorestframework = "*"
 binance-connector = "*"
 django-nested-admin = "*"
 pandas = "*"
@@ -35,7 +35,7 @@ asgiref = "*"
 asyncio = "*"
 celery = {extras = ["redis"], version = "*"}
 django-celery-results = "*"
-django-celery-beat = {editable = true, git = "https://github.com/celery/django-celery-beat.git"}
+django-celery-beat = "*"
 python-crontab = "*"
 pytest-celery = "*"
 django-axes = {version = "*", extras = ["ipware"]}
@@ -48,8 +48,8 @@ django-websocketclient = {git = "https://github.com/math-a3k/django-websocketcli
 beautifulsoup4 = "*"
 websockets = "*"
 pip = "*"
-install = "*"
 django-bootstrap-v5 = {git = "https://github.com/math-a3k/django-bootstrap-v5.git"}
+numpy = "<2"
 
 [dev-packages]
 pre-commit = "*"
